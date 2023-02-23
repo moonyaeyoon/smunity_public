@@ -8,13 +8,26 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 const pageRouter = require('./routes/page');
+const {sequelize} = require('./models');
+const Major = require('./models/major');
 
 const app = express();
 app.set('port', process.env.PORT || 8001);
 app.set('view engine', 'html');
-nunjucks.configure('view', {
+nunjucks.configure('views', {
     express: app,
     watch: true,
+});
+
+sequelize.sync({ force : false}).then(() => {
+    console.log('데이터베이스 연결 성공');
+    //TODO: 나중에 rds로 db통합되면 이 쿼리는 없어집니다. local에서 자동으로 생성되도록 합니다. 최초 실행 이후에, 이 코드는 지워주세요.
+    Major.create({majorName: '컴퓨터과학과'})
+    Major.create({majorName: '휴먼지능정보공학과'});
+    Major.create({majorName: '경영학과'});
+
+}).catch((err) => {
+    console.error(err);
 });
 
 app.use(morgan('dev'));

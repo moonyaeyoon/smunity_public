@@ -10,7 +10,6 @@ router.use((req, res, next) => {
     next();
 });
 
-
 router.get('/board', (req, res)=>{
     res.send('게시판')
 })
