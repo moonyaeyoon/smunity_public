@@ -101,10 +101,10 @@ app.use(session({
     },
 }));
 
-const cors = require('cors');
-app.use(cors({
-    credentials: false,
-}))
+// const cors = require('cors');
+// app.use(cors({
+//     credentials: false,
+// }))
 
 app.use('/', pageRouter);
 
