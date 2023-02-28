@@ -3,8 +3,8 @@ const express = require("express");
 const router = express.Router();
 
 const { sequelize } = require("../models");
-const POST = require("../models/post");
-const USER = require("../models/user");
+
+const BoardRouter = require("./board")
 
 router.use((req, res, next) => {
   res.locals.user = null;
@@ -14,21 +14,7 @@ router.use((req, res, next) => {
   next();
 });
 
-router.get("/board", async (req, res) => {
-  const result = await POST.findAll();
-  res.send(result);
-});
-
-router.post("/board/new", async (req, res) => {
-  const { userId, title, content, majorId } = req.body.params;
-  const result = await POST.create({
-    title: title,
-    content: content,
-    UserId: userId,
-    MajorId: majorId,
-  });
-  res.send(result);
-});
+router.use("/board", BoardRouter);
 
 router.get("/", (req, res, next) => {
   res.send("랜딩페이지");

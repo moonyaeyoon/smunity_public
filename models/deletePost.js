@@ -3,32 +3,18 @@ const Sequelize = require('sequelize');
 module.exports = class Post extends Sequelize.Model {
     static init(sequelize){
         return super.init({
-            title: {
-                type: Sequelize.STRING(200),
-                allowNull: false,
-            },
             content: {
-                type: Sequelize.STRING(1000),
+                type: Sequelize.STRING(140),
                 allowNull: false,
             },
-            imgUrl: {
-                type: Sequelize.STRING(1000),
+            img: {
+                type: Sequelize.STRING(200),
                 allowNull: true,
             },
-            views: {
-                type: Sequelize.INTEGER,
+            title: {
+                type: Sequelize.STRING(100),
                 allowNull: false,
-                defaultValue: 0
             },
-            likes: {
-                type: Sequelize.INTEGER,
-                allowNull: false,
-                defaultValue: 0
-            },
-            isAnonymous: {
-                type: Sequelize.BOOLEAN,
-                allowNull: false,
-            }
         },{
             sequelize,
             timestamps: true, //add createAt & UpdateAt
@@ -42,7 +28,7 @@ module.exports = class Post extends Sequelize.Model {
     }
     static associate(db){
         db.Post.belongsTo(db.User);
+        db.Post.belongsTo(db.Major);
         db.Post.hasMany(db.Comment);
-        db.Post.belongsTo(db.Board);
     }
 }
