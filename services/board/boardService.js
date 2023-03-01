@@ -129,24 +129,23 @@ exports.getBoardList = async(req, res, next) => {
 
         //header의 listSize 힙법성 판단
         let finalListNumber = 0 //-1는 오류, 0는 전체, >=1는 갯수만큼 조회
-        let listSize = req.headers.listSize || false
-        if(listSize != false) {
-            //숫자아니면
-            if(isNum(listSize)){
-                finalListNumber == Number(listSize)
-            }else return res.status(400).json({
+        if(req.headers.listsize){
+            let listSize = req.headers.listsize
+            //숫자 검사
+            if(!isNaN(listSize)){ //숫자면
+                finalListNumber = Number(listSize)
+            }else return res.status(400).json({ //숫자아니면
                 code: 400,
                 message: "listSize는 숫자가 아님"
             })
             //숫자지만 0보다 큰 정수가 아님
-            if(finalListNumber <= 0 || !finalListNumber.isInteger()) return res.status(400).json({
+            if(!Number.isInteger(finalListNumber) || finalListNumber <= 0 ) return res.status(400).json({
                 code: 400,
                 message: "listSize가 0보다 큰 정수가 아님"
             })
         }
 
-
-        let postList = false;
+        let postList;
         if(finalListNumber == 0){
             postList = await Post.findAll({
                 where:{
