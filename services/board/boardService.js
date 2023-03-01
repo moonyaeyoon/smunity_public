@@ -1,6 +1,18 @@
 const {Op} = require('sequelize')
 const {User, Board, Post, Comment, sequelize} = require("../../models");
 
+const majorNameObject = {
+    "001": "컴퓨터과학과",
+    "002": "휴먼지능정보공학전공",
+    "003": "경제학과",
+    "004": "상명대학교",
+}
+const boardNameObject = {
+    "001": "자유게시판",
+    "002": "비밀게시판",
+    "003": "공지게시판",
+}
+
 const checkUserExist = async(userEmail) => {
     const reqUser = await User.findOne({
         where: {
@@ -115,15 +127,89 @@ exports.getBoardList = async(req, res, next) => {
             message: "게시판 접근 권한 없음"
         });
 
+        //header의 listSize 힙법성 판단
+        let finalListNumber = 0 //-1는 오류, 0는 전체, >=1는 갯수만큼 조회
+        let listSize = req.headers.listSize || false
+        if(listSize != false) {
+            //숫자아니면
+            if(isNum(listSize)){
+                finalListNumber == Number(listSize)
+            }else return res.status(400).json({
+                code: 400,
+                message: "listSize는 숫자가 아님"
+            })
+            //숫자지만 0보다 큰 정수가 아님
+            if(finalListNumber <= 0 || !finalListNumber.isInteger()) return res.status(400).json({
+                code: 400,
+                message: "listSize가 0보다 큰 정수가 아님"
+            })
+        }
 
-        const listData = await Post.findAll({
-            where:{
-                BoardBoardId: req.params.majorId + req.params.boardId,
-                // order: [['createdAt', 'DESC']]
-            }
+
+        let postList = false;
+        if(finalListNumber == 0){
+            postList = await Post.findAll({
+                where:{
+                    BoardBoardId: req.params.majorId + req.params.boardId,
+                    // order: [['createdAt', 'DESC']]
+                },
+                include: [{
+                    model: User, 
+                }, 
+                {
+                    model: Comment, 
+                }],
+            });
+        }else{
+            postList = await Post.findAll({
+                where:{
+                    BoardBoardId: req.params.majorId + req.params.boardId,
+                    // order: [['createdAt', 'DESC']]
+                },
+                include: [{
+                    model: User, 
+                }, 
+                {
+                    model: Comment, 
+                }],
+                limit: finalListNumber
+            });
+        }
+
+        let finalResObject = Object();
+        finalResObject["majorName"] = majorNameObject[req.params.majorId];
+        finalResObject["boardName"] = boardNameObject[req.params.boardId];
+        finalResObject["postList"] = Array();
+        postList.forEach(e => {
+            const postInfo = e.dataValues;
+            const nowPostObject = Object()
+            //id
+            nowPostObject["id"] = postInfo.id
+            //userId
+            nowPostObject["userId"] = postInfo.UserId
+            //author
+            let finalAuthor = e.User.nick
+            if(postInfo.isAnonymous == true) finalAuthor = "익명"
+            nowPostObject["author"] = finalAuthor
+            //제목
+            nowPostObject["title"] = postInfo.title
+            //imgUrl
+            nowPostObject["imgUrl"] = postInfo.imgUrl
+            //views
+            nowPostObject["views"] = postInfo.views
+            //likes
+            nowPostObject["likes"] = postInfo.likes
+            //isAnonymous
+            nowPostObject["isAnonymous"] = postInfo.isAnonymous
+            //댓글 수
+            nowPostObject["commentNum"] = e.Comments.length
+            //작성 시간(createdAt)
+            nowPostObject["createDate"] = toJSONLocal(postInfo.createdAt)
+
+            finalResObject["postList"].push(nowPostObject)
         });
-
-        return res.status(200).json(listData)
+    
+        return res.status(200).json(finalResObject)
 
     } catch (error) {
         console.error(error);
@@ -171,7 +257,7 @@ exports.getBoardDatail = async(req, res, next) => {
             message: "게시글 접근 권한 없음"
         });
 
-        const detailData = await Post.findOne({
+        let detailData = await Post.findOne({
             where:{
                 id: req.params.postId,
             },
@@ -186,7 +272,15 @@ exports.getBoardDatail = async(req, res, next) => {
         const oldViews = detailData.views
         const tempPostId = detailData.id
         const [result, metadata] = await sequelize.query(`UPDATE ${config.database}.posts SET views = ${oldViews + 1} WHERE id = ${tempPostId}`);
+        
+        console.log("before: " + detailData);
         //익명 여부 처리
+        let postAuthorInfo = await detailData.getUser()
+        let finalAuthor = postAuthorInfo.nick
+        if(detailData.isAnonymous == true) finalAuthor = "익명"
+        detailData.dataValues["author"] = finalAuthor
+
+        console.log("after: " + detailData);
         return res.status(200).json(detailData)
 
     }catch(err){
@@ -317,7 +411,6 @@ exports.getSchoolNotiListPreview = async(req, res, next) => {
             //댓글 수
             nowPostObject["commentNum"] = e.Comments.length
 
-            console.log("type is: "+typeof (postInfo.createdAt));
             //작성 시간(createdAt)
             nowPostObject["createDate"] = toJSONLocal(postInfo.createdAt)
 
