@@ -1,5 +1,5 @@
 const {Op} = require('sequelize')
-const {User, Board, Post, Comment, sequelize} = require("../../models");
+const {User, Board, Post, Comment, sequelize, Major} = require("../../models");
 
 const majorNameObject = {
     "001": "컴퓨터과학과",
@@ -402,6 +402,8 @@ exports.getSchoolNotiListPreview = async(req, res, next) => {
         schoolNotiList.forEach(e => {
             const postInfo = e.dataValues
             const nowPostObject = Object()
+            //postId
+            nowPostObject["id"] = postInfo.id
             //제목
             nowPostObject["title"] = postInfo.title
             //닉네임
@@ -418,6 +420,38 @@ exports.getSchoolNotiListPreview = async(req, res, next) => {
         });
         console.log(finalReqsList);
         res.status(200).json(finalReqsList)
+
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+}
+
+exports.getUserMajors = async(req, res, next) => {
+    try {
+        if(!req.headers.email) return res.status(400).json({
+            code: 400,
+            message: "요청 문법 틀림"
+        })
+        //사용자 미존재
+        const reqEmail = req.headers.email;
+        const reqUser = await checkUserExist(reqEmail);
+        if(reqUser === false) return res.status(401).json({
+            code: 401,
+            message: "잘못된 사용자 입니다"
+        })
+
+        const userMajorList = await reqUser.getMajors()
+        console.log(userMajorList)
+        let finalResMajor = Array()
+        userMajorList.forEach(e => {
+            majorInfo = e.dataValues
+            let nowNajorObject = Object()
+            const nowRealMajorString = majorInfo.id.toString().padStart(3, "0").toString()
+            nowNajorObject[nowRealMajorString] = majorNameObject[nowRealMajorString]
+            finalResMajor.push(nowNajorObject)
+        });
+        res.status(200).json(finalResMajor)
 
     } catch (err) {
         console.error(err);

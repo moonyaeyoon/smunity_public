@@ -1,7 +1,9 @@
 const express = require('express');
-const {createNewPost, getBoardList, getBoardDatail, updatePost, deletePost, getSchoolNotiListPreview} = require("../services/board/boardService")
+const {createNewPost, getBoardList, getBoardDatail, updatePost, deletePost, getSchoolNotiListPreview, getUserMajors} = require("../services/board/boardService")
 
 const router = express.Router();
+
+router.get("/usermajors", getUserMajors)
 
 router.get("/school/noti/list", getSchoolNotiListPreview)
 
