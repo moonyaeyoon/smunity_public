@@ -41,6 +41,12 @@ exports.login = (req, res, next) => {
       return next(authError);
     }
     if (!user) {
+      if(info.message == 'Missing credentials'){
+        return res.status(401).json({
+          code: 401,
+          message: info.message
+        })
+      }
       return res.status(400).json({
         code: 400,
         message: info.message
