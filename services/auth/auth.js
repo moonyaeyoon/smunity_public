@@ -43,7 +43,7 @@ exports.login = (req, res, next) => {
     if (!user) {
       return res.status(400).json({
         code: 400,
-        message: info
+        message: info.message
       })
     }
     return req.login(user, (loginError) => {
@@ -57,7 +57,7 @@ exports.login = (req, res, next) => {
         message: "로그인 성공"
       });
     });
-  })(req, res, next); // 미들웨어 내의 미들웨어에는 (req, res, next)를 붙입니다.
+  })(req, res, next);
 };
 
 exports.logout = (req, res) => {
