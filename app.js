@@ -29,6 +29,7 @@ sequelize
     Major.create({ majorName: "컴퓨터과학과" }); // 001
     Major.create({ majorName: "휴먼지능정보공학전공" }); // 002
     Major.create({ majorName: "경제학과" }); // 003
+    Major.create({ majorName: "상명대학교" }); // 004
 
     //자유 게시판: 001, 비밀 게시판: 002, 공지게시판: 003
 
@@ -60,6 +61,62 @@ sequelize
       isFree: true,
       MajorId: 2,
     });
+    Board.create({
+      boardId: "002002",
+      boardName: "Human Secret Board",
+      isCanAnonymous: true,
+      isFree: true,
+      MajorId: 2,
+    });
+    Board.create({
+      boardId: "002003",
+      boardName: "Human Noti Board",
+      isCanAnonymous: false,
+      isFree: false,
+      MajorId: 2,
+    });
+    Board.create({
+      boardId: "003001",
+      boardName: "Economics Free Board",
+      isCanAnonymous: false,
+      isFree: true,
+      MajorId: 3,
+    });
+    Board.create({
+      boardId: "003002",
+      boardName: "Economics Secret Board",
+      isCanAnonymous: true,
+      isFree: true,
+      MajorId: 3,
+    });
+    Board.create({
+      boardId: "003003",
+      boardName: "Economics Noti Board",
+      isCanAnonymous: false,
+      isFree: false,
+      MajorId: 3,
+    });
+    Board.create({
+      boardId: "004001",
+      boardName: "School Free Board",
+      isCanAnonymous: false,
+      isFree: true,
+      MajorId: 4,
+    });
+    Board.create({
+      boardId: "004002",
+      boardName: "School Secret Board",
+      isCanAnonymous: true,
+      isFree: true,
+      MajorId: 4,
+    });
+    Board.create({
+      boardId: "004003",
+      boardName: "School Noti Board",
+      isCanAnonymous: false,
+      isFree: false,
+      MajorId: 4,
+    });
 
     const user1 = await User.create({
       email: "first@first.com",
@@ -72,6 +129,11 @@ sequelize
     user1.addBoard("001002");
     user1.addMajor(2);
     user1.addBoard("002001");
+    user1.addBoard("002002");
+    user1.addBoard("002003");
+    user1.addMajor(4);
+    user1.addBoard("004001");
+    user1.addBoard("004002");
 
     const user2 = await User.create({
       email: "second@second.com",
@@ -83,6 +145,47 @@ sequelize
     user2.addBoard("001001");
     user2.addBoard("001002");
     user2.addBoard("001003"); //컴과 공지 게시판 쌉가능
+    user2.addMajor(4);
+    user2.addBoard("004001");
+    user2.addBoard("004002");
+    
+
+    const user3 = await User.create({
+      email: "eco@eco.com",
+      nick: "ecoNick",
+      password: "ecoPW",
+      provider: "local",
+    });
+    user3.addMajor(3);
+    user3.addBoard("003001");
+    user3.addBoard("003002");
+    user3.addBoard("003003"); //경제학과 공지 게시판 쌉가능
+    user3.addMajor(4);
+    user3.addBoard("004001");
+    user3.addBoard("004002");
+
+    const superUser = await User.create({
+      email: "super@super.com",
+      nick: "학생복지팀",
+      password: "superPW",
+      provider: "local",
+    });
+    superUser.addMajor(1);
+    superUser.addMajor(2);
+    superUser.addMajor(3);
+    superUser.addMajor(4);
+    superUser.addBoard("001001");
+    superUser.addBoard("001002");
+    superUser.addBoard("001003"); //컴과 공지 게시판 쌉가능
+    superUser.addBoard("002001");
+    superUser.addBoard("002002");
+    superUser.addBoard("002003"); //휴먼과 공지 게시판 쌉가능
+    superUser.addBoard("003001");
+    superUser.addBoard("003002");
+    superUser.addBoard("003003"); //경제학과 공지 게시판 쌉가능
+    superUser.addBoard("004001");
+    superUser.addBoard("004002");
+    superUser.addBoard("004003"); //학교 공지 게시판 쌉가능
   })
   .catch((err) => {
     console.error(err);

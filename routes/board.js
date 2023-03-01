@@ -1,14 +1,18 @@
 const express = require('express');
-const {createNewPost, getBoardList, getBoardDatail, updatePost, } = require("../services/board/boardService")
+const {createNewPost, getBoardList, getBoardDatail, updatePost, deletePost, getSchoolNotiListPreview} = require("../services/board/boardService")
 
 const router = express.Router();
 
-router.post("/create", createNewPost)
+router.get("/school/noti/list", getSchoolNotiListPreview)
 
-router.get("/:majorId/:boardId/list", getBoardList)
+router.post("/create", createNewPost)
 
 router.get("/detail/:postId", getBoardDatail)
 
 router.patch("/update/:postId", updatePost)
+
+router.delete("/delete/:postId", deletePost)
+
+router.get("/:majorId/:boardId/list", getBoardList)
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const {Op} = require('sequelize')
-const {User, Board, Post, Comment} = require("../../models");
+const {User, Board, Post, Comment, sequelize} = require("../../models");
 
 const checkUserExist = async(userEmail) => {
     const reqUser = await User.findOne({
@@ -10,6 +10,12 @@ const checkUserExist = async(userEmail) => {
     //사용자 미존재
     if(reqUser === null) return false
     else return reqUser
+}
+
+const toJSONLocal = (date) => {
+    var local = new Date(date);
+    local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return local.toJSON().slice(0, 10);
 }
 
 exports.createNewPost = async(req, res, next) => {
@@ -174,6 +180,12 @@ exports.getBoardDatail = async(req, res, next) => {
             }
         });
 
+
+        const env = process.env.NODE_ENV || 'development';
+        const config = require('../../config/config')[env];
+        const oldViews = detailData.views
+        const tempPostId = detailData.id
+        const [result, metadata] = await sequelize.query(`UPDATE ${config.database}.posts SET views = ${oldViews + 1} WHERE id = ${tempPostId}`);
         //익명 여부 처리
         return res.status(200).json(detailData)
 
@@ -222,12 +234,101 @@ exports.updatePost = async(req, res, next) => {
             where: {id: req.params.postId}
         })
         return res.status(200).json({
-            code: 201,
+            code: 200,
             message: "게시글 수정 성공"
         })
         
     } catch (error) {
         console.error(err);
         next(error)
+    }
+}
+
+exports.deletePost = async(req, res, next) => {
+    try {
+        if(!req.headers.email || !req.params.postId) return res.status(400).json({
+            code: 400,
+            message: "요청 문법 틀림"
+        })
+    
+        //사용자 미존재
+        const reqEmail = req.headers.email;
+        const reqUser = await checkUserExist(reqEmail);
+        if(reqUser === false) return res.status(401).json({
+            code: 401,
+            message: "잘못된 사용자 입니다"
+        })
+    
+        //게시글 존재 여부
+        const reqPost = await Post.findOne({
+            where: {
+                id: req.params.postId
+            }
+        })
+        if(!reqPost) return res.status(402).json({
+            code: 402,
+            message: "게시글을 찾지 못했습니다"
+        })
+    
+        //작성자 != 요청자
+        if(reqPost.UserId != reqUser.id) return res.status(403).json({
+            code: 403,
+            message: "게시글 수정 권한 없음"
+        })
+    
+        await Post.destroy({
+            where: {id: req.params.postId}
+        })
+        return res.status(200).json({
+            code: 200,
+            message: "게시글 삭제 성공"
+        })
+    } catch (err) {
+        console.error(err);
+        next(err)
+    }
+}
+
+exports.getSchoolNotiListPreview = async(req, res, next) => {
+    try {
+        const showListNum = 4;
+        const finalReqsList = Array()
+        const schoolNotiList = await Post.findAll({
+            where: {
+                BoardBoardId: "004003"
+            },
+            include: [{
+                model: User, 
+            }, 
+            {
+                model: Comment, 
+            }],
+            limit: showListNum
+        })
+        console.log(schoolNotiList);
+        schoolNotiList.forEach(e => {
+            const postInfo = e.dataValues
+            const nowPostObject = Object()
+            //제목
+            nowPostObject["title"] = postInfo.title
+            //닉네임
+            nowPostObject["nickName"] = e.User.nick
+
+            //댓글 수
+            nowPostObject["commentNum"] = e.Comments.length
+
+            console.log("type is: "+typeof (postInfo.createdAt));
+            //작성 시간(createdAt)
+            nowPostObject["createDate"] = toJSONLocal(postInfo.createdAt)
+
+            finalReqsList.push(nowPostObject)
+            
+        });
+        console.log(finalReqsList);
+        res.status(200).json(finalReqsList)
+
+    } catch (err) {
+        console.error(err);
+        next(err);
     }
 }
