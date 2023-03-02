@@ -6,14 +6,14 @@ const session = require("express-session");
 const nunjucks = require("nunjucks");
 const dotenv = require("dotenv");
 const passport = require("passport");
-const passportConfig = require("./passport")
+const passportConfig = require("./passport");
 
 dotenv.config();
-const pageRouter = require('./routes/page');
-const {sequelize} = require('./models');
-const Major = require('./models/major');
-const Board = require('./models/board');
-const User = require('./models/user');
+const pageRouter = require("./routes/page");
+const { sequelize } = require("./models");
+const Major = require("./models/major");
+const Board = require("./models/board");
+const User = require("./models/user");
 
 const app = express();
 passportConfig();
@@ -159,8 +159,8 @@ app.use(
     saveUninitialized: false,
     secret: process.env.COOKIE_SECRET,
     cookie: {
-        httpOnly: false,
-        secure: false,
+      httpOnly: false,
+      secure: false,
     },
   })
 );
@@ -169,7 +169,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 const cors = require("cors");
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://api.gwabang.site:8001",
+    credentials: true,
+  })
+);
 
 app.use("/", pageRouter);
 

@@ -144,12 +144,13 @@ exports.login = async(req, res, next) => {
       console.log(user.email);
       const alist = await user.getMajors()
       console.log("cookie: " + req.headers.cookie);
+      // res.setHeader("Access-Control-Allow-Credentials", true);
       return res.status(200).json({
         code:200,
         message: "로그인 성공",
         nickname: user.nick,
         email: user.email,
-        saveCookie: req.headers.cookie,
+        // saveCookie: await res.headers.cookie,
         majorlist: alist,
       });
     });
