@@ -448,7 +448,8 @@ exports.getUserMajors = async(req, res, next) => {
             majorInfo = e.dataValues
             let nowNajorObject = Object()
             const nowRealMajorString = majorInfo.id.toString().padStart(3, "0").toString()
-            nowNajorObject[nowRealMajorString] = majorNameObject[nowRealMajorString]
+            nowNajorObject["majorId"] = nowRealMajorString
+            nowNajorObject["majorName"] = majorNameObject[nowRealMajorString]
             finalResMajor.push(nowNajorObject)
         });
         res.status(200).json(finalResMajor)
