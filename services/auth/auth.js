@@ -4,10 +4,30 @@ const User = require('../../models/user');
 const Major = require('../../models/major');
 const Board = require('../../models/board');
 
+const majorNameObject = {
+  "001": "컴퓨터과학과",
+  "002": "휴먼지능정보공학전공",
+  "003": "경제학과",
+  "004": "상명대학교",
+}
+
+const majorCodeObject = {
+  "컴퓨터과학과": "001",
+  "휴먼지능정보공학전공": "002",
+  "경제학과": "003",
+  "상명대학교": "004",
+}
+
+const boardNameObject = {
+  "001": "자유게시판",
+  "002": "비밀게시판",
+  "003": "공지게시판",
+}
+
 exports.join = async (req, res, next) => {
-  const { email, nick, password } = req.body;
+  const { email, nick, password, majorname } = req.body;
   try {
-    if(!email || !nick || !password ){
+    if(!email || !nick || !password || !majorname){
       return res.status(401).json({
         code: 401,
         message: "양식에 맞지 않음"
@@ -20,27 +40,29 @@ exports.join = async (req, res, next) => {
         message: "이미 가입된 정보가 있음"
       });
     }
+
+    //majorName이상시 반환
+    let majorCode = ""
+    if(Object.keys(majorCodeObject).includes(majorname)){
+      majorCode = majorCodeObject[majorname]
+    }else return res.status(402).json({
+      code: 402,
+      message: "전공 이름 불일치"
+    })
+
     const hash = await bcrypt.hash(password, 12);
     const newUser = await User.create({
       email,
       nick,
       password: hash,
     });
-    newUser.addMajor(1);
-    newUser.addMajor(2);
-    newUser.addMajor(3);
+    newUser.addMajor(Number(majorCode));
+    newUser.addBoard(majorCode + "001");
+    newUser.addBoard(majorCode + "002");
     newUser.addMajor(4);
-    newUser.addBoard("001001");
-    newUser.addBoard("001002");
-    newUser.addBoard("001003"); //컴과 공지 게시판 쌉가능
-    newUser.addBoard("002001");
-    newUser.addBoard("002002");
-    newUser.addBoard("003001");
-    newUser.addBoard("003002");
-    newUser.addBoard("003003"); //경제학과 공지 게시판 쌉가능
-    newUser.addBoard("004001");
-    newUser.addBoard("004002");
-    newUser.addBoard("004003"); //학교 공지 게시판 쌉가능
+    newUser.addBoard("004001")
+    newUser.addBoard("004002")
+    
     return res.status(201).json({
         code: 201,
         message: "회원가입 완료"
