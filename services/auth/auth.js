@@ -53,6 +53,7 @@ exports.checkEmail = async(req, res, next) => {
 }
 
 exports.join = async (req, res, next) => {
+  // console.log(req);
   const { email, nick, password, majornames } = req.body;
   try {
     if(!email || !nick || !password || !majornames){
@@ -115,7 +116,9 @@ exports.join = async (req, res, next) => {
   }
 }
 
-exports.login = (req, res, next) => {
+exports.login = async(req, res, next) => {
+  try {
+    // console.log(req);
   passport.authenticate('local', (authError, user, info) => {
     if (authError) {
       console.error(authError);
@@ -133,18 +136,27 @@ exports.login = (req, res, next) => {
         message: info.message
       })
     }
-    return req.login(user, (loginError) => {
+    return req.login(user, async(loginError) => {
       if (loginError) {
         console.error(loginError);
         return next(loginError);
       }
       console.log(user.email);
+      const alist = await user.getMajors()
+
       return res.status(200).json({
         code:200,
-        message: "로그인 성공"
+        message: "로그인 성공",
+        nickname: user.nick,
+        email: user.email,
+        majorlist: alist
       });
     });
   })(req, res, next);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
 };
 
 exports.logout = (req, res) => {
