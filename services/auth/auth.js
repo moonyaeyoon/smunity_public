@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 const User = require('../../models/user');
+const Major = require('../../models/major');
+const Board = require('../../models/board');
 
 exports.join = async (req, res, next) => {
   const { email, nick, password } = req.body;
@@ -19,15 +21,31 @@ exports.join = async (req, res, next) => {
       });
     }
     const hash = await bcrypt.hash(password, 12);
-    await User.create({
+    const newUser = await User.create({
       email,
       nick,
       password: hash,
     });
+    newUser.addMajor(1);
+    newUser.addMajor(2);
+    newUser.addMajor(3);
+    newUser.addMajor(4);
+    newUser.addBoard("001001");
+    newUser.addBoard("001002");
+    newUser.addBoard("001003"); //컴과 공지 게시판 쌉가능
+    newUser.addBoard("002001");
+    newUser.addBoard("002002");
+    newUser.addBoard("003001");
+    newUser.addBoard("003002");
+    newUser.addBoard("003003"); //경제학과 공지 게시판 쌉가능
+    newUser.addBoard("004001");
+    newUser.addBoard("004002");
+    newUser.addBoard("004003"); //학교 공지 게시판 쌉가능
     return res.status(201).json({
         code: 201,
         message: "회원가입 완료"
-    })
+    });
+    
   } catch (error) {
     console.error(error);
     return next(error);

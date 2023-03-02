@@ -6,11 +6,14 @@ const session = require("express-session");
 const nunjucks = require("nunjucks");
 const dotenv = require("dotenv");
 const passport = require("passport");
+const passportConfig = require("./passport")
 
 dotenv.config();
 const pageRouter = require('./routes/page');
 const {sequelize} = require('./models');
 const Major = require('./models/major');
+const Board = require('./models/board');
+const User = require('./models/user');
 
 const app = express();
 passportConfig();
@@ -215,7 +218,6 @@ const cors = require("cors");
 app.use(cors());
 
 app.use("/", pageRouter);
-app.use('/auth', authRouter);
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);

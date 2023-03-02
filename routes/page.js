@@ -5,9 +5,10 @@ const router = express.Router();
 const { sequelize } = require("../models");
 
 const BoardRouter = require("./board")
+const AuthRouter = require("./auth")
 
 router.use((req, res, next) => {
-  res.locals.user = null;
+  res.locals.user = req.user;
   res.locals.followerCount = 0;
   res.locals.followingCount = 0;
   res.locals.followerIdList = [];
@@ -15,6 +16,8 @@ router.use((req, res, next) => {
 });
 
 router.use("/board", BoardRouter);
+
+router.use("/auth", AuthRouter)
 
 router.get("/", (req, res, next) => {
   res.send("랜딩페이지");
