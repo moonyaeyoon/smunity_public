@@ -4,7 +4,7 @@ const User = require('../../models/user');
 const Major = require('../../models/major');
 const Board = require('../../models/board');
 
-const majorNameObject = {
+const majorNamesObject = {
   "001": "컴퓨터과학과",
   "002": "휴먼지능정보공학전공",
   "003": "경제학과",
@@ -25,9 +25,9 @@ const boardNameObject = {
 }
 
 exports.join = async (req, res, next) => {
-  const { email, nick, password, majorname } = req.body;
+  const { email, nick, password, majornames } = req.body;
   try {
-    if(!email || !nick || !password || !majorname){
+    if(!email || !nick || !password || !majornames){
       return res.status(401).json({
         code: 401,
         message: "양식에 맞지 않음"
@@ -41,24 +41,36 @@ exports.join = async (req, res, next) => {
       });
     }
 
-    //majorName이상시 반환
-    let majorCode = ""
-    if(Object.keys(majorCodeObject).includes(majorname)){
-      majorCode = majorCodeObject[majorname]
-    }else return res.status(402).json({
-      code: 402,
-      message: "전공 이름 불일치"
-    })
+    //majorNames이상시 반환
+    let majorCode = Array();
+    const majorNameList = majornames.split(",")
+    let isWrong = false
+    majorNameList.forEach(e => {
+      if(Object.keys(majorCodeObject).includes(e)){
+        majorCode.push(majorCodeObject[e]); 
+      }else {
+        isWrong = true
+        return res.status(402).json({
+          code: 402,
+          message: "전공 이름 불일치: " + e
+        });
+      } 
+    });
 
+    if(isWrong) return; //다음 코드 실행하지 않기 위함
+    
     const hash = await bcrypt.hash(password, 12);
     const newUser = await User.create({
       email,
       nick,
       password: hash,
     });
-    newUser.addMajor(Number(majorCode));
-    newUser.addBoard(majorCode + "001");
-    newUser.addBoard(majorCode + "002");
+    majorCode.forEach(e => {
+      newUser.addMajor(Number(e));
+      newUser.addBoard(e + "001");
+      newUser.addBoard(e + "002");
+    })
+    
     newUser.addMajor(4);
     newUser.addBoard("004001")
     newUser.addBoard("004002")
