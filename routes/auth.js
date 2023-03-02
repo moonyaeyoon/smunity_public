@@ -2,9 +2,11 @@ const express = require('express');
 const passport = require('passport');
 
 const { isLoggedIn, isNotLoggedIn } = require('../middlewares');
-const { join, login, logout } = require('../services/auth/auth');
+const { checkEmail, join, login, logout } = require('../services/auth/auth');
 
 const router = express.Router();
+
+router.get('/checkemail', checkEmail);
 
 router.post('/join', isNotLoggedIn, join); 
 

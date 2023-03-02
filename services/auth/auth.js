@@ -24,6 +24,34 @@ const boardNameObject = {
   "003": "공지게시판",
 }
 
+exports.checkEmail = async(req, res, next) => {
+  try {
+    if(!req.headers.email){
+      return res.status(401).json({
+        code: 401,
+        message: "양식에 맞지 않음"
+      });
+    }
+    const reqEmail = req.headers.email;
+  
+    const exUser = await User.findOne({ where: { email: reqEmail } });
+    if (exUser) {
+      return res.status(400).json({
+        code: 400,
+        message: "이미 가입된 이메일입니다."
+      });
+    }else{
+      return res.status(200).json({
+        code: 200,
+        message: "가입이 가능한 이메일입니다."
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+}
+
 exports.join = async (req, res, next) => {
   const { email, nick, password, majornames } = req.body;
   try {
