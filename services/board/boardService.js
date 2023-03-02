@@ -32,14 +32,19 @@ const toJSONLocal = (date) => {
 
 exports.createNewPost = async(req, res, next) => {
     try{
-        if(!req.body.title || !req.body.content || !req.body.majorId || req.body.majorId.length != 3 || !req.body.boardId || req.body.boardId.length != 3){
+        if(!req.headers.email || !req.body.title || !req.body.content || !req.body.majorId || req.body.majorId.length != 3 || !req.body.boardId || req.body.boardId.length != 3){
             return res.status(400).json({
                 code: 400,
                 message: "요청 문법 틀림"
             })
         } 
 
-        const reqUser = req.user
+        const reqEmail = req.headers.email;
+        const reqUser = await checkUserExist(reqEmail);
+        if(reqUser === false) return res.status(401).json({
+            code: 401,
+            message: "잘못된 사용자 입니다"
+        })
 
         //사용자 권한 없음
         const reqBoardId = req.body.majorId + req.body.boardId
@@ -95,12 +100,17 @@ exports.createNewPost = async(req, res, next) => {
 
 exports.getBoardList = async(req, res, next) => {
     try {
-        if( !req.params.majorId || req.params.majorId.length != 3 || !req.params.boardId || req.params.boardId.length != 3) return res.status(400).json({
+        if( !req.headers.email || !req.params.majorId || req.params.majorId.length != 3 || !req.params.boardId || req.params.boardId.length != 3) return res.status(400).json({
             code: 400,
             message: "요청 문법 틀림"
         })
 
-        const reqUser = req.user
+        const reqEmail = req.headers.email;
+        const reqUser = await checkUserExist(reqEmail);
+        if(reqUser === false) return res.status(401).json({
+            code: 401,
+            message: "잘못된 사용자 입니다"
+        })
 
         //사용자 권한 없음
         let canRead = false
@@ -208,13 +218,17 @@ exports.getBoardList = async(req, res, next) => {
 
 exports.getBoardDatail = async(req, res, next) => {
     try{
-        if(!req.params.postId) return res.status(400).json({
+        if(!req.headers.email || !req.params.postId) return res.status(400).json({
             code: 400,
             message: "요청 문법 틀림"
         })
         //사용자 미존재
-        // const reqEmail = req.headers.email;
-        const reqUser = req.user
+        const reqEmail = req.headers.email;
+        const reqUser = await checkUserExist(reqEmail);
+        if(reqUser === false) return res.status(401).json({
+            code: 401,
+            message: "잘못된 사용자 입니다"
+        })
 
         //게시글 존재 여부
         const reqPost = await Post.findOne({
@@ -276,12 +290,18 @@ exports.getBoardDatail = async(req, res, next) => {
 
 exports.updatePost = async(req, res, next) => {
     try {
-        if(!req.params.postId || !req.body.title || !req.body.content) return res.status(400).json({
+        if(!req.headers.email || !req.params.postId || !req.body.title || !req.body.content) return res.status(400).json({
             code: 400,
             message: "요청 문법 틀림"
         })
 
-        const reqUser = req.user
+        //사용자 미존재
+        const reqEmail = req.headers.email;
+        const reqUser = await checkUserExist(reqEmail);
+        if(reqUser === false) return res.status(401).json({
+            code: 401,
+            message: "잘못된 사용자 입니다"
+        })
 
         //게시글 존재 여부
         const reqPost = await Post.findOne({
@@ -319,12 +339,18 @@ exports.updatePost = async(req, res, next) => {
 
 exports.deletePost = async(req, res, next) => {
     try {
-        if(!req.params.postId) return res.status(400).json({
+        if(!req.headers.email ||!req.params.postId) return res.status(400).json({
             code: 400,
             message: "요청 문법 틀림"
         })
 
-        const reqUser = req.user
+        //사용자 미존재
+        const reqEmail = req.headers.email;
+        const reqUser = await checkUserExist(reqEmail);
+        if(reqUser === false) return res.status(401).json({
+            code: 401,
+            message: "잘못된 사용자 입니다"
+        })
     
         //게시글 존재 여부
         const reqPost = await Post.findOne({
@@ -403,7 +429,17 @@ exports.getSchoolNotiListPreview = async(req, res, next) => {
 
 exports.getUserMajors = async(req, res, next) => {
     try {
-        const reqUser = req.user
+        if(!req.headers.email) return res.status(400).json({
+            code: 400,
+            message: "요청 문법 틀림"
+        })
+        //사용자 미존재
+        const reqEmail = req.headers.email;
+        const reqUser = await checkUserExist(reqEmail);
+        if(reqUser === false) return res.status(401).json({
+            code: 401,
+            message: "잘못된 사용자 입니다"
+        })
 
         const userMajorList = await reqUser.getMajors()
         console.log(userMajorList)

@@ -159,7 +159,7 @@ app.use(
     saveUninitialized: false,
     secret: process.env.COOKIE_SECRET,
     cookie: {
-      httpOnly: false,
+      httpOnly: true,
       secure: false,
     },
   })
@@ -171,8 +171,8 @@ app.use(passport.session());
 const cors = require("cors");
 app.use(
   cors({
-    origin: "http://api.gwabang.site:8001",
-    credentials: true,
+    // origin: "http://localhost:3000",
+    // credentials: false,
   })
 );
 

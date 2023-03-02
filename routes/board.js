@@ -4,18 +4,18 @@ const {createNewPost, getBoardList, getBoardDatail, updatePost, deletePost, getS
 
 const router = express.Router();
 
-router.get("/usermajors", isLoggedIn, getUserMajors)
+router.get("/usermajors", getUserMajors)
 
 router.get("/school/noti/list", getSchoolNotiListPreview)
 
-router.post("/create", isLoggedIn, createNewPost)
+router.post("/create", createNewPost)
 
-router.get("/detail/:postId", isLoggedIn, getBoardDatail)
+router.get("/detail/:postId", getBoardDatail)
 
-router.patch("/update/:postId", isLoggedIn, updatePost)
+router.patch("/update/:postId", updatePost)
 
-router.delete("/delete/:postId", isLoggedIn, deletePost)
+router.delete("/delete/:postId", deletePost)
 
-router.get("/:majorId/:boardId/list", isLoggedIn, getBoardList)
+router.get("/:majorId/:boardId/list", getBoardList)
 
 module.exports = router;
