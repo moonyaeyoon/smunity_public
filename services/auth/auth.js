@@ -149,10 +149,11 @@ exports.login = async(req, res, next) => {
         message: "로그인 성공",
         nickname: user.nick,
         email: user.email,
-        majorlist: alist
+        saveCookie: req.headers.cookie,
+        majorlist: alist,
       });
     });
-  })(req, res, next);
+  }) (req, res, next);
   } catch (error) {
     console.error(error);
     next(error);
