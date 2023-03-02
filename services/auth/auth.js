@@ -88,6 +88,7 @@ exports.join = async (req, res, next) => {
     if(isWrong) return; //다음 코드 실행하지 않기 위함
     
     const hash = await bcrypt.hash(password, 12);
+    console.log("passwod hash is: "+ hash);
     const newUser = await User.create({
       email,
       nick,

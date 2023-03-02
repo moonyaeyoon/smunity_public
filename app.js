@@ -121,56 +121,10 @@ sequelize
       MajorId: 4,
     });
 
-    const user1 = await User.create({
-      email: "first@first.com",
-      nick: "firstNick",
-      password: "firstPW",
-      provider: "local",
-    });
-    user1.addMajor(1);
-    user1.addBoard("001001");
-    user1.addBoard("001002");
-    user1.addMajor(2);
-    user1.addBoard("002001");
-    user1.addBoard("002002");
-    user1.addBoard("002003");
-    user1.addMajor(4);
-    user1.addBoard("004001");
-    user1.addBoard("004002");
-
-    const user2 = await User.create({
-      email: "second@second.com",
-      nick: "secondNick",
-      password: "secondPW",
-      provider: "local",
-    });
-    user2.addMajor(1);
-    user2.addBoard("001001");
-    user2.addBoard("001002");
-    user2.addBoard("001003"); //컴과 공지 게시판 쌉가능
-    user2.addMajor(4);
-    user2.addBoard("004001");
-    user2.addBoard("004002");
-    
-
-    const user3 = await User.create({
-      email: "eco@eco.com",
-      nick: "ecoNick",
-      password: "ecoPW",
-      provider: "local",
-    });
-    user3.addMajor(3);
-    user3.addBoard("003001");
-    user3.addBoard("003002");
-    user3.addBoard("003003"); //경제학과 공지 게시판 쌉가능
-    user3.addMajor(4);
-    user3.addBoard("004001");
-    user3.addBoard("004002");
-
     const superUser = await User.create({
-      email: "super@super.com",
+      email: "super",
       nick: "학생복지팀",
-      password: "superPW",
+      password: "$2b$12$r3bjYP.fhSyEt1Ychg1i/OosBxb1IaUJsw9yPuVFbLyKgzQiZTiy2",
       provider: "local",
     });
     superUser.addMajor(1);
