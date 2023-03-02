@@ -143,7 +143,7 @@ exports.login = async(req, res, next) => {
       }
       console.log(user.email);
       const alist = await user.getMajors()
-
+      console.log("cookie: " + req.headers.cookie);
       return res.status(200).json({
         code:200,
         message: "로그인 성공",
