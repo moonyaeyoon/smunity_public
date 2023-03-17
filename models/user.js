@@ -3,14 +3,20 @@ const Sequelize = require('sequelize');
 module.exports = class User extends Sequelize.Model {
     static init(sequelize){
         return super.init({
-            email: {
-                type: Sequelize.STRING(40),
-                allowNull: true,
+            schoolId: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
                 unique: true,
             },
-            nick: {
-                type: Sequelize.STRING(15),
+            email: {
+                type: Sequelize.STRING(100),
                 allowNull: false,
+                unique: true,
+            },
+            nickname: {
+                type: Sequelize.STRING(100),
+                allowNull: false,
+                unique: true,
             },
             password: {
                 type: Sequelize.STRING(100),
@@ -21,12 +27,12 @@ module.exports = class User extends Sequelize.Model {
                 allowNull: false,
                 defaultValue: 'local',
             },
-            snsID: {
+            snsId: {
                 type: Sequelize.STRING(30),
                 allowNull: true,
             },
             profileImgUrl: {
-                type: Sequelize.STRING(1000),
+                type: Sequelize.STRING(500),
                 allowNull: true,
             }
         },{
@@ -41,9 +47,25 @@ module.exports = class User extends Sequelize.Model {
         });
     }
     static associate(db){
+        //Post관련
         db.User.hasMany(db.Post);
-        db.User.belongsToMany(db.Major, {through: 'UserMajor'});
+        db.User.belongsToMany(db.Post, {through: 'UserLikePosts'});
+        db.User.belongsToMany(db.Post, {through: 'UserUnlikePosts'});
+        db.User.belongsToMany(db.Post, {through: 'UserScrapPosts'});
+        db.User.belongsToMany(db.Post, {through: 'UserReportPosts'});
+
+        //댓글 관련
         db.User.hasMany(db.Comment);
-        db.User.belongsToMany(db.Board, {through: 'AllowBoardId'});
+        db.User.belongsToMany(db.Comment, {through: 'UserLikeComments'});
+        db.User.belongsToMany(db.Comment, {through: 'UserUnlikeComments'});
+        db.User.belongsToMany(db.Comment, {through: 'UserReportComments'});
+
+        //학과 관련
+        db.User.belongsToMany(db.Major, {through: 'UserMajors'});
+
+        //게시판 권한 관련
+        db.User.belongsToMany(db.Board, {through: 'AllowWriteBoards'});
+        db.User.belongsToMany(db.Board, {through: 'AllowReadBoards'});
+
     }
 }

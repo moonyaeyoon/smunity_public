@@ -4,15 +4,15 @@ module.exports = class Post extends Sequelize.Model {
     static init(sequelize){
         return super.init({
             title: {
-                type: Sequelize.STRING(200),
+                type: Sequelize.STRING(100),
                 allowNull: false,
             },
             content: {
-                type: Sequelize.STRING(1000),
+                type: Sequelize.STRING(2000),
                 allowNull: false,
             },
-            imgUrl: {
-                type: Sequelize.STRING(1000),
+            imgUrls: {
+                type: Sequelize.STRING(5000),
                 allowNull: true,
             },
             views: {
@@ -21,6 +21,21 @@ module.exports = class Post extends Sequelize.Model {
                 defaultValue: 0
             },
             likes: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                defaultValue: 0
+            },
+            unlikes: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                defaultValue: 0
+            },
+            scraps: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                defaultValue: 0
+            },
+            reports: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 defaultValue: 0
@@ -42,7 +57,16 @@ module.exports = class Post extends Sequelize.Model {
     }
     static associate(db){
         db.Post.belongsTo(db.User);
-        db.Post.hasMany(db.Comment);
+        db.Post.belongsTo(db.Major);
         db.Post.belongsTo(db.Board);
+
+        db.Post.hasMany(db.Comment);
+
+        //사용자 액션 관련
+        db.Post.belongsToMany(db.User, {through: 'UserLikePosts'})
+        db.Post.belongsToMany(db.User, {through: 'UserUnlikePosts'})
+        db.Post.belongsToMany(db.User, {through: 'UserScrapPosts'})
+        db.Post.belongsToMany(db.User, {through: 'UserReportPosts'})
+
     }
 }

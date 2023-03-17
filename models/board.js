@@ -3,12 +3,6 @@ const Sequelize = require('sequelize');
 module.exports = class board extends Sequelize.Model {
     static init(sequelize) {
         return super.init({
-            boardId: {
-                type: Sequelize.STRING(6),
-                allowNull: false,
-                primaryKey: true,
-                unique: true
-            },
             boardName: {
                 type: Sequelize.STRING(40),
                 allowNull: false,
@@ -17,7 +11,7 @@ module.exports = class board extends Sequelize.Model {
                 type: Sequelize.BOOLEAN,
                 allowNull: false,
             },
-            isFree: {
+            isNotice: {
                 type: Sequelize.BOOLEAN,
                 allowNull: false
             }
@@ -35,6 +29,9 @@ module.exports = class board extends Sequelize.Model {
     static associate(db){
         db.Board.belongsTo(db.Major);
         db.Board.hasMany(db.Post);
-        db.Board.belongsToMany(db.User, {through: 'AllowBoardId'});
+
+        //사용자 권한 관련
+        db.Board.belongsToMany(db.User, {through: 'AllowReadBoards'});
+        db.Board.belongsToMany(db.User, {through: 'AllowWriteBoards'});
     }
 }

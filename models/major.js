@@ -4,7 +4,7 @@ module.exports = class Major extends Sequelize.Model {
     static init(sequelize) {
         return super.init({
             majorName: {
-                type: Sequelize.STRING(40),
+                type: Sequelize.STRING(30),
                 allowNull: false,
             }
         },{
@@ -19,7 +19,7 @@ module.exports = class Major extends Sequelize.Model {
         })
     }
     static associate(db){
-        db.Major.belongsToMany(db.User, {through: 'UserMajor'});
+        db.Major.belongsToMany(db.User, {through: 'UserMajors'});
         db.Major.hasMany(db.Post);
         db.Major.hasMany(db.Board);
     }

@@ -10,7 +10,38 @@ module.exports = class comment extends Sequelize.Model {
             isAnonymous: {
                 type: Sequelize.BOOLEAN,
                 allowNull: false,
-            }
+            },
+            groupId: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
+            level: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
+            childs: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
+            parentId: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
+            likes: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                defaultValue: 0
+            },
+            unlikes: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                defaultValue: 0
+            },
+            reports: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                defaultValue: 0
+            },
         },{
             sequelize,
             timestamps: true,
@@ -24,7 +55,11 @@ module.exports = class comment extends Sequelize.Model {
     }
     static associate(db){
         db.Comment.belongsTo(db.User);
-        // db.Comment.hasMany(db.Post);
         db.Comment.belongsTo(db.Post);
+
+        //사용자 액션 관련
+        db.Comment.belongsToMany(db.User, {through: 'UserLikeComments'})
+        db.Comment.belongsToMany(db.User, {through: 'UserUnlikeComments'})
+        db.Comment.belongsToMany(db.User, {through: 'UserReportComments'})
     }
 }
