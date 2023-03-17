@@ -24,7 +24,7 @@ nunjucks.configure("views", {
   watch: true,
 });
 
-const isResetDB = true
+const isResetDB = false
 
 sequelize
   .sync({ force: isResetDB })
@@ -115,7 +115,7 @@ const resetDB = async() => {
     }
 
     const superUser = await User.create({
-      schoolId: 193712345,
+      schoolId: "193712345",
       email: "super",
       nickname: "학생복지팀",
       password: "$2b$12$r3bjYP.fhSyEt1Ychg1i/OosBxb1IaUJsw9yPuVFbLyKgzQiZTiy2",
