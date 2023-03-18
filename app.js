@@ -23,7 +23,7 @@ nunjucks.configure('views', {
     watch: true,
 });
 
-const IS_RESET_DB = false;
+const IS_RESET_DB = true;
 
 sequelize
     .sync({ force: IS_RESET_DB })

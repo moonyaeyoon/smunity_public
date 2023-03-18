@@ -1,5 +1,10 @@
 const bcrypt = require('bcrypt');
 const passport = require('passport');
+const dotenv = require('dotenv');
+const RES_ERROR_JSON = require('../../constants/resErrorJson');
+const SMU_STUDENT_EMAIL_DOMAIN = process.env.SMU_STUDENT_EMAIL_DOMAIN;
+const PASSWORD_SALT_OR_ROUNDS = process.env.PASSWORD_SALT_OR_ROUNDS;
+
 const User = require('../../models/user');
 const Major = require('../../models/major');
 const Board = require('../../models/board');
@@ -24,27 +29,17 @@ const boardNameObject = {
     '003': '공지게시판',
 };
 
-exports.checkEmail = async (req, res, next) => {
+exports.checkSchoolId = async (req, res, next) => {
     try {
-        if (!req.headers.email) {
-            return res.status(401).json({
-                code: 401,
-                message: '양식에 맞지 않음',
-            });
+        if (!req.headers.school_id) {
+            return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
-        const reqEmail = req.headers.email;
 
-        const exUser = await User.findOne({ where: { email: reqEmail } });
-        if (exUser) {
-            return res.status(400).json({
-                code: 400,
-                message: '이미 가입된 이메일입니다.',
-            });
+        const EX_USER = await User.findOne({ where: { schoolId: req.headers.school_id } });
+        if (EX_USER) {
+            return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         } else {
-            return res.status(200).json({
-                code: 200,
-                message: '가입이 가능한 이메일입니다.',
-            });
+            return res.status(RES_ERROR_JSON.USER_NOT_EXISTS.status_code).json(RES_ERROR_JSON.USER_NOT_EXISTS.res_json);
         }
     } catch (err) {
         console.error(err);
@@ -53,62 +48,28 @@ exports.checkEmail = async (req, res, next) => {
 };
 
 exports.join = async (req, res, next) => {
-    // console.log(req);
-    const { email, nick, password, majornames } = req.body;
+    const { school_id, nickname, password } = req.body;
     try {
-        if (!email || !nick || !password || !majornames) {
-            return res.status(401).json({
-                code: 401,
-                message: '양식에 맞지 않음',
-            });
-        }
-        const exUser = await User.findOne({ where: { email } });
-        if (exUser) {
-            return res.status(400).json({
-                code: 400,
-                message: '이미 가입된 정보가 있음',
-            });
+        if (!school_id || !nickname || !password) {
+            return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
 
-        //majorNames이상시 반환
-        let majorCode = Array();
-        const majorNameList = majornames.split(',');
-        let isWrong = false;
-        majorNameList.forEach((e) => {
-            if (Object.keys(majorCodeObject).includes(e)) {
-                majorCode.push(majorCodeObject[e]);
-            } else {
-                isWrong = true;
-                return res.status(402).json({
-                    code: 402,
-                    message: '전공 이름 불일치: ' + e,
-                });
-            }
+        const EX_USER = await User.findOne({ where: { schoolId: school_id } });
+        if (EX_USER) {
+            return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
+        }
+
+        const NEW_USER_EMAIL = `${school_id}@${SMU_STUDENT_EMAIL_DOMAIN}`;
+        const NEW_USER_PASSWORD_HASH = await bcrypt.hash(password, Number(PASSWORD_SALT_OR_ROUNDS));
+        console.log('passwod hash is: ' + NEW_USER_PASSWORD_HASH);
+        const NEW_USER = await User.create({
+            schoolId: school_id,
+            email: NEW_USER_EMAIL,
+            nickname,
+            password: NEW_USER_PASSWORD_HASH,
         });
 
-        if (isWrong) return; //다음 코드 실행하지 않기 위함
-
-        const hash = await bcrypt.hash(password, 12);
-        console.log('passwod hash is: ' + hash);
-        const newUser = await User.create({
-            email,
-            nick,
-            password: hash,
-        });
-        majorCode.forEach((e) => {
-            newUser.addMajor(Number(e));
-            newUser.addBoard(e + '001');
-            newUser.addBoard(e + '002');
-        });
-
-        newUser.addMajor(4);
-        newUser.addBoard('004001');
-        newUser.addBoard('004002');
-
-        return res.status(201).json({
-            code: 201,
-            message: '회원가입 완료',
-        });
+        return res.status(RES_ERROR_JSON.ADD_USER_SUCCESS.status_code).json(RES_ERROR_JSON.ADD_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
         return next(error);
