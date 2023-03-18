@@ -7,11 +7,8 @@ const Major = require('./major');
 const Post = require('./post');
 const User = require('./user');
 
-
 const db = {};
-const sequelize = new Sequelize(
-    config.database, config.username, config.password, config,
-);
+const sequelize = new Sequelize(config.database, config.username, config.password, config);
 
 db.sequelize = sequelize;
 db.Board = Board;
@@ -20,13 +17,11 @@ db.Major = Major;
 db.Post = Post;
 db.User = User;
 
-
 Board.init(sequelize);
 Comment.init(sequelize);
 Major.init(sequelize);
 Post.init(sequelize);
 User.init(sequelize);
-
 
 Board.associate(db);
 Comment.associate(db);
