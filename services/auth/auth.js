@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
 const passport = require('passport');
-const dotenv = require('dotenv');
 const RES_ERROR_JSON = require('../../constants/resErrorJson');
 const SMU_STUDENT_EMAIL_DOMAIN = process.env.SMU_STUDENT_EMAIL_DOMAIN;
 const PASSWORD_SALT_OR_ROUNDS = process.env.PASSWORD_SALT_OR_ROUNDS;
@@ -8,26 +7,6 @@ const PASSWORD_SALT_OR_ROUNDS = process.env.PASSWORD_SALT_OR_ROUNDS;
 const User = require('../../models/user');
 const Major = require('../../models/major');
 const Board = require('../../models/board');
-
-const majorNamesObject = {
-    '001': '컴퓨터과학과',
-    '002': '휴먼지능정보공학전공',
-    '003': '경제학과',
-    '004': '상명대학교',
-};
-
-const majorCodeObject = {
-    컴퓨터과학과: '001',
-    휴먼지능정보공학전공: '002',
-    경제학과: '003',
-    상명대학교: '004',
-};
-
-const boardNameObject = {
-    '001': '자유게시판',
-    '002': '비밀게시판',
-    '003': '공지게시판',
-};
 
 exports.checkSchoolId = async (req, res, next) => {
     try {
