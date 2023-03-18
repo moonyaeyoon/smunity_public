@@ -2,11 +2,11 @@ const express = require('express');
 const passport = require('passport');
 
 const { isLoggedIn, isNotLoggedIn } = require('../middlewares');
-const { checkEmail, join, login, logout } = require('../services/auth/auth');
+const { checkSchoolId, join, login, logout } = require('../services/auth/auth');
 
 const router = express.Router();
 
-router.get('/checkemail', checkEmail);
+router.get('/check_school_id', checkSchoolId);
 
 router.post('/join', isNotLoggedIn, join);
 
