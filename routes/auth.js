@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.get('/checkemail', checkEmail);
 
-router.post('/join', isNotLoggedIn, join); 
+router.post('/join', isNotLoggedIn, join);
 
 router.post('/login', isNotLoggedIn, login);
 
