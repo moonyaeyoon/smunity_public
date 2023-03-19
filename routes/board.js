@@ -1,5 +1,5 @@
 const express = require('express');
-const { isLoggedIn, isNotLoggedIn } = require('../middlewares');
+const { verifyAToken } = require('../middlewares');
 const {
     createNewPost,
     getBoardList,
@@ -12,7 +12,7 @@ const {
 
 const router = express.Router();
 
-router.get('/usermajors', getUserMajors);
+router.get('/usermajors', verifyAToken, getUserMajors);
 
 router.get('/school/noti/list', getSchoolNotiListPreview);
 

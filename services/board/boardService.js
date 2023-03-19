@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, NOW } = require('sequelize');
 const { User, Board, Post, Comment, sequelize, Major } = require('../../models');
 
 const majorNameObject = {
@@ -468,32 +468,22 @@ exports.getSchoolNotiListPreview = async (req, res, next) => {
 
 exports.getUserMajors = async (req, res, next) => {
     try {
-        if (!req.headers.email)
-            return res.status(400).json({
-                code: 400,
-                message: '요청 문법 틀림',
-            });
-        //사용자 미존재
-        const reqEmail = req.headers.email;
-        const reqUser = await checkUserExist(reqEmail);
-        if (reqUser === false)
-            return res.status(401).json({
-                code: 401,
-                message: '잘못된 사용자 입니다',
-            });
-
-        const userMajorList = await reqUser.getMajors();
-        console.log(userMajorList);
-        let finalResMajor = Array();
-        userMajorList.forEach((e) => {
-            majorInfo = e.dataValues;
-            let nowNajorObject = Object();
-            const nowRealMajorString = majorInfo.id.toString().padStart(3, '0').toString();
-            nowNajorObject['majorId'] = nowRealMajorString;
-            nowNajorObject['majorName'] = majorNameObject[nowRealMajorString];
-            finalResMajor.push(nowNajorObject);
-        });
-        res.status(200).json(finalResMajor);
+        const USER_ID = res.locals.decodes.user_id;
+        const NOW_USER = await User.findOne({ where: { id: USER_ID } });
+        console.log(NOW_USER);
+        return res.send(NOW_USER);
+        // const userMajorList = await NOW_USER.getMajors();
+        // console.log(userMajorList);
+        // let finalResMajor = Array();
+        // userMajorList.forEach((e) => {
+        //     majorInfo = e.dataValues;
+        //     let nowNajorObject = Object();
+        //     const nowRealMajorString = majorInfo.id.toString().padStart(3, '0').toString();
+        //     nowNajorObject['majorId'] = nowRealMajorString;
+        //     nowNajorObject['majorName'] = majorNameObject[nowRealMajorString];
+        //     finalResMajor.push(nowNajorObject);
+        // });
+        // res.status(200).json(finalResMajor);
     } catch (err) {
         console.error(err);
         next(err);

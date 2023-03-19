@@ -1,17 +1,20 @@
 const express = require('express');
 const passport = require('passport');
 
-const { isLoggedIn, isNotLoggedIn } = require('../middlewares');
+const { verifyAToken } = require('../middlewares');
+
 const { checkSchoolId, join, login, logout } = require('../services/auth/auth');
 
 const router = express.Router();
 
 router.get('/check_school_id', checkSchoolId);
 
-router.post('/join', isNotLoggedIn, join);
+router.post('/join', join);
 
-router.post('/login', isNotLoggedIn, login);
+router.post('/login', login);
 
-router.get('/logout', isLoggedIn, logout);
+// router.get('/refresh_access_token', reSignAToken)
+
+// router.get('/logout', logout);
 
 module.exports = router;
