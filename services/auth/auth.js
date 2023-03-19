@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const passport = require('passport');
-const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
 const RES_ERROR_JSON = require('../../constants/resErrorJson');
 const SMU_STUDENT_EMAIL_DOMAIN = process.env.SMU_STUDENT_EMAIL_DOMAIN;
 const PASSWORD_SALT_OR_ROUNDS = process.env.PASSWORD_SALT_OR_ROUNDS;
@@ -8,25 +8,13 @@ const PASSWORD_SALT_OR_ROUNDS = process.env.PASSWORD_SALT_OR_ROUNDS;
 const User = require('../../models/user');
 const Major = require('../../models/major');
 const Board = require('../../models/board');
+const jwtUtil = require('../../util/jwtUtil');
+const { getSuccessSignInJson } = require('../../constants/resSuccessJson');
 
-const majorNamesObject = {
-    '001': '컴퓨터과학과',
-    '002': '휴먼지능정보공학전공',
-    '003': '경제학과',
-    '004': '상명대학교',
-};
-
-const majorCodeObject = {
-    컴퓨터과학과: '001',
-    휴먼지능정보공학전공: '002',
-    경제학과: '003',
-    상명대학교: '004',
-};
-
-const boardNameObject = {
-    '001': '자유게시판',
-    '002': '비밀게시판',
-    '003': '공지게시판',
+const checkSchoolIdExist = async (schoolId) => {
+    const EX_USER = await User.findOne({ where: { schoolId: schoolId } });
+    if (EX_USER) return EX_USER;
+    else return null;
 };
 
 exports.checkSchoolId = async (req, res, next) => {
@@ -35,11 +23,11 @@ exports.checkSchoolId = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
 
-        const EX_USER = await User.findOne({ where: { schoolId: req.headers.school_id } });
-        if (EX_USER) {
-            return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
+        const USER_INFO = await checkSchoolIdExist(req.headers.school_id);
+        if (USER_INFO === null) {
+            return res.status(RES_ERROR_JSON.USER_CAN_SIGNUP.status_code).json(RES_ERROR_JSON.USER_CAN_SIGNUP.res_json);
         } else {
-            return res.status(RES_ERROR_JSON.USER_NOT_EXISTS.status_code).json(RES_ERROR_JSON.USER_NOT_EXISTS.res_json);
+            return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         }
     } catch (err) {
         console.error(err);
@@ -77,57 +65,49 @@ exports.join = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
+    const { school_id, password } = req.body;
     try {
-        // console.log(req);
-        passport.authenticate('local', (authError, user, info) => {
-            if (authError) {
-                console.error(authError);
-                return next(authError);
-            }
-            if (!user) {
-                if (info.message == 'Missing credentials') {
-                    return res.status(401).json({
-                        code: 401,
-                        message: info.message,
-                    });
-                }
-                return res.status(400).json({
-                    code: 400,
-                    message: info.message,
-                });
-            }
-            return req.login(user, async (loginError) => {
-                if (loginError) {
-                    console.error(loginError);
-                    return next(loginError);
-                }
-                console.log(user.email);
-                const alist = await user.getMajors();
-                console.log('cookie: ' + req.headers.cookie);
-                // res.setHeader("Access-Control-Allow-Credentials", true);
-                res.status(200)
-                    .json({
-                        code: 200,
-                        message: '로그인 성공',
-                        nickname: user.nick,
-                        email: user.email,
-                        // saveCookie: await res.headers.cookie,
-                        majorlist: alist,
-                    })
-                    .send();
-            });
-        })(req, res, next);
+        if (!school_id || !password)
+            return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
+
+        const USER_INFO = await checkSchoolIdExist(school_id);
+        if (USER_INFO === null) return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
+
+        if (USER_INFO.password === null)
+            return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
+
+        const PASSWORD_COMPARE_RESULT = await bcrypt.compare(password, USER_INFO.password);
+        if (PASSWORD_COMPARE_RESULT) {
+            //success
+            const aToken = jwtUtil.signAToken(USER_INFO.id);
+            const rToken = jwtUtil.signRToken();
+
+            return res.status(201).json(getSuccessSignInJson(aToken, rToken));
+        } else {
+            return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
+        }
     } catch (error) {
         console.error(error);
         next(error);
     }
 };
 
-exports.logout = (req, res) => {
-    req.logout(() => {
-        res.status(200).json({
-            code: 200,
-            message: '로그아웃 성공',
-        });
-    });
-};
+// exports.refreshAToken = async (req, res, next) => {
+//     if (!req.headers.access_token || !req.headers.refresh_token)
+//         return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json)
+//     try {
+//         //aToken 디코딩
+//         const NOW_USER_ID = jwt.decode(req.headers.access_token)
+//         if(jwtUtil.verifyRToken(req.headers.refresh_token, NOW_USER_ID)){
+//             //rToken유효
+//             //send new aToken
+//             const NEW_ATOKEN = 
+//         }else{
+//             //rToken무효
+//             return //send error
+//         }
+//     } catch (error) {
+//         console.error(error);
+//     }
+// }
+
