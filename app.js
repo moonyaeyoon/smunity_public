@@ -7,6 +7,7 @@ const nunjucks = require('nunjucks');
 const dotenv = require('dotenv');
 const passport = require('passport');
 const passportConfig = require('./passport');
+const { createClient } = require('redis');
 
 dotenv.config();
 const pageRouter = require('./routes/page');
@@ -23,13 +24,15 @@ nunjucks.configure('views', {
     watch: true,
 });
 
-const IS_RESET_DB = true;
+// const IS_RESET_DB = process.argv[2] | "false";
+let isResetDB = false;
+if (process.argv[2] === 'reset') isResetDB = true;
 
 sequelize
-    .sync({ force: IS_RESET_DB })
+    .sync({ force: isResetDB })
     .then(async () => {
         console.log('데이터베이스 연결 성공');
-        if (IS_RESET_DB) resetDB();
+        if (isResetDB) resetDB();
     })
     .catch((err) => {
         console.error(err);
@@ -62,6 +65,9 @@ app.use(
         // credentials: false,
     })
 );
+
+const client = createClient();
+client.on('error', (err) => console.log('redis Error', err));
 
 app.use('/', pageRouter);
 

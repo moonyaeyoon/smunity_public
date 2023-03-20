@@ -7,8 +7,8 @@ const SUPER_ACCOUNT = RESET_DB_CONST.SUPER_ACCOUNT;
 const COMMON_BOARD_LIST = RESET_DB_CONST.COMMON_BOARD_LIST;
 const MAJOR_LIST = RESET_DB_CONST.MAJOR_LIST;
 
-const createMajorBoards = async(majorName, majorId) => {
-    COMMON_BOARD_LIST.forEach(async(BOARD_INFO) => {
+const createMajorBoards = async (majorName, majorId) => {
+    COMMON_BOARD_LIST.forEach(async (BOARD_INFO) => {
         await Board.create({
             boardName: `${majorName}-${BOARD_INFO.boardName}`,
             isCanAnonymous: BOARD_INFO.isCanAnonymous,
@@ -35,10 +35,5 @@ exports.resetDB = async () => {
         await Major.create({ majorName: MAJOR_NAME });
         await superUser.addMajor(majorIndex + 1);
         await createMajorBoards(MAJOR_NAME, majorIndex + 1);
-    }
-
-    //add board auth to super account
-    for (let BOARD_INDEX = 1; BOARD_INDEX <= COMMON_BOARD_LIST.length * 3; BOARD_INDEX++) {
-        await superUser.addBoard(BOARD_INDEX);
     }
 };

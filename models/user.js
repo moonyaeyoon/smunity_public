@@ -35,6 +35,10 @@ module.exports = class User extends Sequelize.Model {
                     type: Sequelize.STRING(500),
                     allowNull: true,
                 },
+                refreshToken: {
+                    type: Sequelize.STRING(200),
+                    allowNull: true,
+                },
             },
             {
                 sequelize,
@@ -64,10 +68,6 @@ module.exports = class User extends Sequelize.Model {
 
         //학과 관련
         db.User.belongsToMany(db.Major, { through: 'UserMajors' });
-
-        //게시판 권한 관련
-        db.User.belongsToMany(db.Board, { through: 'AllowWriteBoards' });
-        db.User.belongsToMany(db.Board, { through: 'AllowReadBoards' });
 
         //인증 게시판 관련
         db.User.hasMany(db.MajorAuthPost);

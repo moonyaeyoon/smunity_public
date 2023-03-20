@@ -3,7 +3,7 @@ const passport = require('passport');
 
 const { verifyAToken } = require('../middlewares');
 
-const { checkSchoolId, join, login, logout } = require('../services/auth/auth');
+const { checkSchoolId, join, login, refreshAToken } = require('../services/auth/auth');
 
 const router = express.Router();
 
@@ -13,8 +13,6 @@ router.post('/join', join);
 
 router.post('/login', login);
 
-// router.get('/refresh_access_token', reSignAToken)
-
-// router.get('/logout', logout);
+router.get('/refresh_access_token', refreshAToken);
 
 module.exports = router;
