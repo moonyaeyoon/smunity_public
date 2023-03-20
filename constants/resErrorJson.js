@@ -1,20 +1,3 @@
-//Success Response(20?)
-exports.USER_CAN_SIGNUP = {
-    status_code: 200,
-    res_json: {
-        status_code: 200,
-        message: '가입이 가능한 학번입니다.',
-    },
-};
-
-exports.ADD_USER_SUCCESS = {
-    status_code: 201,
-    res_json: {
-        status_code: 201,
-        message: '회원 가입이 완료되었습니다.',
-    },
-};
-
 //Failed Response(40?)
 exports.REQ_FORM_ERROR = {
     status_code: 401,
@@ -41,6 +24,22 @@ exports.SIGN_IN_ERROR = {
 };
 
 //JWT관련
+exports.JWT_TOKEN_NOT_FOUND = {
+    status_code: 440,
+    res_json: {
+        status_code: 440,
+        message: '토큰을 찾지 못해 사용자 인증을 할 수 없습니다.',
+    },
+};
+
+exports.JWT_TOKEN_WRONG = {
+    status_code: 441,
+    res_json: {
+        status_code: 441,
+        message: '잘못된 토큰입니다.',
+    },
+};
+
 exports.JWT_TOKEN_EXPIRED = {
     status_code: 444,
     res_json: {
@@ -49,18 +48,10 @@ exports.JWT_TOKEN_EXPIRED = {
     },
 };
 
-exports.JWT_TOKEN_INVALID = {
-    status_code: 401,
+exports.JWT_REFRESH_TOKEN_EXPIRED = {
+    status_code: 445,
     res_json: {
-        status_code: 401,
-        message: '유효하지 않은 토큰입니다.',
-    },
-};
-
-exports.JWT_TOKEN_NOT_FOUND = {
-    status_code: 440,
-    res_json: {
-        status_code: 440,
-        message: '토큰을 찾지 못했습니다.',
+        status_code: 445,
+        message: 'Refresh토큰이 만료되었습니다.',
     },
 };

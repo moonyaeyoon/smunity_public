@@ -8,6 +8,23 @@ exports.getSuccessSignInJson = (aToken, rToken) => {
     };
 };
 
+//Success Response(20?)
+exports.USER_CAN_SIGNUP = {
+    status_code: 200,
+    res_json: {
+        status_code: 200,
+        message: '가입이 가능한 학번입니다.',
+    },
+};
+
+exports.ADD_USER_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '회원 가입이 완료되었습니다.',
+    },
+};
+
 exports.GET_NEW_ACCESS_TOKEN_STATUS = 240;
 exports.getNewAccessTokenJson = (aToken) => {
     return {

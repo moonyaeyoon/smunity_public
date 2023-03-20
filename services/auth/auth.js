@@ -13,6 +13,8 @@ const {
     GET_NEW_ACCESS_TOKEN_STATUS,
     getNewAccessTokenJson,
     USER_SIGNIN_SUCCESS_STATUS,
+    USER_CAN_SIGNUP,
+    ADD_USER_SUCCESS,
 } = require('../../constants/resSuccessJson');
 
 const checkSchoolIdExist = async (schoolId) => {
@@ -29,7 +31,7 @@ exports.checkSchoolId = async (req, res, next) => {
 
         const USER_INFO = await checkSchoolIdExist(req.headers.school_id);
         if (USER_INFO === null) {
-            return res.status(RES_ERROR_JSON.USER_CAN_SIGNUP.status_code).json(RES_ERROR_JSON.USER_CAN_SIGNUP.res_json);
+            return res.status(USER_CAN_SIGNUP.status_code).json(USER_CAN_SIGNUP.res_json);
         } else {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         }
@@ -61,7 +63,7 @@ exports.join = async (req, res, next) => {
             password: NEW_USER_PASSWORD_HASH,
         });
 
-        return res.status(RES_ERROR_JSON.ADD_USER_SUCCESS.status_code).json(RES_ERROR_JSON.ADD_USER_SUCCESS.res_json);
+        return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
         return next(error);
@@ -105,10 +107,8 @@ exports.refreshAToken = async (req, res, next) => {
     try {
         //aToken 디코딩 => UserId 확인
         const NOW_USER_INFO = jwt.decode(req.headers.access_token);
-
-        if (NOW_USER_INFO.user_id === null)
-            //이상한 토큰(무효 토큰)
-            return res.status(RES_ERROR_JSON.JWT_TOKEN_INVALID.status_code).json(RES_ERROR_JSON.JWT_TOKEN_INVALID.res_json);
+        
+        //TODO: 토큰이 아닌 일반적인 문자열이 들어오면 예외처리해줘야 함.
 
         //rToken 인증(rToken도 유효 기간 지날 수 있으니까)
         const RTOKEN_STATUS = await jwtUtil.verifyRToken(req.headers.refresh_token, NOW_USER_INFO.user_id);
@@ -118,7 +118,7 @@ exports.refreshAToken = async (req, res, next) => {
             return res.status(GET_NEW_ACCESS_TOKEN_STATUS).json(getNewAccessTokenJson(NEW_ATOKEN));
         } else {
             //rToken무효
-            return res.status(RES_ERROR_JSON.JWT_TOKEN_EXPIRED.status_code).json(RES_ERROR_JSON.JWT_TOKEN_EXPIRED.res_json);
+            return res.status(RES_ERROR_JSON.JWT_REFRESH_TOKEN_EXPIRED.status_code).json(RES_ERROR_JSON.JWT_REFRESH_TOKEN_EXPIRED.res_json);
         }
     } catch (error) {
         console.error(error);
