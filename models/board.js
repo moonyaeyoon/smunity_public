@@ -4,27 +4,31 @@ module.exports = class board extends Sequelize.Model {
     static init(sequelize) {
         return super.init(
             {
-                boardName: {
+                board_name: {
                     type: Sequelize.STRING(40),
                     allowNull: false,
                 },
-                isCanAnonymous: {
+                is_can_anonymous: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
-                isNotice: {
+                is_notice: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
-                noticeUserIdList: {
+                notice_user_id_list: {
                     type: Sequelize.STRING(1000),
                     allowNull: true,
+                },
+                major_id: {
+                    type: Sequelize.INTEGER,
+                    allowNull: false,
                 },
             },
             {
                 sequelize,
                 timestamps: true,
-                underscored: false,
+                underscored: true,
                 modelName: 'Board',
                 tableName: 'boards',
                 paranoid: true,
@@ -34,7 +38,6 @@ module.exports = class board extends Sequelize.Model {
         );
     }
     static associate(db) {
-        db.Board.belongsTo(db.Major);
-        db.Board.hasMany(db.Post);
+        
     }
 };

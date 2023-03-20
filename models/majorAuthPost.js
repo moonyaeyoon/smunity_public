@@ -1,22 +1,26 @@
 const Sequelize = require('sequelize');
 
-module.exports = class majorAuthPost extends Sequelize.Model {
+module.exports = class MajorAuthPost extends Sequelize.Model {
     static init(sequelize) {
         return super.init(
             {
-                imageUrl: {
+                image_url: {
                     type: Sequelize.STRING(120),
                     allowNull: false,
                 },
                 content: {
-                    type: Sequelize.STRING(200),
+                    type: Sequelize.TEXT('medium'),
                     allowNull: true,
+                },
+                user_id: {
+                    type: Sequelize.INTEGER,
+                    allowNull: false,
                 },
             },
             {
                 sequelize,
                 timestamps: true,
-                underscored: false,
+                underscored: true,
                 modelName: 'MajorAuthPost',
                 tableName: 'majorAuthPosts',
                 paranoid: true,
@@ -26,6 +30,6 @@ module.exports = class majorAuthPost extends Sequelize.Model {
         );
     }
     static associate(db) {
-        db.MajorAuthPost.belongsTo(db.User);
+        
     }
 };

@@ -4,16 +4,24 @@ module.exports = class Post extends Sequelize.Model {
     static init(sequelize) {
         return super.init(
             {
+                board_id: {
+                    type: Sequelize.INTEGER,
+                    allowNull: false,
+                },
+                user_id: {
+                    type: Sequelize.INTEGER,
+                    allowNull: false,
+                },
                 title: {
                     type: Sequelize.STRING(100),
                     allowNull: false,
                 },
                 content: {
-                    type: Sequelize.STRING(2000),
+                    type: Sequelize.TEXT('medium'),
                     allowNull: false,
                 },
-                imgUrls: {
-                    type: Sequelize.STRING(5000),
+                img_urls: {
+                    type: Sequelize.TEXT('medium'),
                     allowNull: true,
                 },
                 views: {
@@ -41,7 +49,7 @@ module.exports = class Post extends Sequelize.Model {
                     allowNull: false,
                     defaultValue: 0,
                 },
-                isAnonymous: {
+                is_anonymous: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
@@ -49,7 +57,7 @@ module.exports = class Post extends Sequelize.Model {
             {
                 sequelize,
                 timestamps: true, //add createAt & UpdateAt
-                underscored: false, //true: createAt => create_at
+                underscored: true, //true: createAt => create_at
                 modelName: 'Post', //name in node project
                 tableName: 'posts',
                 paranoid: true, // add deleteAt
@@ -59,16 +67,6 @@ module.exports = class Post extends Sequelize.Model {
         );
     }
     static associate(db) {
-        db.Post.belongsTo(db.User);
-        db.Post.belongsTo(db.Major);
-        db.Post.belongsTo(db.Board);
-
-        db.Post.hasMany(db.Comment);
-
-        //사용자 액션 관련
-        db.Post.belongsToMany(db.User, { through: 'UserLikePosts' });
-        db.Post.belongsToMany(db.User, { through: 'UserUnlikePosts' });
-        db.Post.belongsToMany(db.User, { through: 'UserScrapPosts' });
-        db.Post.belongsToMany(db.User, { through: 'UserReportPosts' });
+        
     }
 };

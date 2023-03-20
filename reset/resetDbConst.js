@@ -1,5 +1,5 @@
 exports.SUPER_ACCOUNT = {
-    schoolId: '193712345',
+    school_id: '193712345',
     email: 'super',
     nickname: '학생복지팀',
     password: '$2b$12$r3bjYP.fhSyEt1Ychg1i/OosBxb1IaUJsw9yPuVFbLyKgzQiZTiy2',
