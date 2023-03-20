@@ -5,9 +5,6 @@ const path = require('path');
 const session = require('express-session');
 const nunjucks = require('nunjucks');
 const dotenv = require('dotenv');
-const passport = require('passport');
-const passportConfig = require('./passport');
-const { createClient } = require('redis');
 
 dotenv.config();
 const pageRouter = require('./routes/page');
@@ -16,7 +13,6 @@ const { sequelize } = require('./models');
 const { resetDB } = require('./reset/resetDB');
 
 const app = express();
-passportConfig();
 app.set('port', process.env.PORT || 8001);
 app.set('view engine', 'html');
 nunjucks.configure('views', {
@@ -55,9 +51,6 @@ app.use(
     })
 );
 
-app.use(passport.initialize());
-app.use(passport.session());
-
 const cors = require('cors');
 app.use(
     cors({
@@ -65,9 +58,6 @@ app.use(
         // credentials: false,
     })
 );
-
-const client = createClient();
-client.on('error', (err) => console.log('redis Error', err));
 
 app.use('/', pageRouter);
 
