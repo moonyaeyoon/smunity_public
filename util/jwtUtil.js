@@ -18,8 +18,7 @@ module.exports = {
             algorithm: process.env.JWT_SIGN_ALGORITHM,
             expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRESIN,
         });
-        await User.update({ refreshToken: NEW_RTOKEN }, { where: { id: userId } });
-        // await redis.set(userId, NEW_RTOKEN);
+        await User.update({ refresh_token: NEW_RTOKEN }, { where: { id: userId } });
         return NEW_RTOKEN;
     },
 
@@ -28,7 +27,7 @@ module.exports = {
     verifyRToken: async (rToken, userId) => {
         try {
             const USER_INFO = await User.findOne({ where: { id: userId } });
-            const DB_TOKEN = USER_INFO.refreshToken;
+            const DB_TOKEN = USER_INFO.refresh_token;
             if (rToken === DB_TOKEN) {
                 try {
                     jwt.verify(rToken, process.env.JWT_SECRET); //유효 시간 체크

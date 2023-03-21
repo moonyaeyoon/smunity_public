@@ -1,18 +1,6 @@
 const { Op, NOW } = require('sequelize');
 const { User, Board, Post, Comment, sequelize, Major } = require('../../models');
 
-const majorNameObject = {
-    '001': '컴퓨터과학과',
-    '002': '휴먼지능정보공학전공',
-    '003': '경제학과',
-    '004': '상명대학교',
-};
-const boardNameObject = {
-    '001': '자유게시판',
-    '002': '비밀게시판',
-    '003': '공지게시판',
-};
-
 const checkUserExist = async (userEmail) => {
     const reqUser = await User.findOne({
         where: {
