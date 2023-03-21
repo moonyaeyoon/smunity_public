@@ -8,14 +8,17 @@ const SUPER_ACCOUNT = RESET_DB_CONST.SUPER_ACCOUNT;
 const COMMON_BOARD_LIST = RESET_DB_CONST.COMMON_BOARD_LIST;
 const MAJOR_LIST = RESET_DB_CONST.MAJOR_LIST;
 
+let nowBoardId = 1 // DB생성 시 순서를 강제로 정하기 위한 변수임
+let nowMajorId = 1 // DB생성 시 순서를 강제로 정하기 위한 변수임
 const createMajorBoards = async (majorName, majorId) => {
     COMMON_BOARD_LIST.forEach(async (BOARD_INFO) => {
         await Board.create({
+            id: nowBoardId++,
             board_name: `${majorName}-${BOARD_INFO.boardName}`,
             is_can_anonymous: BOARD_INFO.isCanAnonymous,
             is_notice: BOARD_INFO.isNotice,
             major_id: majorId,
-        });
+        })
     });
 };
 
@@ -29,24 +32,11 @@ exports.resetDB = async () => {
         provider: SUPER_ACCOUNT.provider,
     });
 
-    const promises = [];
-    for (let majorIndex = 0; majorIndex < MAJOR_LIST.length; majorIndex++) {
-        const MAJOR_NAME = MAJOR_LIST[majorIndex];
-        promises.push(Major.create({ major_name: MAJOR_NAME }));
-    }
-
-    Promise.all(promises).then((results) => {
-        console.log(results);
-    });
-
     //create all majors and boards
     for (let majorIndex = 0; majorIndex < MAJOR_LIST.length; majorIndex++) {
-        
-        
         const MAJOR_NAME = MAJOR_LIST[majorIndex];
-
-        const MAJOR_INFO = await Major.findOne({ id: majorIndex+1 });
-        await UserMajor.create({user_id: superUser.id, major_id: MAJOR_INFO.id})
-        await createMajorBoards(MAJOR_NAME, majorIndex + 1);
+        const NOW_MAJOR = await Major.create({ id: nowMajorId++, major_name: MAJOR_NAME });
+        await UserMajor.create({ user_id: superUser.id, major_id: NOW_MAJOR.id });
+        await createMajorBoards(MAJOR_NAME, NOW_MAJOR.id);
     }
 };
