@@ -4,15 +4,23 @@ module.exports = class comment extends Sequelize.Model {
     static init(sequelize) {
         return super.init(
             {
-                content: {
-                    type: Sequelize.STRING(1000),
+                post_id: {
+                    type: Sequelize.INTEGER,
                     allowNull: false,
                 },
-                isAnonymous: {
+                user_id: {
+                    type: Sequelize.INTEGER,
+                    allowNull: false,
+                },
+                content: {
+                    type: Sequelize.TEXT('medium'),
+                    allowNull: false,
+                },
+                is_anonymous: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
-                groupId: {
+                group_id: {
                     type: Sequelize.INTEGER,
                     allowNull: false,
                 },
@@ -24,7 +32,7 @@ module.exports = class comment extends Sequelize.Model {
                     type: Sequelize.INTEGER,
                     allowNull: false,
                 },
-                parentId: {
+                parent_id: {
                     type: Sequelize.INTEGER,
                     allowNull: false,
                 },
@@ -47,7 +55,7 @@ module.exports = class comment extends Sequelize.Model {
             {
                 sequelize,
                 timestamps: true,
-                underscored: false,
+                underscored: true,
                 modelName: 'Comment',
                 tableName: 'comments',
                 paranoid: true,
@@ -57,12 +65,6 @@ module.exports = class comment extends Sequelize.Model {
         );
     }
     static associate(db) {
-        db.Comment.belongsTo(db.User);
-        db.Comment.belongsTo(db.Post);
-
-        //사용자 액션 관련
-        db.Comment.belongsToMany(db.User, { through: 'UserLikeComments' });
-        db.Comment.belongsToMany(db.User, { through: 'UserUnlikeComments' });
-        db.Comment.belongsToMany(db.User, { through: 'UserReportComments' });
+        
     }
 };

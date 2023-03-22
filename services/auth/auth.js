@@ -18,7 +18,7 @@ const {
 } = require('../../constants/resSuccessJson');
 
 const checkSchoolIdExist = async (schoolId) => {
-    const EX_USER = await User.findOne({ where: { schoolId: schoolId } });
+    const EX_USER = await User.findOne({ where: { school_id: schoolId } });
     if (EX_USER) return EX_USER;
     else return null;
 };
@@ -48,7 +48,7 @@ exports.join = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
 
-        const EX_USER = await User.findOne({ where: { schoolId: school_id } });
+        const EX_USER = await User.findOne({ where: { school_id: school_id } });
         if (EX_USER) {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         }
@@ -57,7 +57,7 @@ exports.join = async (req, res, next) => {
         const NEW_USER_PASSWORD_HASH = await bcrypt.hash(password, Number(PASSWORD_SALT_OR_ROUNDS));
         console.log('passwod hash is: ' + NEW_USER_PASSWORD_HASH);
         const NEW_USER = await User.create({
-            schoolId: school_id,
+            school_id: school_id,
             email: NEW_USER_EMAIL,
             nickname,
             password: NEW_USER_PASSWORD_HASH,

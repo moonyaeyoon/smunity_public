@@ -4,7 +4,7 @@ module.exports = class User extends Sequelize.Model {
     static init(sequelize) {
         return super.init(
             {
-                schoolId: {
+                school_id: {
                     type: Sequelize.STRING(15),
                     allowNull: false,
                     unique: true,
@@ -27,15 +27,15 @@ module.exports = class User extends Sequelize.Model {
                     allowNull: false,
                     defaultValue: 'local',
                 },
-                snsId: {
+                sns_id: {
                     type: Sequelize.STRING(30),
                     allowNull: true,
                 },
-                profileImgUrl: {
+                profile_img_url: {
                     type: Sequelize.STRING(500),
                     allowNull: true,
                 },
-                refreshToken: {
+                refresh_token: {
                     type: Sequelize.STRING(200),
                     allowNull: true,
                 },
@@ -43,7 +43,7 @@ module.exports = class User extends Sequelize.Model {
             {
                 sequelize,
                 timestamps: true,
-                underscored: false,
+                underscored: true,
                 modelName: 'User',
                 tableName: 'users',
                 paranoid: true,
@@ -53,23 +53,6 @@ module.exports = class User extends Sequelize.Model {
         );
     }
     static associate(db) {
-        //Post관련
-        db.User.hasMany(db.Post);
-        db.User.belongsToMany(db.Post, { through: 'UserLikePosts' });
-        db.User.belongsToMany(db.Post, { through: 'UserUnlikePosts' });
-        db.User.belongsToMany(db.Post, { through: 'UserScrapPosts' });
-        db.User.belongsToMany(db.Post, { through: 'UserReportPosts' });
-
-        //댓글 관련
-        db.User.hasMany(db.Comment);
-        db.User.belongsToMany(db.Comment, { through: 'UserLikeComments' });
-        db.User.belongsToMany(db.Comment, { through: 'UserUnlikeComments' });
-        db.User.belongsToMany(db.Comment, { through: 'UserReportComments' });
-
-        //학과 관련
-        db.User.belongsToMany(db.Major, { through: 'UserMajors' });
-
-        //인증 게시판 관련
-        db.User.hasMany(db.MajorAuthPost);
+        
     }
 };
