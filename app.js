@@ -5,8 +5,6 @@ const path = require('path');
 const session = require('express-session');
 const nunjucks = require('nunjucks');
 const dotenv = require('dotenv');
-const passport = require('passport');
-const passportConfig = require('./passport');
 
 dotenv.config();
 const pageRouter = require('./routes/page');
@@ -15,7 +13,6 @@ const { sequelize } = require('./models');
 const { resetDB } = require('./reset/resetDB');
 
 const app = express();
-passportConfig();
 app.set('port', process.env.PORT || 8001);
 app.set('view engine', 'html');
 nunjucks.configure('views', {
@@ -23,13 +20,15 @@ nunjucks.configure('views', {
     watch: true,
 });
 
-const IS_RESET_DB = true;
+// const IS_RESET_DB = process.argv[2] | "false";
+let isResetDB = false;
+if (process.argv[2] === 'reset') isResetDB = true;
 
 sequelize
-    .sync({ force: IS_RESET_DB })
+    .sync({ force: isResetDB })
     .then(async () => {
         console.log('데이터베이스 연결 성공');
-        if (IS_RESET_DB) resetDB();
+        if (isResetDB) resetDB();
     })
     .catch((err) => {
         console.error(err);
@@ -51,9 +50,6 @@ app.use(
         },
     })
 );
-
-app.use(passport.initialize());
-app.use(passport.session());
 
 const cors = require('cors');
 app.use(

@@ -16,6 +16,10 @@ module.exports = class board extends Sequelize.Model {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
+                noticeUserIdList: {
+                    type: Sequelize.STRING(1000),
+                    allowNull: true,
+                },
             },
             {
                 sequelize,
@@ -32,9 +36,5 @@ module.exports = class board extends Sequelize.Model {
     static associate(db) {
         db.Board.belongsTo(db.Major);
         db.Board.hasMany(db.Post);
-
-        //사용자 권한 관련
-        db.Board.belongsToMany(db.User, { through: 'AllowReadBoards' });
-        db.Board.belongsToMany(db.User, { through: 'AllowWriteBoards' });
     }
 };

@@ -1,5 +1,4 @@
 const bcrypt = require('bcrypt');
-const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const RES_ERROR_JSON = require('../../constants/resErrorJson');
 const SMU_STUDENT_EMAIL_DOMAIN = process.env.SMU_STUDENT_EMAIL_DOMAIN;
@@ -9,7 +8,14 @@ const User = require('../../models/user');
 const Major = require('../../models/major');
 const Board = require('../../models/board');
 const jwtUtil = require('../../util/jwtUtil');
-const { getSuccessSignInJson } = require('../../constants/resSuccessJson');
+const {
+    getSuccessSignInJson,
+    GET_NEW_ACCESS_TOKEN_STATUS,
+    getNewAccessTokenJson,
+    USER_SIGNIN_SUCCESS_STATUS,
+    USER_CAN_SIGNUP,
+    ADD_USER_SUCCESS,
+} = require('../../constants/resSuccessJson');
 
 const checkSchoolIdExist = async (schoolId) => {
     const EX_USER = await User.findOne({ where: { schoolId: schoolId } });
@@ -25,7 +31,7 @@ exports.checkSchoolId = async (req, res, next) => {
 
         const USER_INFO = await checkSchoolIdExist(req.headers.school_id);
         if (USER_INFO === null) {
-            return res.status(RES_ERROR_JSON.USER_CAN_SIGNUP.status_code).json(RES_ERROR_JSON.USER_CAN_SIGNUP.res_json);
+            return res.status(USER_CAN_SIGNUP.status_code).json(USER_CAN_SIGNUP.res_json);
         } else {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         }
@@ -57,7 +63,7 @@ exports.join = async (req, res, next) => {
             password: NEW_USER_PASSWORD_HASH,
         });
 
-        return res.status(RES_ERROR_JSON.ADD_USER_SUCCESS.status_code).json(RES_ERROR_JSON.ADD_USER_SUCCESS.res_json);
+        return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
         return next(error);
@@ -68,22 +74,25 @@ exports.login = async (req, res, next) => {
     const { school_id, password } = req.body;
     try {
         if (!school_id || !password)
+            //요청 양식 틀림
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
 
-        const USER_INFO = await checkSchoolIdExist(school_id);
+        const USER_INFO = await checkSchoolIdExist(school_id); //사용자 미존재
         if (USER_INFO === null) return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
 
         if (USER_INFO.password === null)
+            //local로 회원가입한 사람이 이닐 경우
             return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
 
+        //비번 해싱하고 DB와 비교하기
         const PASSWORD_COMPARE_RESULT = await bcrypt.compare(password, USER_INFO.password);
         if (PASSWORD_COMPARE_RESULT) {
-            //success
+            //비번 일치
             const aToken = jwtUtil.signAToken(USER_INFO.id);
-            const rToken = jwtUtil.signRToken();
-
-            return res.status(201).json(getSuccessSignInJson(aToken, rToken));
+            const rToken = await jwtUtil.signRToken(USER_INFO.id);
+            return res.status(USER_SIGNIN_SUCCESS_STATUS).json(getSuccessSignInJson(aToken, rToken));
         } else {
+            //비번 불일치
             return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
         }
     } catch (error) {
@@ -92,22 +101,26 @@ exports.login = async (req, res, next) => {
     }
 };
 
-// exports.refreshAToken = async (req, res, next) => {
-//     if (!req.headers.access_token || !req.headers.refresh_token)
-//         return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json)
-//     try {
-//         //aToken 디코딩
-//         const NOW_USER_ID = jwt.decode(req.headers.access_token)
-//         if(jwtUtil.verifyRToken(req.headers.refresh_token, NOW_USER_ID)){
-//             //rToken유효
-//             //send new aToken
-//             const NEW_ATOKEN = 
-//         }else{
-//             //rToken무효
-//             return //send error
-//         }
-//     } catch (error) {
-//         console.error(error);
-//     }
-// }
+exports.refreshAToken = async (req, res, next) => {
+    if (!req.headers.access_token || !req.headers.refresh_token)
+        return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
+    try {
+        //aToken 디코딩 => UserId 확인
+        const NOW_USER_INFO = jwt.decode(req.headers.access_token);
+        
+        //TODO: 토큰이 아닌 일반적인 문자열이 들어오면 예외처리해줘야 함.
 
+        //rToken 인증(rToken도 유효 기간 지날 수 있으니까)
+        const RTOKEN_STATUS = await jwtUtil.verifyRToken(req.headers.refresh_token, NOW_USER_INFO.user_id);
+        if (RTOKEN_STATUS) {
+            //rToken유효
+            const NEW_ATOKEN = jwtUtil.signAToken(NOW_USER_INFO.user_id);
+            return res.status(GET_NEW_ACCESS_TOKEN_STATUS).json(getNewAccessTokenJson(NEW_ATOKEN));
+        } else {
+            //rToken무효
+            return res.status(RES_ERROR_JSON.JWT_REFRESH_TOKEN_EXPIRED.status_code).json(RES_ERROR_JSON.JWT_REFRESH_TOKEN_EXPIRED.res_json);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+};
