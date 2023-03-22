@@ -29,7 +29,5 @@ module.exports = class MajorAuthPost extends Sequelize.Model {
             }
         );
     }
-    static associate(db) {
-        
-    }
+    static associate(db) {}
 };
