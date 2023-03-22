@@ -2,8 +2,8 @@ const express = require('express');
 const { verifyAToken } = require('../middlewares');
 const {
     createNewPost,
-    getBoardList,
-    getBoardDatail,
+    getPostList,
+    getPostDatail,
     updatePost,
     deletePost,
     getSchoolNotiListPreview,
@@ -16,14 +16,14 @@ router.get('/usermajors', verifyAToken, getUserMajors);
 
 router.get('/school/noti/list', getSchoolNotiListPreview);
 
-router.post('/create', createNewPost);
+router.post('/create', verifyAToken, createNewPost);
 
-router.get('/detail/:postId', getBoardDatail);
+router.get('/detail/:post_id', verifyAToken, getPostDatail);
 
-router.patch('/update/:postId', updatePost);
+router.patch('/update/:post_id', verifyAToken, updatePost);
 
-router.delete('/delete/:postId', deletePost);
+router.delete('/delete/:post_id', verifyAToken, deletePost);
 
-router.get('/:majorId/:boardId/list', getBoardList);
+router.get('/:board_id', verifyAToken, getPostList);
 
 module.exports = router;

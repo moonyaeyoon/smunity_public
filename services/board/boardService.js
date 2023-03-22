@@ -1,10 +1,12 @@
 const { Op, NOW } = require('sequelize');
-const { User, Board, Post, Comment, sequelize, Major } = require('../../models');
+const { REQ_FORM_ERROR, USER_NOT_EXIST, USER_NO_AUTH, POST_NOT_EXIST, BOARD_NOT_EXIST } = require('../../constants/resErrorJson');
+const { ADD_POST_SUCCESS, UPDATE_POST_SUCCESS, DELETE_POST_SUCCESS } = require('../../constants/resSuccessJson');
+const { User, Board, Post, Comment, sequelize, Major, UserMajor, UserLikePost, UserScrapPost } = require('../../models');
 
-const checkUserExist = async (userEmail) => {
+const checkUserExist = async (userId) => {
     const reqUser = await User.findOne({
         where: {
-            email: userEmail,
+            id: userId,
         },
     });
     //사용자 미존재
@@ -18,92 +20,9 @@ const toJSONLocal = (date) => {
     return local.toJSON().slice(0, 10);
 };
 
-exports.createNewPost = async (req, res, next) => {
-    try {
-        if (
-            !req.headers.email ||
-            !req.body.title ||
-            !req.body.content ||
-            !req.body.majorId ||
-            req.body.majorId.length != 3 ||
-            !req.body.boardId ||
-            req.body.boardId.length != 3
-        ) {
-            return res.status(400).json({
-                code: 400,
-                message: '요청 문법 틀림',
-            });
-        }
-
-        const reqEmail = req.headers.email;
-        const reqUser = await checkUserExist(reqEmail);
-        if (reqUser === false)
-            return res.status(401).json({
-                code: 401,
-                message: '잘못된 사용자 입니다',
-            });
-
-        //사용자 권한 없음
-        const reqBoardId = req.body.majorId + req.body.boardId;
-        let canWrite = false;
-        const reqUserAllowBoards = await reqUser.getBoards();
-        console.log(reqUserAllowBoards);
-        reqUserAllowBoards.forEach((element) => {
-            if (element.dataValues.boardId === reqBoardId) {
-                console.log('nowreqId==' + reqBoardId);
-                canWrite = true;
-                return;
-            }
-        });
-        if (!canWrite)
-            return res.status(403).json({
-                code: 403,
-                message: '게시판 접근 권한 없음',
-            });
-
-        //익명 여부 처리
-        let finalAnonymous = req.body.isAnonymous || false;
-        if (finalAnonymous) {
-            const reqBoard = await Board.findOne({
-                where: {
-                    boardId: reqBoardId,
-                },
-            });
-            if (reqBoard.isCanAnonymous) {
-                finalAnonymous = req.body.isAnonymous;
-            } else {
-                finalAnonymous = false;
-            }
-        }
-        await Post.create({
-            title: req.body.title,
-            content: req.body.content,
-            isAnonymous: finalAnonymous,
-            // views: 0,
-            // likes: 0,
-            BoardBoardId: reqBoardId,
-            UserId: reqUser.id,
-            MajorId: req.body.majorId,
-        });
-        return res.status(201).json({
-            code: 201,
-            message: '게시글 작성 성공',
-        });
-    } catch (err) {
-        console.error(err);
-        next(err);
-    }
-};
-
 exports.getBoardList = async (req, res, next) => {
     try {
-        if (
-            !req.headers.email ||
-            !req.params.majorId ||
-            req.params.majorId.length != 3 ||
-            !req.params.boardId ||
-            req.params.boardId.length != 3
-        )
+        if (!req.headers.email || !req.params.board_id)
             return res.status(400).json({
                 code: 400,
                 message: '요청 문법 틀림',
@@ -229,76 +148,219 @@ exports.getBoardList = async (req, res, next) => {
     }
 };
 
-exports.getBoardDatail = async (req, res, next) => {
+exports.getPostList = async (req, res, next) => {
     try {
-        if (!req.headers.email || !req.params.postId)
-            return res.status(400).json({
-                code: 400,
-                message: '요청 문법 틀림',
-            });
-        //사용자 미존재
-        const reqEmail = req.headers.email;
-        const reqUser = await checkUserExist(reqEmail);
-        if (reqUser === false)
-            return res.status(401).json({
-                code: 401,
-                message: '잘못된 사용자 입니다',
-            });
+        if (!req.params.board_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
 
-        //게시글 존재 여부
-        const reqPost = await Post.findOne({
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+
+        //게시판 존재 여부
+        const NOW_BOARD = await Board.findOne({
             where: {
-                id: req.params.postId,
+                id: req.params.board_id,
             },
         });
-        if (!reqPost)
-            return res.status(402).json({
-                code: 402,
-                message: '게시글을 찾지 못했습니다',
-            });
+        if (!NOW_BOARD) {
+            return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
+        }
 
         //사용자 권한 없음
         let canRead = false;
-        const reqUserMajors = await reqUser.getMajors();
-        console.log(reqUserMajors);
-        reqUserMajors.forEach((element) => {
-            if (element.dataValues.id.toString().padStart(3, '0') === reqPost.MajorId.toString().padStart(3, '0')) {
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        NOW_USER_MAJOR_LIST.forEach((e) => {
+            if (e.dataValues.major_id === NOW_BOARD.dataValues.major_id) {
                 canRead = true;
                 return;
             }
         });
-        if (!canRead)
-            return res.status(403).json({
-                code: 403,
-                message: '게시글 접근 권한 없음',
-            });
 
-        let detailData = await Post.findOne({
+        if (!canRead) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
+
+        const POST_LIST = await Post.findAll({
             where: {
-                id: req.params.postId,
-            },
-            include: {
-                model: Comment,
+                board_id: req.params.board_id,
             },
         });
 
-        const env = process.env.NODE_ENV || 'development';
-        const config = require('../../config/config')[env];
-        const oldViews = detailData.views;
-        const tempPostId = detailData.id;
-        const [result, metadata] = await sequelize.query(
-            `UPDATE ${config.database}.posts SET views = ${oldViews + 1} WHERE id = ${tempPostId}`
-        );
+        let returnPostList = Array();
+        POST_LIST.forEach((NOW_POST) => {
+            let returnPostObject = Object();
 
-        console.log('before: ' + detailData);
+            returnPostObject['id'] = NOW_POST.id;
+
+            //post 익명 여부 처리
+            returnPostObject['username'] = NOW_USER.nickname;
+            if (NOW_POST.is_anonymous == true) {
+                returnPostObject['username'] = '익명';
+            }
+
+            returnPostObject['title'] = NOW_POST.title;
+            returnPostObject['preview'] = NOW_POST.content.substr(0, 50);
+
+            //댓글 수 //TODO: 여기도 나중에 합시다
+            returnPostObject['comments'] = 0;
+
+            returnPostObject['created_time'] = NOW_POST.createdAt;
+            returnPostObject['updated_time'] = NOW_POST.updatedAt;
+
+            returnPostList.push(returnPostObject)
+        });
+
+        return res.status(200).json(returnPostList);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
+
+exports.createNewPost = async (req, res, next) => {
+    try {
+        if (!req.body.title || !req.body.content || !req.body.board_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+
+        //사용자 권한 없음
+        let canWrite = false;
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        const NOW_BOARD = await Board.findOne({ where: { id: req.body.board_id } });
+        NOW_USER_MAJOR_LIST.forEach((e) => {
+            if (e.dataValues.major_id === NOW_BOARD.dataValues.major_id) {
+                canWrite = true;
+                return;
+            }
+        });
+
+        //공지 페이지일 경우 사용자 권한 확인.
+        if (NOW_BOARD.is_notice == true) {
+            canWrite = false;
+            const NOTICE_ALLOW_ID_LIST = NOW_BOARD.notice_user_id_list.split(',');
+            NOTICE_ALLOW_ID_LIST.forEach((allowedId) => {
+                if (allowedId == NOW_USER.id) {
+                    canWrite = true;
+                    return;
+                }
+            });
+        }
+
+        if (!canWrite) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
+
         //익명 여부 처리
-        let postAuthorInfo = await detailData.getUser();
-        let finalAuthor = postAuthorInfo.nick;
-        if (detailData.isAnonymous == true) finalAuthor = '익명';
-        detailData.dataValues['author'] = finalAuthor;
+        let isUserSelectedAnonymous = req.body.is_anonymous || false;
+        if (isUserSelectedAnonymous) {
+            //사용자가 익명을 선택했지만
+            if (NOW_BOARD.is_can_anonymous == false) {
+                //실제로도 게시판이 익명을 허용하지 않으면
+                isUserSelectedAnonymous = false; //강제로 익명 선택 취소
+            }
+        }
 
-        console.log('after: ' + detailData);
-        return res.status(200).json(detailData);
+        await Post.create({
+            title: req.body.title,
+            content: req.body.content,
+            is_anonymous: isUserSelectedAnonymous,
+            user_id: NOW_USER.id,
+            board_id: NOW_BOARD.id,
+        });
+        return res.status(ADD_POST_SUCCESS.status_code).json(ADD_POST_SUCCESS.res_json);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
+
+exports.getPostDatail = async (req, res, next) => {
+    try {
+        if (!req.params.post_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+
+        //게시글 존재 여부
+        const NOW_POST = await Post.findOne({
+            where: {
+                id: req.params.post_id,
+            },
+        });
+        if (!NOW_POST) {
+            return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
+        }
+
+        //사용자 권한 없음
+        let canRead = false;
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        const NOW_BOARD = await Board.findOne({ where: { id: NOW_POST.board_id } });
+        NOW_USER_MAJOR_LIST.forEach((e) => {
+            if (e.dataValues.major_id === NOW_BOARD.dataValues.major_id) {
+                canRead = true;
+                return;
+            }
+        });
+
+        if (!canRead) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
+
+        //post조회수 + 1 (UpdatedAt가 바뀌지 않도록 수동으로 쿼리문 작성함.)
+        if (NOW_POST.user_id != NOW_USER.id) {
+            //자신이 보면 조회수 안 올라가게 함.
+            const env = process.env.NODE_ENV || 'development';
+            const config = require('../../config/config')[env];
+            const [result, metadata] = await sequelize.query(
+                `UPDATE ${config.database}.posts SET views = ${NOW_POST.views + 1} WHERE id = ${NOW_POST.id}`
+            );
+        }
+
+        const COMMENT_LIST = await Comment.findAll({
+            where: {
+                post_id: req.params.post_id,
+            },
+        });
+
+        let returnPostObject = Object();
+        returnPostObject['id'] = NOW_POST.id;
+
+        //post 익명 여부 처리
+        returnPostObject['username'] = NOW_USER.nickname;
+        if (NOW_POST.is_anonymous == true) {
+            returnPostObject['username'] = '익명';
+        }
+
+        returnPostObject['title'] = NOW_POST.title;
+        returnPostObject['content'] = NOW_POST.content;
+        returnPostObject['image_urls'] = NOW_POST.img_urls || null;
+        returnPostObject['views'] = NOW_POST.views + 1;
+        returnPostObject['likes'] = NOW_POST.likes;
+        returnPostObject['scraps'] = NOW_POST.scraps;
+
+        //현재 사용자가 게시글에 좋아요를 눌렀는지 확인
+        returnPostObject['isLiked'] = false;
+        const USER_LIKED_INFO = await UserLikePost.findOne({ where: { user_id: NOW_USER.id, post_id: NOW_POST.id } });
+        if (USER_LIKED_INFO) {
+            returnPostObject['isLiked'] = true;
+        }
+
+        //현재 사용자가 게시글에 스크랩을 눌렀는지 확인
+        returnPostObject['isScrap'] = false;
+        const USER_SCRAP_INFO = await UserScrapPost.findOne({ where: { user_id: NOW_USER.id, post_id: NOW_POST.id } });
+        if (USER_SCRAP_INFO) {
+            returnPostObject['isScrap'] = true;
+        }
+
+        //싫어요는 나중에 ㅎㅎ
+
+        returnPostObject['created_time'] = NOW_POST.createdAt;
+        returnPostObject['updated_time'] = NOW_POST.updatedAt;
+
+        return res.status(200).json(returnPostObject);
     } catch (err) {
         console.error(err);
         next(err);
@@ -307,53 +369,31 @@ exports.getBoardDatail = async (req, res, next) => {
 
 exports.updatePost = async (req, res, next) => {
     try {
-        if (!req.headers.email || !req.params.postId || !req.body.title || !req.body.content)
-            return res.status(400).json({
-                code: 400,
-                message: '요청 문법 틀림',
-            });
-
-        //사용자 미존재
-        const reqEmail = req.headers.email;
-        const reqUser = await checkUserExist(reqEmail);
-        if (reqUser === false)
-            return res.status(401).json({
-                code: 401,
-                message: '잘못된 사용자 입니다',
-            });
+        if (!req.params.post_id || !req.body.title || !req.body.content) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
 
         //게시글 존재 여부
-        const reqPost = await Post.findOne({
+        const NOW_POST = await Post.findOne({
             where: {
-                id: req.params.postId,
+                id: req.params.post_id,
             },
         });
-        if (!reqPost)
-            return res.status(402).json({
-                code: 402,
-                message: '게시글을 찾지 못했습니다',
-            });
+        if (!NOW_POST) {
+            return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
+        }
 
         //작성자 != 요청자
-        if (reqPost.UserId != reqUser.id)
-            return res.status(403).json({
-                code: 403,
-                message: '게시글 수정 권한 없음',
-            });
+        if (NOW_POST.user_id != res.locals.decodes.user_id) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
 
-        await Post.update(
-            {
-                title: req.body.title,
-                content: req.body.content,
-            },
-            {
-                where: { id: req.params.postId },
-            }
-        );
-        return res.status(200).json({
-            code: 200,
-            message: '게시글 수정 성공',
+        await NOW_POST.update({
+            title: req.body.title,
+            content: req.body.content,
         });
+
+        return res.status(UPDATE_POST_SUCCESS.status_code).json(UPDATE_POST_SUCCESS.res_json);
     } catch (error) {
         console.error(err);
         next(error);
@@ -362,50 +402,31 @@ exports.updatePost = async (req, res, next) => {
 
 exports.deletePost = async (req, res, next) => {
     try {
-        if (!req.headers.email || !req.params.postId)
-            return res.status(400).json({
-                code: 400,
-                message: '요청 문법 틀림',
-            });
-
-        //사용자 미존재
-        const reqEmail = req.headers.email;
-        const reqUser = await checkUserExist(reqEmail);
-        if (reqUser === false)
-            return res.status(401).json({
-                code: 401,
-                message: '잘못된 사용자 입니다',
-            });
+        if (!req.params.post_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
 
         //게시글 존재 여부
-        const reqPost = await Post.findOne({
+        const NOW_POST = await Post.findOne({
             where: {
-                id: req.params.postId,
+                id: req.params.post_id,
             },
         });
-        if (!reqPost)
-            return res.status(402).json({
-                code: 402,
-                message: '게시글을 찾지 못했습니다',
-            });
+        if (!NOW_POST) {
+            return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
+        }
 
         //작성자 != 요청자
-        if (reqPost.UserId != reqUser.id)
-            return res.status(403).json({
-                code: 403,
-                message: '게시글 수정 권한 없음',
-            });
+        if (NOW_POST.user_id != res.locals.decodes.user_id) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
 
-        await Post.destroy({
-            where: { id: req.params.postId },
-        });
-        return res.status(200).json({
-            code: 200,
-            message: '게시글 삭제 성공',
-        });
-    } catch (err) {
+        await NOW_POST.destroy();
+
+        return res.status(DELETE_POST_SUCCESS.status_code).json(DELETE_POST_SUCCESS.res_json);
+    } catch (error) {
         console.error(err);
-        next(err);
+        next(error);
     }
 };
 
@@ -459,19 +480,19 @@ exports.getUserMajors = async (req, res, next) => {
         const USER_ID = res.locals.decodes.user_id;
         const NOW_USER = await User.findOne({ where: { id: USER_ID } });
         console.log(NOW_USER);
-        return res.send(NOW_USER);
-        // const userMajorList = await NOW_USER.getMajors();
-        // console.log(userMajorList);
-        // let finalResMajor = Array();
-        // userMajorList.forEach((e) => {
-        //     majorInfo = e.dataValues;
-        //     let nowNajorObject = Object();
-        //     const nowRealMajorString = majorInfo.id.toString().padStart(3, '0').toString();
-        //     nowNajorObject['majorId'] = nowRealMajorString;
-        //     nowNajorObject['majorName'] = majorNameObject[nowRealMajorString];
-        //     finalResMajor.push(nowNajorObject);
-        // });
-        // res.status(200).json(finalResMajor);
+
+        const USER_MAJOR_LIST = await UserMajor.findAll({ where: {} });
+        console.log(userMajorList);
+        let finalResMajor = Array();
+        userMajorList.forEach((e) => {
+            majorInfo = e.dataValues;
+            let nowNajorObject = Object();
+            const nowRealMajorString = majorInfo.id.toString().padStart(3, '0').toString();
+            nowNajorObject['majorId'] = nowRealMajorString;
+            nowNajorObject['majorName'] = majorNameObject[nowRealMajorString];
+            finalResMajor.push(nowNajorObject);
+        });
+        res.status(200).json(finalResMajor);
     } catch (err) {
         console.error(err);
         next(err);
