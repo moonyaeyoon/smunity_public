@@ -31,6 +31,14 @@ exports.POST_NOT_EXIST = {
     },
 };
 
+exports.BOARD_NOT_EXIST = {
+    status_code: 400,
+    res_json: {
+        status_code: 400,
+        message: '존재하지 않는 게시판입니다.',
+    },
+};
+
 exports.USER_NO_AUTH = {
     status_code: 402,
     res_json: {

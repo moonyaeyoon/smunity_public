@@ -1,7 +1,7 @@
 const { Op, NOW } = require('sequelize');
-const { REQ_FORM_ERROR, USER_NOT_EXIST, USER_NO_AUTH, POST_NOT_EXIST } = require('../../constants/resErrorJson');
+const { REQ_FORM_ERROR, USER_NOT_EXIST, USER_NO_AUTH, POST_NOT_EXIST, BOARD_NOT_EXIST } = require('../../constants/resErrorJson');
 const { ADD_POST_SUCCESS, UPDATE_POST_SUCCESS, DELETE_POST_SUCCESS } = require('../../constants/resSuccessJson');
-const { User, Board, Post, Comment, sequelize, Major, UserMajor, UserLikePost, UserScrapPost} = require('../../models');
+const { User, Board, Post, Comment, sequelize, Major, UserMajor, UserLikePost, UserScrapPost } = require('../../models');
 
 const checkUserExist = async (userId) => {
     const reqUser = await User.findOne({
@@ -148,6 +148,75 @@ exports.getBoardList = async (req, res, next) => {
     }
 };
 
+exports.getPostList = async (req, res, next) => {
+    try {
+        if (!req.params.board_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+
+        //게시판 존재 여부
+        const NOW_BOARD = await Board.findOne({
+            where: {
+                id: req.params.board_id,
+            },
+        });
+        if (!NOW_BOARD) {
+            return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
+        }
+
+        //사용자 권한 없음
+        let canRead = false;
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        NOW_USER_MAJOR_LIST.forEach((e) => {
+            if (e.dataValues.major_id === NOW_BOARD.dataValues.major_id) {
+                canRead = true;
+                return;
+            }
+        });
+
+        if (!canRead) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
+
+        const POST_LIST = await Post.findAll({
+            where: {
+                board_id: req.params.board_id,
+            },
+        });
+
+        let returnPostList = Array();
+        POST_LIST.forEach((NOW_POST) => {
+            let returnPostObject = Object();
+
+            returnPostObject['id'] = NOW_POST.id;
+
+            //post 익명 여부 처리
+            returnPostObject['username'] = NOW_USER.nickname;
+            if (NOW_POST.is_anonymous == true) {
+                returnPostObject['username'] = '익명';
+            }
+
+            returnPostObject['title'] = NOW_POST.title;
+            returnPostObject['preview'] = NOW_POST.content.substr(0, 50);
+
+            //댓글 수 //TODO: 여기도 나중에 합시다
+            returnPostObject['comments'] = 0;
+
+            returnPostObject['created_time'] = NOW_POST.createdAt;
+            returnPostObject['updated_time'] = NOW_POST.updatedAt;
+
+            returnPostList.push(returnPostObject)
+        });
+
+        return res.status(200).json(returnPostList);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
+
 exports.createNewPost = async (req, res, next) => {
     try {
         if (!req.body.title || !req.body.content || !req.body.board_id) {
@@ -207,7 +276,7 @@ exports.createNewPost = async (req, res, next) => {
     }
 };
 
-exports.getBoardDatail = async (req, res, next) => {
+exports.getPostDatail = async (req, res, next) => {
     try {
         if (!req.params.post_id) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
