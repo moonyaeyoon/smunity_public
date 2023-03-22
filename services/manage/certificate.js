@@ -3,7 +3,7 @@ const { MajorAuthPost, UserMajors } = require('../../models');
 exports.getCertificateList = async (req, res, next) => {
     try {
         const certificateList = await MajorAuthPost.findAll();
-        res.json({ code: 200, payload: certificateList });
+        res.json({ certificateList: certificateList });
     } catch (err) {
         console.error(err);
         next(err);
@@ -22,7 +22,7 @@ exports.addCertificate = async (req, res, next) => {
             image_url: imageUrl,
             content: content,
         });
-        res.json({ code: 200, payload: '인증 요청 성공' });
+        res.json({ isSuccess: true });
     } catch (err) {
         console.error(err);
         next(err);
@@ -43,6 +43,7 @@ exports.updateMajorInCertificate = async (req, res, next) => {
                     major_id: element,
                 });
             });
+            res.json({ isSuccess: true });
         }
     } catch (err) {
         console.error(err);
