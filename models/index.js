@@ -5,6 +5,7 @@ const Board = require('./board');
 const Comment = require('./comment');
 const Major = require('./major');
 const MajorAuthPost = require('./MajorAuthPost');
+const MajorRejectPost = require('./MajorRejectPost');
 const Post = require('./post');
 const User = require('./user');
 const UserLikeComment = require('./UserLikeComment')
@@ -26,6 +27,7 @@ db.Board = Board;
 db.Comment = Comment;
 db.Major = Major;
 db.MajorAuthPost = MajorAuthPost;
+db.MajorRejectPost = MajorRejectPost;
 db.Post = Post;
 db.User = User;
 
@@ -42,6 +44,7 @@ Board.init(sequelize);
 Comment.init(sequelize);
 Major.init(sequelize);
 MajorAuthPost.init(sequelize);
+MajorRejectPost.init(sequelize);
 Post.init(sequelize);
 User.init(sequelize);
 UserLikeComment.init(sequelize)
