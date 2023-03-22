@@ -25,6 +25,30 @@ exports.ADD_USER_SUCCESS = {
     },
 };
 
+exports.ADD_POST_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '게시글의 추가가 완료되었습니다.',
+    },
+};
+
+exports.UPDATE_POST_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '게시글의 수정이 완료되었습니다.',
+    },
+};
+
+exports.DELETE_POST_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '게시글의 삭제가 완료되었습니다.',
+    },
+};
+
 exports.GET_NEW_ACCESS_TOKEN_STATUS = 240;
 exports.getNewAccessTokenJson = (aToken) => {
     return {

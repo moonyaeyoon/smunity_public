@@ -22,7 +22,7 @@ module.exports = class MajorAuthPost extends Sequelize.Model {
                 timestamps: true,
                 underscored: true,
                 modelName: 'MajorAuthPost',
-                tableName: 'majorAuthPosts',
+                tableName: 'MajorAuthPosts',
                 paranoid: true,
                 charset: 'utf8mb4',
                 collate: 'utf8mb4_general_ci',

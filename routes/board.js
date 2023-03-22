@@ -16,14 +16,14 @@ router.get('/usermajors', verifyAToken, getUserMajors);
 
 router.get('/school/noti/list', getSchoolNotiListPreview);
 
-router.post('/create', createNewPost);
+router.post('/create', verifyAToken, createNewPost);
 
-router.get('/detail/:postId', getBoardDatail);
+router.get('/detail/:post_id', verifyAToken, getBoardDatail);
 
-router.patch('/update/:postId', updatePost);
+router.patch('/update/:post_id', verifyAToken, updatePost);
 
-router.delete('/delete/:postId', deletePost);
+router.delete('/delete/:post_id', verifyAToken, deletePost);
 
-router.get('/:majorId/:boardId/list', getBoardList);
+router.get('/:board_id/list', getBoardList);
 
 module.exports = router;
