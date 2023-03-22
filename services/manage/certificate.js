@@ -1,4 +1,4 @@
-const { MajorAuthPost, UserMajors } = require('../../models');
+const { MajorAuthPost, UserMajor } = require('../../models');
 
 exports.getCertificateList = async (req, res, next) => {
     try {
@@ -34,11 +34,12 @@ exports.updateMajorInCertificate = async (req, res, next) => {
     if (!userId || !majorList) {
         return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
     }
-    const isUserMajorsDeleted = await deleteUserMajorList(userId);
     try {
+        const isUserMajorsDeleted = await deleteUserMajorList(userId);
         if (isUserMajorsDeleted) {
-            majorList.forEach(async (element) => {
-                await UserMajors.create({
+            majorList.map(async (element) => {
+                console.log(element);
+                await UserMajor.create({
                     user_id: userId,
                     major_id: element,
                 });
@@ -51,9 +52,23 @@ exports.updateMajorInCertificate = async (req, res, next) => {
     }
 };
 
+exports.deletePostMajor = async (req, res, next) => {
+    const { postId } = req.body;
+    try {
+        await MajorAuthPost.destroy({
+            where: { id: postId },
+        });
+        res.json({ isSuccess: true });
+        return true;
+    } catch (err) {
+        next(err);
+        res.json({ isSuccess: false });
+    }
+};
+
 const deleteUserMajorList = async (userId) => {
     try {
-        await UserMajors.destroy({
+        await UserMajor.destroy({
             where: { user_id: userId },
         });
         return true;
@@ -61,5 +76,16 @@ const deleteUserMajorList = async (userId) => {
         console.err(err);
         next(err);
         return false;
+    }
+};
+
+exports.getCertificateInfo = async (req, res, next) => {
+    const { postId } = req.body;
+    try {
+        const certificateInfo = await MajorAuthPost.findByPk(postId);
+        res.json({ certificateInfo: certificateInfo });
+    } catch (err) {
+        console.error(err);
+        next(err);
     }
 };
