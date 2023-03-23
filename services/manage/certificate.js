@@ -1,4 +1,4 @@
-const { MajorAuthPost, UserMajor } = require('../../models');
+const { MajorAuthPost, UserMajor, MajorRejectPost } = require('../../models');
 
 exports.getCertificateList = async (req, res, next) => {
     try {
@@ -84,6 +84,20 @@ exports.getCertificateInfo = async (req, res, next) => {
     try {
         const certificateInfo = await MajorAuthPost.findByPk(postId);
         res.json({ certificateInfo: certificateInfo });
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
+
+exports.rejectCertificate = async (req, res, next) => {
+    const { userId, rejectText } = req.body;
+    try {
+        await MajorRejectPost.create({
+            reject_text: rejectText,
+            user_id: userId,
+        });
+        res.json({ isSuccess: true });
     } catch (err) {
         console.error(err);
         next(err);
