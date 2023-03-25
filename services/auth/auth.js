@@ -88,7 +88,9 @@ exports.login = async (req, res, next) => {
         //비번 해싱하고 DB와 비교하기
         const PASSWORD_COMPARE_RESULT = await bcrypt.compare(password, USER_INFO.password);
         if (PASSWORD_COMPARE_RESULT) {
-            //비번 일치
+            //비번 일치 시 전공이 비어 있는지 확인 -> 비어 있으면 아직 인증 못한 상태임.
+            const USER_MAJOR_INFO = await UserMajor.findOne({where: {user_id: USER_INFO.id}})
+            if(!USER_MAJOR_INFO) return res.status(RES_ERROR_JSON.EMAIL_AUTH_ERROR.status_code).json(RES_ERROR_JSON.EMAIL_AUTH_ERROR.res_json);
             const aToken = jwtUtil.signAToken(USER_INFO.id);
             const rToken = await jwtUtil.signRToken(USER_INFO.id);
             return res.status(USER_SIGNIN_SUCCESS_STATUS).json(getSuccessSignInJson(aToken, rToken));
@@ -128,22 +130,19 @@ exports.refreshAToken = async (req, res, next) => {
 
 exports.getUserMajors = async (req, res, next) => {
     try {
-        const USER_ID = res.locals.decodes.user_id;
-
-        const USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: USER_ID } });
-        let finalResMajor = Array();
-        for (let index = 0; index < USER_MAJOR_LIST.length; index++) {
-            const e = USER_MAJOR_LIST[index];
-            const NOW_USER_MAJOR = e.dataValues;
-            let nowMajorObject = Object();
-            const NOW_MAJOR_INFO = await Major.findOne({ where: { id: NOW_USER_MAJOR.major_id } });
-            nowMajorObject['major_id'] = NOW_USER_MAJOR.major_id;
-            nowMajorObject['major_name'] = NOW_MAJOR_INFO.major_name;
-            finalResMajor.push(nowMajorObject);
+        const USER_MAJORS_INFO = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
+        const RES_MAJOR_LIST = Array();
+        for (let index = 0; index < USER_MAJORS_INFO.length; index++) {
+            const NOW_USER_MAJOR = USER_MAJORS_INFO[index];
+            const MAJOR_INFO = await Major.findOne({ where: { id: NOW_USER_MAJOR.major_id } });
+            RES_MAJOR_LIST.push({
+                major_id: NOW_USER_MAJOR.major_id,
+                major_name: MAJOR_INFO.major_name,
+            });
         }
-        res.status(200).json(finalResMajor);
-    } catch (err) {
-        console.error(err);
-        next(err);
+        res.status(200).json(RES_MAJOR_LIST);
+    } catch (error) {
+        console.error(error);
+        next(error);
     }
 };

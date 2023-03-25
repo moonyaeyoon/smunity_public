@@ -55,6 +55,14 @@ exports.SIGN_IN_ERROR = {
     },
 };
 
+exports.EMAIL_AUTH_ERROR = {
+    status_code: 405,
+    res_json: {
+        status_code: 405,
+        message: '학교 이메일 인증을 완료하지 않았습니다.',
+    },
+};
+
 //JWT관련
 exports.JWT_TOKEN_NOT_FOUND = {
     status_code: 440,

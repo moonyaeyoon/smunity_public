@@ -1,4 +1,4 @@
-{
+module.exports = {
     "development": {
         "username": "admin",
         "password": "1Q5ACZnjz7jpISOCAn8M",
@@ -8,7 +8,7 @@
     },
     "test": {
         "username": "root",
-        "password": "8398288",
+        "password": process.env.DB_PASSWORD,
         "database": "capstone",
         "host": "127.0.0.1",
         "dialect": "mysql"
