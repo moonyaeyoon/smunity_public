@@ -16,6 +16,7 @@ const {
     USER_CAN_SIGNUP,
     ADD_USER_SUCCESS,
 } = require('../../constants/resSuccessJson');
+const { UserMajor } = require('../../models');
 
 const checkSchoolIdExist = async (schoolId) => {
     const EX_USER = await User.findOne({ where: { school_id: schoolId } });
@@ -107,7 +108,7 @@ exports.refreshAToken = async (req, res, next) => {
     try {
         //aToken 디코딩 => UserId 확인
         const NOW_USER_INFO = jwt.decode(req.headers.access_token);
-        
+
         //TODO: 토큰이 아닌 일반적인 문자열이 들어오면 예외처리해줘야 함.
 
         //rToken 인증(rToken도 유효 기간 지날 수 있으니까)
@@ -122,5 +123,27 @@ exports.refreshAToken = async (req, res, next) => {
         }
     } catch (error) {
         console.error(error);
+    }
+};
+
+exports.getUserMajors = async (req, res, next) => {
+    try {
+        const USER_ID = res.locals.decodes.user_id;
+
+        const USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: USER_ID } });
+        let finalResMajor = Array();
+        for (let index = 0; index < USER_MAJOR_LIST.length; index++) {
+            const e = USER_MAJOR_LIST[index];
+            const NOW_USER_MAJOR = e.dataValues;
+            let nowMajorObject = Object();
+            const NOW_MAJOR_INFO = await Major.findOne({ where: { id: NOW_USER_MAJOR.major_id } });
+            nowMajorObject['major_id'] = NOW_USER_MAJOR.major_id;
+            nowMajorObject['major_name'] = NOW_MAJOR_INFO.major_name;
+            finalResMajor.push(nowMajorObject);
+        }
+        res.status(200).json(finalResMajor);
+    } catch (err) {
+        console.error(err);
+        next(err);
     }
 };

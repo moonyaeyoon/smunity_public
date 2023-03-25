@@ -20,203 +20,6 @@ const toJSONLocal = (date) => {
     return local.toJSON().slice(0, 10);
 };
 
-exports.getBoardList = async (req, res, next) => {
-    try {
-        if (!req.headers.email || !req.params.board_id)
-            return res.status(400).json({
-                code: 400,
-                message: '요청 문법 틀림',
-            });
-
-        const reqEmail = req.headers.email;
-        const reqUser = await checkUserExist(reqEmail);
-        if (reqUser === false)
-            return res.status(401).json({
-                code: 401,
-                message: '잘못된 사용자 입니다',
-            });
-
-        //사용자 권한 없음
-        let canRead = false;
-        const reqUserMajors = await reqUser.getMajors();
-        console.log(reqUserMajors);
-        reqUserMajors.forEach((element) => {
-            if (element.dataValues.id.toString().padStart(3, '0') === req.params.majorId) {
-                canRead = true;
-                return;
-            }
-        });
-        if (!canRead)
-            return res.status(403).json({
-                code: 403,
-                message: '게시판 접근 권한 없음',
-            });
-
-        //header의 listSize 힙법성 판단
-        let finalListNumber = 0; //-1는 오류, 0는 전체, >=1는 갯수만큼 조회
-        if (req.headers.listsize) {
-            let listSize = req.headers.listsize;
-            //숫자 검사
-            if (!isNaN(listSize)) {
-                //숫자면
-                finalListNumber = Number(listSize);
-            } else
-                return res.status(400).json({
-                    //숫자아니면
-                    code: 400,
-                    message: 'listSize는 숫자가 아님',
-                });
-            //숫자지만 0보다 큰 정수가 아님
-            if (!Number.isInteger(finalListNumber) || finalListNumber <= 0)
-                return res.status(400).json({
-                    code: 400,
-                    message: 'listSize가 0보다 큰 정수가 아님',
-                });
-        }
-
-        let postList;
-        if (finalListNumber == 0) {
-            postList = await Post.findAll({
-                where: {
-                    BoardBoardId: req.params.majorId + req.params.boardId,
-                    // order: [['createdAt', 'DESC']]
-                },
-                include: [
-                    {
-                        model: User,
-                    },
-                    {
-                        model: Comment,
-                    },
-                ],
-            });
-        } else {
-            postList = await Post.findAll({
-                where: {
-                    BoardBoardId: req.params.majorId + req.params.boardId,
-                    // order: [['createdAt', 'DESC']]
-                },
-                include: [
-                    {
-                        model: User,
-                    },
-                    {
-                        model: Comment,
-                    },
-                ],
-                limit: finalListNumber,
-            });
-        }
-
-        let finalResObject = Object();
-        finalResObject['majorName'] = majorNameObject[req.params.majorId];
-        finalResObject['boardName'] = boardNameObject[req.params.boardId];
-        finalResObject['postList'] = Array();
-        postList.forEach((e) => {
-            const postInfo = e.dataValues;
-            const nowPostObject = Object();
-            //id
-            nowPostObject['id'] = postInfo.id;
-            //userId
-            nowPostObject['userId'] = postInfo.UserId;
-            //author
-            let finalAuthor = e.User.nick;
-            if (postInfo.isAnonymous == true) finalAuthor = '익명';
-            nowPostObject['author'] = finalAuthor;
-            //제목
-            nowPostObject['title'] = postInfo.title;
-            //imgUrl
-            nowPostObject['imgUrl'] = postInfo.imgUrl;
-            //views
-            nowPostObject['views'] = postInfo.views;
-            //likes
-            nowPostObject['likes'] = postInfo.likes;
-            //isAnonymous
-            nowPostObject['isAnonymous'] = postInfo.isAnonymous;
-            //댓글 수
-            nowPostObject['commentNum'] = e.Comments.length;
-            //작성 시간(createdAt)
-            nowPostObject['createDate'] = toJSONLocal(postInfo.createdAt);
-
-            finalResObject['postList'].push(nowPostObject);
-        });
-
-        return res.status(200).json(finalResObject);
-    } catch (error) {
-        console.error(error);
-        next(error);
-    }
-};
-
-exports.getPostList = async (req, res, next) => {
-    try {
-        if (!req.params.board_id) {
-            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
-        }
-
-        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
-
-        //게시판 존재 여부
-        const NOW_BOARD = await Board.findOne({
-            where: {
-                id: req.params.board_id,
-            },
-        });
-        if (!NOW_BOARD) {
-            return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
-        }
-
-        //사용자 권한 없음
-        let canRead = false;
-        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
-        NOW_USER_MAJOR_LIST.forEach((e) => {
-            if (e.dataValues.major_id === NOW_BOARD.dataValues.major_id) {
-                canRead = true;
-                return;
-            }
-        });
-
-        if (!canRead) {
-            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
-        }
-
-        const POST_LIST = await Post.findAll({
-            where: {
-                board_id: req.params.board_id,
-            },
-        });
-
-        let returnPostList = Array();
-        POST_LIST.forEach((NOW_POST) => {
-            let returnPostObject = Object();
-
-            returnPostObject['id'] = NOW_POST.id;
-
-            //post 익명 여부 처리
-            returnPostObject['username'] = NOW_USER.nickname;
-            if (NOW_POST.is_anonymous == true) {
-                returnPostObject['username'] = '익명';
-            }
-
-            returnPostObject['title'] = NOW_POST.title;
-            returnPostObject['preview'] = NOW_POST.content.substr(0, 50);
-
-            //댓글 수 //TODO: 여기도 나중에 합시다
-            returnPostObject['comments'] = 0;
-
-            returnPostObject['created_time'] = NOW_POST.createdAt;
-            returnPostObject['updated_time'] = NOW_POST.updatedAt;
-
-            returnPostList.push(returnPostObject)
-        });
-
-        return res.status(200).json(returnPostList);
-    } catch (err) {
-        console.error(err);
-        next(err);
-    }
-};
-
 exports.createNewPost = async (req, res, next) => {
     try {
         if (!req.body.title || !req.body.content || !req.body.board_id) {
@@ -430,69 +233,142 @@ exports.deletePost = async (req, res, next) => {
     }
 };
 
-exports.getSchoolNotiListPreview = async (req, res, next) => {
+exports.getPostList = async (req, res, next) => {
     try {
-        const showListNum = 4;
-        const finalReqsList = Array();
-        const schoolNotiList = await Post.findAll({
+        if (!req.params.board_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+
+        //게시판 존재 여부
+        const NOW_BOARD = await Board.findOne({
             where: {
-                BoardBoardId: '004003',
+                id: req.params.board_id,
             },
-            include: [
-                {
-                    model: User,
-                },
-                {
-                    model: Comment,
-                },
+        });
+        if (!NOW_BOARD) {
+            return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
+        }
+
+        //사용자 권한 없음
+        let canRead = false;
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        NOW_USER_MAJOR_LIST.forEach((e) => {
+            if (e.dataValues.major_id === NOW_BOARD.dataValues.major_id) {
+                canRead = true;
+                return;
+            }
+        });
+
+        if (!canRead) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
+
+        const POST_LIST = await Post.findAll({
+            where: {
+                board_id: req.params.board_id,
+            },
+            order: [
+                ['created_at', 'DESC'],
             ],
-            limit: showListNum,
         });
-        console.log(schoolNotiList);
-        schoolNotiList.forEach((e) => {
-            const postInfo = e.dataValues;
-            const nowPostObject = Object();
-            //postId
-            nowPostObject['id'] = postInfo.id;
-            //제목
-            nowPostObject['title'] = postInfo.title;
-            //닉네임
-            nowPostObject['nickName'] = e.User.nick;
 
-            //댓글 수
-            nowPostObject['commentNum'] = e.Comments.length;
+        let returnPostList = Array();
+        POST_LIST.forEach((NOW_POST) => {
+            let returnPostObject = Object();
 
-            //작성 시간(createdAt)
-            nowPostObject['createDate'] = toJSONLocal(postInfo.createdAt);
+            returnPostObject['id'] = NOW_POST.id;
 
-            finalReqsList.push(nowPostObject);
+            //post 익명 여부 처리
+            returnPostObject['username'] = NOW_USER.nickname;
+            if (NOW_POST.is_anonymous == true) {
+                returnPostObject['username'] = '익명';
+            }
+
+            returnPostObject['title'] = NOW_POST.title;
+            returnPostObject['preview'] = NOW_POST.content.substr(0, 50);
+
+            //댓글 수 //TODO: 여기도 나중에 합시다
+            returnPostObject['comments'] = 0;
+
+            returnPostObject['created_time'] = NOW_POST.createdAt;
+            returnPostObject['updated_time'] = NOW_POST.updatedAt;
+
+            returnPostList.push(returnPostObject)
         });
-        console.log(finalReqsList);
-        res.status(200).json(finalReqsList);
+
+        return res.status(200).json(returnPostList);
     } catch (err) {
         console.error(err);
         next(err);
     }
 };
 
-exports.getUserMajors = async (req, res, next) => {
+exports.getMajorBoards = async (req, res, next) => {
     try {
-        const USER_ID = res.locals.decodes.user_id;
-        const NOW_USER = await User.findOne({ where: { id: USER_ID } });
-        console.log(NOW_USER);
+        if (!req.params.major_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
 
-        const USER_MAJOR_LIST = await UserMajor.findAll({ where: {} });
-        console.log(userMajorList);
-        let finalResMajor = Array();
-        userMajorList.forEach((e) => {
-            majorInfo = e.dataValues;
-            let nowNajorObject = Object();
-            const nowRealMajorString = majorInfo.id.toString().padStart(3, '0').toString();
-            nowNajorObject['majorId'] = nowRealMajorString;
-            nowNajorObject['majorName'] = majorNameObject[nowRealMajorString];
-            finalResMajor.push(nowNajorObject);
+        const BOARD_LIST = await Board.findAll({ where: {major_id: req.params.major_id} });
+
+        let finalResBoard = Array();
+        BOARD_LIST.forEach(async(e) => {
+            const NOW_BOARD = e.dataValues;
+            let nowBoardObject = Object();
+            nowBoardObject['board_name'] = NOW_BOARD.board_name;
+            nowBoardObject['is_can_anonymous'] = NOW_BOARD.is_can_anonymous;
+            nowBoardObject['is_notice'] = NOW_BOARD.is_notice;
+            finalResBoard.push(nowBoardObject);
         });
-        res.status(200).json(finalResMajor);
+        res.status(200).json(finalResBoard);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
+
+exports.getBoardPreview = async (req, res, next) => {
+    try {
+        if (!req.params.board_id || !req.body.count || +req.body.count <= 0) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        if(!await Board.findOne({where: {id: req.params.board_id}})){
+            return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
+        }
+
+        const postList = Array();
+        const BOARD_PREVIEW_POST_LIST = await Post.findAll({
+            where: {
+                board_id: req.params.board_id,
+            },
+            order: [
+                ['created_at', 'DESC'],
+            ],
+            limit: req.body.count,
+        });
+
+        for (let index = 0; index < BOARD_PREVIEW_POST_LIST.length; index++) {
+            const e = BOARD_PREVIEW_POST_LIST[index];
+            const postInfo = e.dataValues;
+            const nowPostObject = Object();
+            //postId
+            nowPostObject['id'] = postInfo.id;
+
+            //제목
+            nowPostObject['title'] = postInfo.title;
+
+            //댓글 수
+            nowPostObject['commentNum'] = await (await Comment.findAll({where: {post_id: postInfo.id}})).length;
+
+            //작성 시간(createdAt)
+            nowPostObject['createDate'] = toJSONLocal(postInfo.createdAt);
+
+            postList.push(nowPostObject);
+        }
+        res.status(200).json(postList);
     } catch (err) {
         console.error(err);
         next(err);

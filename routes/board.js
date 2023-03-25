@@ -8,13 +8,12 @@ const {
     deletePost,
     getSchoolNotiListPreview,
     getUserMajors,
+    getMajorBoards,
+    getBoardPreview,
 } = require('../services/board/boardService');
 
 const router = express.Router();
 
-router.get('/usermajors', verifyAToken, getUserMajors);
-
-router.get('/school/noti/list', getSchoolNotiListPreview);
 
 router.post('/create', verifyAToken, createNewPost);
 
@@ -25,5 +24,9 @@ router.patch('/update/:post_id', verifyAToken, updatePost);
 router.delete('/delete/:post_id', verifyAToken, deletePost);
 
 router.get('/:board_id', verifyAToken, getPostList);
+
+router.get('/board_list/:major_id', getMajorBoards);
+
+router.get('/preview/:board_id', verifyAToken, getBoardPreview);
 
 module.exports = router;

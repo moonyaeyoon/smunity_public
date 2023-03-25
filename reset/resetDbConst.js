@@ -24,4 +24,9 @@ exports.COMMON_BOARD_LIST = [
         isCanAnonymous: false,
         isNotice: true,
     },
+    {
+        boardName: '정보/홍보게시판',
+        isCanAnonymous: false,
+        isNotice: false,
+    },
 ];
