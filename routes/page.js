@@ -6,6 +6,7 @@ const { sequelize } = require('../models');
 const ManageRouter = require('./manage');
 const BoardRouter = require('./board');
 const AuthRouter = require('./auth');
+const CommentRouter = require('./comment');
 
 router.use((req, res, next) => {
     res.locals.user = req.user;
@@ -14,6 +15,7 @@ router.use((req, res, next) => {
 
 router.use('/manage', ManageRouter);
 router.use('/board', BoardRouter);
+router.use('/comment', CommentRouter);
 
 router.use('/auth', AuthRouter);
 
