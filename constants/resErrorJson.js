@@ -31,6 +31,14 @@ exports.POST_NOT_EXIST = {
     },
 };
 
+exports.COMMENT_NOT_EXIST = {
+    status_code: 400,
+    res_json: {
+        status_code: 400,
+        message: '존재하지 않는 댓글입니다.',
+    },
+};
+
 exports.BOARD_NOT_EXIST = {
     status_code: 400,
     res_json: {

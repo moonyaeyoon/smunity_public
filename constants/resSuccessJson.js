@@ -49,6 +49,30 @@ exports.DELETE_POST_SUCCESS = {
     },
 };
 
+exports.ADD_COMMENT_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '댓글의 추가가 완료되었습니다.',
+    },
+};
+
+exports.UPDATE_COMMENT_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '댓글의 수정이 완료되었습니다.',
+    },
+};
+
+exports.DELETE_COMMENT_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '댓글의 삭제가 완료되었습니다.',
+    },
+};
+
 exports.GET_NEW_ACCESS_TOKEN_STATUS = 240;
 exports.getNewAccessTokenJson = (aToken) => {
     return {
