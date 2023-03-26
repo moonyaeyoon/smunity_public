@@ -16,6 +16,7 @@ const {
     USER_CAN_SIGNUP,
     ADD_USER_SUCCESS,
 } = require('../../constants/resSuccessJson');
+const { UserMajor } = require('../../models');
 
 const checkSchoolIdExist = async (schoolId) => {
     const EX_USER = await User.findOne({ where: { school_id: schoolId } });
@@ -71,7 +72,7 @@ exports.join = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-    const { school_id, password } = req.body;
+    const { school_id, password } = req.headers;
     try {
         if (!school_id || !password)
             //요청 양식 틀림
@@ -87,7 +88,9 @@ exports.login = async (req, res, next) => {
         //비번 해싱하고 DB와 비교하기
         const PASSWORD_COMPARE_RESULT = await bcrypt.compare(password, USER_INFO.password);
         if (PASSWORD_COMPARE_RESULT) {
-            //비번 일치
+            //비번 일치 시 전공이 비어 있는지 확인 -> 비어 있으면 아직 인증 못한 상태임.
+            const USER_MAJOR_INFO = await UserMajor.findOne({where: {user_id: USER_INFO.id}})
+            if(!USER_MAJOR_INFO) return res.status(RES_ERROR_JSON.EMAIL_AUTH_ERROR.status_code).json(RES_ERROR_JSON.EMAIL_AUTH_ERROR.res_json);
             const aToken = jwtUtil.signAToken(USER_INFO.id);
             const rToken = await jwtUtil.signRToken(USER_INFO.id);
             return res.status(USER_SIGNIN_SUCCESS_STATUS).json(getSuccessSignInJson(aToken, rToken));
@@ -107,7 +110,7 @@ exports.refreshAToken = async (req, res, next) => {
     try {
         //aToken 디코딩 => UserId 확인
         const NOW_USER_INFO = jwt.decode(req.headers.access_token);
-        
+
         //TODO: 토큰이 아닌 일반적인 문자열이 들어오면 예외처리해줘야 함.
 
         //rToken 인증(rToken도 유효 기간 지날 수 있으니까)
@@ -122,5 +125,24 @@ exports.refreshAToken = async (req, res, next) => {
         }
     } catch (error) {
         console.error(error);
+    }
+};
+
+exports.getUserMajors = async (req, res, next) => {
+    try {
+        const USER_MAJORS_INFO = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
+        const RES_MAJOR_LIST = [];
+        for (let index = 0; index < USER_MAJORS_INFO.length; index++) {
+            const NOW_USER_MAJOR = USER_MAJORS_INFO[index];
+            const MAJOR_INFO = await Major.findOne({ where: { id: NOW_USER_MAJOR.major_id } });
+            RES_MAJOR_LIST.push({
+                major_id: NOW_USER_MAJOR.major_id,
+                major_name: MAJOR_INFO.major_name,
+            });
+        }
+        res.status(200).json(RES_MAJOR_LIST);
+    } catch (error) {
+        console.error(error);
+        next(error);
     }
 };
