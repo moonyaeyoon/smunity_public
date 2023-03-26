@@ -23,10 +23,10 @@ router.patch('/update/:post_id', verifyAToken, updatePost);
 
 router.delete('/delete/:post_id', verifyAToken, deletePost);
 
-router.get('/:board_id', verifyAToken, getPostList);
+router.get('/post_list/:board_id', verifyAToken, getPostList);
 
 router.get('/board_list/:major_id', getMajorBoards);
 
-router.get('/preview/:board_id', verifyAToken, getBoardPreview);
+router.get('/preview', verifyAToken, getBoardPreview);
 
 module.exports = router;

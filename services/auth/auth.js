@@ -72,7 +72,7 @@ exports.join = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-    const { school_id, password } = req.body;
+    const { school_id, password } = req.headers;
     try {
         if (!school_id || !password)
             //요청 양식 틀림
@@ -131,7 +131,7 @@ exports.refreshAToken = async (req, res, next) => {
 exports.getUserMajors = async (req, res, next) => {
     try {
         const USER_MAJORS_INFO = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
-        const RES_MAJOR_LIST = Array();
+        const RES_MAJOR_LIST = [];
         for (let index = 0; index < USER_MAJORS_INFO.length; index++) {
             const NOW_USER_MAJOR = USER_MAJORS_INFO[index];
             const MAJOR_INFO = await Major.findOne({ where: { id: NOW_USER_MAJOR.major_id } });

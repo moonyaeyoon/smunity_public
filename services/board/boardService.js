@@ -112,7 +112,8 @@ exports.getPostDatail = async (req, res, next) => {
         }
 
         //post조회수 + 1 (UpdatedAt가 바뀌지 않도록 수동으로 쿼리문 작성함.)
-        if (NOW_POST.user_id != NOW_USER.id) { //자신이 보면 조회수 안 올라가게 함.
+        if (NOW_POST.user_id != NOW_USER.id) {
+            //자신이 보면 조회수 안 올라가게 함.
             const env = process.env.NODE_ENV || 'development';
             const config = require('../../config/config')[env];
             const [result, metadata] = await sequelize.query(
@@ -131,7 +132,7 @@ exports.getPostDatail = async (req, res, next) => {
             order: [['created_at', 'DESC']],
         });
 
-        const COMMENT_LIST = Array();
+        const COMMENT_LIST = [];
         for (let index = 0; index < COMMENTS_INFO.length; index++) {
             const NOW_COMMENT = COMMENTS_INFO[index];
             const NOW_COMMENT_USER = await User.findOne({ where: { id: NOW_COMMENT.user_id } });
@@ -267,7 +268,7 @@ exports.getPostList = async (req, res, next) => {
             order: [['created_at', 'DESC']],
         });
 
-        const RES_POSTS = Array();
+        const RES_POSTS = [];
         for (let index = 0; index < POSTS_INFO.length; index++) {
             const NOW_POST = POSTS_INFO[index];
             const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
@@ -296,7 +297,7 @@ exports.getMajorBoards = async (req, res, next) => {
 
         const BOARDS_INFO = await Board.findAll({ where: { major_id: req.params.major_id } });
 
-        const RES_BOARD_LIST = Array();
+        const RES_BOARD_LIST = [];
         for (let index = 0; index < BOARDS_INFO.length; index++) {
             const NOW_BOARD = BOARDS_INFO[index];
             RES_BOARD_LIST.push({
@@ -314,28 +315,29 @@ exports.getMajorBoards = async (req, res, next) => {
 
 exports.getBoardPreview = async (req, res, next) => {
     try {
-        if (!req.params.board_id || !req.body.limit_post_num) {
+        if (!req.query.board_id || !req.query.limit_post_num) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
         //limit_post_num가 양의 정수인지 판단
-        if (isNaN(req.body.limit_post_num) || parseInt(req.body.limit_post_num) <= 0) {
+        if (isNaN(req.query.limit_post_num) || parseInt(req.query.limit_post_num) <= 0) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
-        if (!(await Board.findOne({ where: { id: req.params.board_id } }))) {
+        const NOW_BOARD = await Board.findOne({ where: { id: req.query.board_id } });
+        if (!NOW_BOARD) {
             return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
         }
 
         const BOARD_PREVIEW_POSTS_INFO = await Post.findAll({
             where: {
-                board_id: req.params.board_id,
+                board_id: req.query.board_id,
             },
             order: [['created_at', 'DESC']],
-            limit: req.body.limit_post_num,
+            limit: parseInt(req.query.limit_post_num),
         });
 
-        const RES_POST_LIST = Array();
+        const RES_POST_LIST = [];
 
         for (let index = 0; index < BOARD_PREVIEW_POSTS_INFO.length; index++) {
             const NOW_POST = BOARD_PREVIEW_POSTS_INFO[index];
