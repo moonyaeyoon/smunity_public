@@ -139,8 +139,9 @@ exports.getPostDatail = async (req, res, next) => {
             COMMENT_LIST.push({
                 comment_id: NOW_COMMENT.id,
                 username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_USER.nickname,
-                created_at: NOW_COMMENT.createdAt,
-                updated_at: NOW_COMMENT.updatedAt,
+                content: NOW_COMMENT.content,
+                created_time: NOW_COMMENT.createdAt,
+                updated_time: NOW_COMMENT.updatedAt,
             });
         }
 
@@ -301,6 +302,7 @@ exports.getMajorBoards = async (req, res, next) => {
         for (let index = 0; index < BOARDS_INFO.length; index++) {
             const NOW_BOARD = BOARDS_INFO[index];
             RES_BOARD_LIST.push({
+                board_id: NOW_BOARD.id,
                 board_name: NOW_BOARD.board_name,
                 is_can_anonymous: NOW_BOARD.is_can_anonymous,
                 is_notice: NOW_BOARD.is_notice,
@@ -346,7 +348,7 @@ exports.getBoardPreview = async (req, res, next) => {
                 post_id: NOW_POST.id,
                 title: NOW_POST.title,
                 comments: COMMENT_LIST.length,
-                created_at: toJSONLocal(NOW_POST.createdAt),
+                created_time: toJSONLocal(NOW_POST.createdAt),
             });
         }
         res.status(200).json(RES_POST_LIST);
