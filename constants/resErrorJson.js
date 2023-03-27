@@ -103,3 +103,10 @@ exports.JWT_REFRESH_TOKEN_EXPIRED = {
         message: 'Refresh토큰이 만료되었습니다.',
     },
 };
+
+exports.sendErrorLog = (error) => {
+    return {
+        message: '예상치 않는 에러입니다.',
+        error_message: error,
+    };
+};

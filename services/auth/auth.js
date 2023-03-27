@@ -79,11 +79,16 @@ exports.login = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
 
         const USER_INFO = await checkSchoolIdExist(school_id); //사용자 미존재
-        if (USER_INFO === null) return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
-
-        if (USER_INFO.password === null)
-            //local로 회원가입한 사람이 이닐 경우
+        if (USER_INFO === null) {
+            console.log("Login Error: school donot exist");
             return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
+        }
+
+        if (USER_INFO.password === null){
+            console.log("Login Error: user signup by third part");
+            return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
+        }
+            //local로 회원가입한 사람이 이닐 경우
 
         //비번 해싱하고 DB와 비교하기
         const PASSWORD_COMPARE_RESULT = await bcrypt.compare(password, USER_INFO.password);
@@ -96,6 +101,7 @@ exports.login = async (req, res, next) => {
             return res.status(USER_SIGNIN_SUCCESS_STATUS).json(getSuccessSignInJson(aToken, rToken));
         } else {
             //비번 불일치
+            console.log("Login Error: password error");
             return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
         }
     } catch (error) {
