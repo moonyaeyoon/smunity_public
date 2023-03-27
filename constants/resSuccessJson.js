@@ -81,3 +81,7 @@ exports.getNewAccessTokenJson = (aToken) => {
         access_token: aToken,
     };
 };
+
+exports.emailAuthSuccess = () => {
+    return "<script>alert('이메일 인증이 완료되었습니다!');</script>"
+}

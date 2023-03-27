@@ -3,14 +3,14 @@ const { ADD_POST_SUCCESS, UPDATE_POST_SUCCESS, DELETE_POST_SUCCESS } = require('
 const { User, Board, Post, Comment, sequelize, Major, UserMajor, UserLikePost, UserScrapPost } = require('../../models');
 
 const checkUserExist = async (userId) => {
-    const reqUser = await User.findOne({
+    const REQ_USER = await User.findOne({
         where: {
             id: userId,
         },
     });
     //사용자 미존재
-    if (reqUser === null) return false;
-    else return reqUser;
+    if (REQ_USER === null) return false;
+    else return REQ_USER;
 };
 
 const toJSONLocal = (date) => {
