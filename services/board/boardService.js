@@ -19,6 +19,10 @@ const toJSONLocal = (date) => {
     return local.toJSON().slice(0, 10);
 };
 
+const UTC2KOR = (utcTimeString) => {
+    Date.parse(dateString)
+}
+
 exports.createNewPost = async (req, res, next) => {
     try {
         if (!req.body.title || !req.body.content || !req.body.board_id) {
@@ -136,6 +140,7 @@ exports.getPostDatail = async (req, res, next) => {
         for (let index = 0; index < COMMENTS_INFO.length; index++) {
             const NOW_COMMENT = COMMENTS_INFO[index];
             const NOW_COMMENT_USER = await User.findOne({ where: { id: NOW_COMMENT.user_id } });
+            const 
             COMMENT_LIST.push({
                 comment_id: NOW_COMMENT.id,
                 username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_USER.nickname,
@@ -283,7 +288,15 @@ exports.getPostList = async (req, res, next) => {
                 updated_time: NOW_POST.updatedAt,
             });
         }
-        return res.status(200).json(RES_POSTS);
+
+
+
+        const RES_BOARD_AND_POSTS = {
+            major_name: NOW_BOARD.board_name.split("-")[0],
+            board_name: NOW_BOARD.board_name.split("-")[1],
+            posts: RES_POSTS
+        }
+        return res.status(200).json(RES_BOARD_AND_POSTS);
     } catch (error) {
         console.error(error);
         next(error);
