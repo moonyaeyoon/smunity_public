@@ -110,3 +110,7 @@ exports.sendErrorLog = (error) => {
         error_message: error,
     };
 };
+
+exports.emailAuthError = () => {
+    return "<script>alert('이메일 인증이 실패했습니다. 인증 링크를 다시 한 번 확인하세요.');</script>"
+}

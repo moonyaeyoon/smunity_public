@@ -15,14 +15,37 @@ const {
     USER_SIGNIN_SUCCESS_STATUS,
     USER_CAN_SIGNUP,
     ADD_USER_SUCCESS,
+    emailAuthSuccess,
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
+const { encrypt, decrypt } = require('../../util/crypter');
 
 const checkSchoolIdExist = async (schoolId) => {
     const EX_USER = await User.findOne({ where: { school_id: schoolId } });
     if (EX_USER) return EX_USER;
     else return null;
 };
+
+const generateRandomCode = (digit) => {
+    let randomNumberCode = ''
+    for (let i = 0; i < digit; i++) {
+        randomNumberCode += Math.floor(Math.random() * 10)
+    }
+    return randomNumberCode
+};
+
+const generateAuthUrl = (schoolId, randomCode) => {
+
+    //이메일 인증을 위한 링크 생성 -> 암호화 필수
+    const AUTH_QUERY = `${schoolId}&&${randomCode}`;
+    const CRYPTED_QUERY = encrypt(AUTH_QUERY, process.env.AUTH_QUERY_SECRET_KEY)
+    const ENCODED_QUERY = encodeURIComponent(CRYPTED_QUERY)
+    console.log("encoded query: ", ENCODED_QUERY);
+    
+    const LINK_DOMAIN = process.env.NODE_ENV == "test" ? 'http://localhost' : process.env.EMAIL_AUTH_DOMAIN
+    
+    return `${LINK_DOMAIN}:8001/auth/auth_email?code=${ENCODED_QUERY}`;
+}
 
 exports.checkSchoolId = async (req, res, next) => {
     try {
@@ -57,11 +80,23 @@ exports.join = async (req, res, next) => {
         const NEW_USER_EMAIL = `${school_id}@${SMU_STUDENT_EMAIL_DOMAIN}`;
         const NEW_USER_PASSWORD_HASH = await bcrypt.hash(password, Number(PASSWORD_SALT_OR_ROUNDS));
         console.log('passwod hash is: ' + NEW_USER_PASSWORD_HASH);
+
+        //이메일 인증을 위한 랜덤 코드 생성
+        const AUTH_CODE = generateRandomCode(10);
+
+        //이메일 인증을 위한 링크 생성 -> 암호화 필수
+        const AUTH_URL = generateAuthUrl(school_id, AUTH_CODE);
+
+        //이메일 보내기 => 테스트할 때는 해당 링크를 서버에 log남기기
+            //TODO: 링크가 포함한 이메일 보내기
+        console.log(`Sign Up: 인증 링크: ${AUTH_URL}`);
+
         const NEW_USER = await User.create({
             school_id: school_id,
             email: NEW_USER_EMAIL,
             nickname,
             password: NEW_USER_PASSWORD_HASH,
+            email_auth_code: AUTH_CODE
         });
 
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
@@ -162,6 +197,41 @@ exports.getUserMajors = async (req, res, next) => {
     } catch (error) {
         console.error(error);
         next(error);
+    }
+};
+
+exports.addSchoolAuth = async (req, res, next) => {
+
+    try {
+        if(!req.query.code){
+            console.log("Email Auth Error: 요청양식 틀림");
+            return res.status(404).send(RES_ERROR_JSON.emailAuthError())
+        }
+
+        const DECODED_CODE = decodeURIComponent(req.query.code)
+        const AUTH_QUERY_ARRAY = decrypt(DECODED_CODE, process.env.AUTH_QUERY_SECRET_KEY).split("&&")
+        const URL_SCHOOL_ID = AUTH_QUERY_ARRAY[0]
+        const URL_AUTH_CODE = AUTH_QUERY_ARRAY[1]
+
+        const REQ_USER = await checkSchoolIdExist(URL_SCHOOL_ID);
+        if(!REQ_USER) {
+            console.log("Email Auth Error: 사용자 존재하지 않음");
+            return res.status(404).send(RES_ERROR_JSON.emailAuthError())
+        }
+
+        if(REQ_USER.email_auth_code === URL_AUTH_CODE){
+            await UserMajor.create({
+                user_id: REQ_USER.id,
+                major_id: 1,
+            });
+            return res.status(201).send(emailAuthSuccess())
+        }else{
+            console.log(`Email Auth Error: 인증코드 일치하지 않음 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`);
+            return res.status(404).send(RES_ERROR_JSON.emailAuthError())
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(404).send(RES_ERROR_JSON.emailAuthError())
     }
 };
 

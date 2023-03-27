@@ -39,6 +39,10 @@ module.exports = class User extends Sequelize.Model {
                     type: Sequelize.STRING(200),
                     allowNull: true,
                 },
+                email_auth_code: {
+                    type: Sequelize.STRING(30),
+                    allowNull: true
+                }
             },
             {
                 sequelize,
