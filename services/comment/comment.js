@@ -160,7 +160,7 @@ exports.deleteComment = async (req, res, next) => {
         //게시글 존재 여부
         const NOW_POST = await Post.findOne({
             where: {
-                id: req.params.comment_id,
+                id: NOW_COMMENT.post_id,
             },
         });
         if (!NOW_POST) {
