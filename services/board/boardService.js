@@ -19,6 +19,10 @@ const toJSONLocal = (date) => {
     return local.toJSON().slice(0, 10);
 };
 
+const UTC2KOR = (utcTimeString) => {
+    Date.parse(dateString);
+};
+
 exports.createNewPost = async (req, res, next) => {
     try {
         if (!req.body.title || !req.body.content || !req.body.board_id) {
@@ -140,8 +144,8 @@ exports.getPostDatail = async (req, res, next) => {
                 comment_id: NOW_COMMENT.id,
                 username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_USER.nickname,
                 content: NOW_COMMENT.content,
-                created_time: NOW_COMMENT.createdAt,
-                updated_time: NOW_COMMENT.updatedAt,
+                created_time: Date(Date.parse(NOW_COMMENT.createdAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
+                updated_time: Date(Date.parse(NOW_COMMENT.updatedAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
             });
         }
 
@@ -157,8 +161,8 @@ exports.getPostDatail = async (req, res, next) => {
             isLiked: USER_LIKED_INFO ? true : false,
             isScrap: USER_SCRAP_INFO ? true : false,
             comments: COMMENT_LIST,
-            created_time: NOW_POST.createdAt,
-            updated_time: NOW_POST.updatedAt,
+            created_time: Date(Date.parse(NOW_POST.createdAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
+            updated_time: Date(Date.parse(NOW_POST.updatedAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
         };
         return res.status(200).json(RES_POST_DETAIL);
     } catch (err) {
@@ -279,11 +283,18 @@ exports.getPostList = async (req, res, next) => {
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_LIST.length,
-                created_time: NOW_POST.createdAt,
-                updated_time: NOW_POST.updatedAt,
+                views: NOW_POST.views,
+                created_time: Date(Date.parse(NOW_POST.createdAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
+                updated_time: Date(Date.parse(NOW_POST.updatedAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
             });
         }
-        return res.status(200).json(RES_POSTS);
+
+        const RES_BOARD_AND_POSTS = {
+            major_name: NOW_BOARD.board_name.split('-')[0],
+            board_name: NOW_BOARD.board_name.split('-')[1],
+            posts: RES_POSTS,
+        };
+        return res.status(200).json(RES_BOARD_AND_POSTS);
     } catch (error) {
         console.error(error);
         next(error);
@@ -348,7 +359,7 @@ exports.getBoardPreview = async (req, res, next) => {
                 post_id: NOW_POST.id,
                 title: NOW_POST.title,
                 comments: COMMENT_LIST.length,
-                created_time: toJSONLocal(NOW_POST.createdAt),
+                created_time: toJSONLocal(NOW_POST.createdAt), 
             });
         }
         res.status(200).json(RES_POST_LIST);
