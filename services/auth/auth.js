@@ -141,9 +141,21 @@ exports.getUserMajors = async (req, res, next) => {
         for (let index = 0; index < USER_MAJORS_INFO.length; index++) {
             const NOW_USER_MAJOR = USER_MAJORS_INFO[index];
             const MAJOR_INFO = await Major.findOne({ where: { id: NOW_USER_MAJOR.major_id } });
+            
+            const BOARDS_INFO = await Board.findAll({where: {major_id: MAJOR_INFO.id}})
+            let freeBoardID = 1
+            for (let boardIdx = 0; boardIdx < BOARDS_INFO.length; boardIdx++) {
+                const NOW_BOARD_INFO = BOARDS_INFO[boardIdx];
+                if(NOW_BOARD_INFO.board_name.split("-")[1] === "자유게시판"){
+                    freeBoardID = NOW_BOARD_INFO.id
+                    break;
+                }
+            }
+
             RES_MAJOR_LIST.push({
                 major_id: NOW_USER_MAJOR.major_id,
                 major_name: MAJOR_INFO.major_name,
+                free_board_id: freeBoardID
             });
         }
         res.status(200).json(RES_MAJOR_LIST);
