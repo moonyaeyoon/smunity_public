@@ -140,7 +140,6 @@ exports.getPostDatail = async (req, res, next) => {
         for (let index = 0; index < COMMENTS_INFO.length; index++) {
             const NOW_COMMENT = COMMENTS_INFO[index];
             const NOW_COMMENT_USER = await User.findOne({ where: { id: NOW_COMMENT.user_id } });
-            const 
             COMMENT_LIST.push({
                 comment_id: NOW_COMMENT.id,
                 username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_USER.nickname,
@@ -284,6 +283,7 @@ exports.getPostList = async (req, res, next) => {
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_LIST.length,
+                views: NOW_POST.views,
                 created_time: NOW_POST.createdAt,
                 updated_time: NOW_POST.updatedAt,
             });
