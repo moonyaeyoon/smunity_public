@@ -18,7 +18,6 @@ router.get('/usermajors', verifyAToken, getUserMajors);
 
 router.get('/user_info', verifyAToken, getUserInfo);
 
-router.get('/auth_email', addSchoolAuth)
-
+router.get('/auth_email', addSchoolAuth);
 
 module.exports = router;

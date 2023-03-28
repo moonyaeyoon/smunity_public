@@ -368,3 +368,11 @@ exports.getBoardPreview = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.likePost = async (req, res, next) => {
+    
+}
+
+exports.unlikePost = async (req, res, next) => {
+
+}

@@ -21,7 +21,5 @@ module.exports = class Major extends Sequelize.Model {
             }
         );
     }
-    static associate(db) {
-        
-    }
+    static associate(db) {}
 };

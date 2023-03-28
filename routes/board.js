@@ -14,7 +14,6 @@ const {
 
 const router = express.Router();
 
-
 router.post('/create', verifyAToken, createNewPost);
 
 router.get('/detail/:post_id', verifyAToken, getPostDatail);

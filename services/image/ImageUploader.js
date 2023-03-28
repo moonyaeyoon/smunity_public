@@ -15,10 +15,10 @@ const imageUploader = multer({
     storage: multerS3({
         s3: s3,
         bucket: 'smus',
-        key: (req, file, callback) =>{
+        key: (req, file, callback) => {
             callback(null, `userProfile/${Date.now()}_${file.originalname}`); //s3내 저장될 경로 설정하기!!
         },
-        acl: 'public-read-write'
+        acl: 'public-read-write',
     }),
 });
 //업로드 완료시 {imageUrl: ""} 반환됩니다!
