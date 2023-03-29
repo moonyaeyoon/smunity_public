@@ -55,6 +55,7 @@ app.use(
 );
 
 const cors = require('cors');
+const { sendErrorLog } = require('./constants/resErrorJson');
 app.use(
     cors({
         // origin: "http://localhost:3000",
@@ -75,7 +76,7 @@ app.use((err, req, res, next) => {
     res.locals.error = process.env.NODE_ENV !== 'production' ? err : {};
     res.status(err.status || 500);
     console.log(err);
-    res.render('error');
+    return res.json(sendErrorLog(err));
 });
 
 app.listen(app.get('port'), () => {

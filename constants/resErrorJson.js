@@ -31,6 +31,14 @@ exports.POST_NOT_EXIST = {
     },
 };
 
+exports.COMMENT_NOT_EXIST = {
+    status_code: 400,
+    res_json: {
+        status_code: 400,
+        message: '존재하지 않는 댓글입니다.',
+    },
+};
+
 exports.BOARD_NOT_EXIST = {
     status_code: 400,
     res_json: {
@@ -52,6 +60,14 @@ exports.SIGN_IN_ERROR = {
     res_json: {
         status_code: 403,
         message: '로그인이 실패했습니다.',
+    },
+};
+
+exports.EMAIL_AUTH_ERROR = {
+    status_code: 405,
+    res_json: {
+        status_code: 405,
+        message: '학교 이메일 인증을 완료하지 않았습니다.',
     },
 };
 
@@ -87,3 +103,14 @@ exports.JWT_REFRESH_TOKEN_EXPIRED = {
         message: 'Refresh토큰이 만료되었습니다.',
     },
 };
+
+exports.sendErrorLog = (error) => {
+    return {
+        message: '예상치 않는 에러입니다.',
+        error_message: error,
+    };
+};
+
+exports.emailAuthError = () => {
+    return "<script>alert('이메일 인증이 실패했습니다. 인증 링크를 다시 한 번 확인하세요.');</script>"
+}
