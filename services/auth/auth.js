@@ -88,6 +88,8 @@ exports.join = async (req, res, next) => {
 
         //이메일 보내기 => 테스트할 때는 해당 링크를 서버에 log남기기
         //TODO: 링크가 포함한 이메일 보내기
+
+        sendAuthMailing(AUTH_URL, school_id);
         console.log(`Sign Up: 인증 링크: ${AUTH_URL}`);
 
         const NEW_USER = await User.create({
