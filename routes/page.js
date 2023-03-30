@@ -7,11 +7,8 @@ const ManageRouter = require('./manage');
 const BoardRouter = require('./board');
 const AuthRouter = require('./auth');
 
-const mailRouter = require('./mail');
-
 const CommentRouter = require('./comment');
 const ImageRouter = require('./upload');
-
 
 router.use((req, res, next) => {
     res.locals.user = req.user;
@@ -24,10 +21,7 @@ router.use('/comment', CommentRouter);
 
 router.use('/auth', AuthRouter);
 
-router.use('/mail', mailRouter);
-
 router.use('/upload', ImageRouter);
-
 
 router.get('/', (req, res, next) => {
     res.send('랜딩페이지');
