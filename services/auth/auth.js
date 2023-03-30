@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 const RES_ERROR_JSON = require('../../constants/resErrorJson');
 const SMU_STUDENT_EMAIL_DOMAIN = process.env.SMU_STUDENT_EMAIL_DOMAIN;
 const PASSWORD_SALT_OR_ROUNDS = process.env.PASSWORD_SALT_OR_ROUNDS;
+const nodemailer = require('nodemailer');
+const aws = require('aws-sdk');
+const ejs = require('ejs');
 
 const User = require('../../models/user');
 const Major = require('../../models/major');
@@ -88,6 +91,8 @@ exports.join = async (req, res, next) => {
 
         //이메일 보내기 => 테스트할 때는 해당 링크를 서버에 log남기기
         //TODO: 링크가 포함한 이메일 보내기
+
+        sendAuthMailing(AUTH_URL, school_id);
         console.log(`Sign Up: 인증 링크: ${AUTH_URL}`);
 
         const NEW_USER = await User.create({
@@ -271,4 +276,35 @@ exports.getUserInfo = async (req, res, next) => {
         console.error(error);
         next(error);
     }
+};
+
+const sendAuthMailing = async (authUrl, schoolId) => {
+    aws.config.update({
+        accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SES_ACCESS_KEY,
+        region: 'us-east-1',
+    });
+    const ses = new aws.SES({
+        apiVersion: '2010-12-01',
+    });
+
+    let transporter = nodemailer.createTransport({
+        SES: { ses, aws },
+    });
+
+    transporter.sendMail(
+        {
+            from: 'SMUS<sja3410@gmail.com>',
+            to: `${schoolId}@sangmyung.kr`,
+            subject: 'SMUS 회원가입 인증메일 입니다.',
+            text: `해당 링크를 클릭하면 회원인증이 완료됩니다. ${authUrl}`,
+        },
+        (err, info) => {
+            if (err) {
+                console.log(err);
+                return false;
+            }
+        }
+    );
+    return true;
 };

@@ -6,6 +6,7 @@ const { sequelize } = require('../models');
 const ManageRouter = require('./manage');
 const BoardRouter = require('./board');
 const AuthRouter = require('./auth');
+
 const CommentRouter = require('./comment');
 const ImageRouter = require('./upload');
 
@@ -19,6 +20,7 @@ router.use('/board', BoardRouter);
 router.use('/comment', CommentRouter);
 
 router.use('/auth', AuthRouter);
+
 router.use('/upload', ImageRouter);
 
 router.get('/', (req, res, next) => {
