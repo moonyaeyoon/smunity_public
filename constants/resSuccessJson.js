@@ -81,6 +81,14 @@ exports.UNDO_SCRAP_POST_SUCCESS = {
     },
 };
 
+exports.REPORT_POST_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '게시글 신고가 접수되었습니다.',
+    },
+};
+
 exports.ADD_COMMENT_SUCCESS = {
     status_code: 201,
     res_json: {
@@ -102,6 +110,30 @@ exports.DELETE_COMMENT_SUCCESS = {
     res_json: {
         status_code: 201,
         message: '댓글의 삭제가 완료되었습니다.',
+    },
+};
+
+exports.LIKE_COMMENT_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '댓글에 좋아요를 추가했습니다.',
+    },
+};
+
+exports.UNDO_LIKE_COMMENT_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '댓글에 좋아요를 취소했습니다.',
+    },
+};
+
+exports.REPORT_COMMENT_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '댓글 신고가 접수되었습니다.',
     },
 };
 

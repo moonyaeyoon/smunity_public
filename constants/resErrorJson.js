@@ -55,6 +55,22 @@ exports.USER_NO_AUTH = {
     },
 };
 
+exports.POST_ALREADY_REPORT = {
+    status_code: 400,
+    res_json: {
+        status_code: 400,
+        message: '이미 신고한 게시글입니다.',
+    },
+};
+
+exports.COMMENT_ALREADY_REPORT = {
+    status_code: 400,
+    res_json: {
+        status_code: 400,
+        message: '이미 신고한 댓글입니다.',
+    },
+};
+
 exports.SIGN_IN_ERROR = {
     status_code: 403,
     res_json: {

@@ -12,6 +12,7 @@ const {
     getBoardPreview,
     likePost,
     scrapPost,
+    reportPost,
 } = require('../services/board/boardService');
 
 const router = express.Router();
@@ -33,5 +34,7 @@ router.get('/preview', verifyAToken, getBoardPreview);
 router.post('/like/:post_id', verifyAToken, likePost);
 
 router.post('/scrap/:post_id', verifyAToken, scrapPost);
+
+router.post('/report/:post_id', verifyAToken, reportPost);
 
 module.exports = router;
