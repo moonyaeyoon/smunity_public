@@ -1,4 +1,5 @@
 const { Transaction, LOCK } = require('sequelize');
+const moment = require('moment');
 const {
     REQ_FORM_ERROR,
     USER_NOT_EXIST,
@@ -17,7 +18,19 @@ const {
     UNDO_SCRAP_POST_SUCCESS,
     REPORT_POST_SUCCESS,
 } = require('../../constants/resSuccessJson');
-const { User, Board, Post, Comment, sequelize, Major, UserMajor, UserLikePost, UserScrapPost, UserReportPost } = require('../../models');
+const {
+    User,
+    Board,
+    Post,
+    Comment,
+    sequelize,
+    Major,
+    UserMajor,
+    UserLikePost,
+    UserScrapPost,
+    UserReportPost,
+    UserLikeComment,
+} = require('../../models');
 
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
@@ -31,16 +44,6 @@ const checkUserExist = async (userId) => {
     //사용자 미존재
     if (REQ_USER === null) return false;
     else return REQ_USER;
-};
-
-const toJSONLocal = (date) => {
-    var local = new Date(date);
-    local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-    return local.toJSON().slice(0, 10);
-};
-
-const UTC2KOR = (utcTimeString) => {
-    Date.parse(dateString);
 };
 
 exports.createNewPost = async (req, res, next) => {
@@ -160,12 +163,15 @@ exports.getPostDatail = async (req, res, next) => {
         for (let index = 0; index < COMMENTS_INFO.length; index++) {
             const NOW_COMMENT = COMMENTS_INFO[index];
             const NOW_COMMENT_USER = await User.findOne({ where: { id: NOW_COMMENT.user_id } });
+            const COMMENT_LIKED_INFO = await UserLikeComment.findOne({ where: { user_id: NOW_USER.id, comment_id: NOW_COMMENT.id } });
             COMMENT_LIST.push({
                 comment_id: NOW_COMMENT.id,
                 username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_USER.nickname,
                 content: NOW_COMMENT.content,
-                created_time: Date(Date.parse(NOW_COMMENT.createdAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
-                updated_time: Date(Date.parse(NOW_COMMENT.updatedAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+                likes: NOW_COMMENT.likes,
+                isLiked: COMMENT_LIKED_INFO ? true : false,
+                created_time: moment(NOW_COMMENT.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+                updated_time: moment(NOW_COMMENT.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });
         }
 
@@ -181,8 +187,8 @@ exports.getPostDatail = async (req, res, next) => {
             isLiked: USER_LIKED_INFO ? true : false,
             isScrap: USER_SCRAP_INFO ? true : false,
             comments: COMMENT_LIST,
-            created_time: Date(Date.parse(NOW_POST.createdAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
-            updated_time: Date(Date.parse(NOW_POST.updatedAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+            created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
         };
         return res.status(200).json(RES_POST_DETAIL);
     } catch (err) {
@@ -304,8 +310,8 @@ exports.getPostList = async (req, res, next) => {
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_LIST.length,
                 views: NOW_POST.views,
-                created_time: Date(Date.parse(NOW_POST.createdAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
-                updated_time: Date(Date.parse(NOW_POST.updatedAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
+                updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });
         }
 
@@ -328,6 +334,7 @@ exports.getMajorBoards = async (req, res, next) => {
         }
 
         const BOARDS_INFO = await Board.findAll({ where: { major_id: req.params.major_id } });
+        if (!BOARDS_INFO) return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
 
         const RES_BOARD_LIST = [];
         for (let index = 0; index < BOARDS_INFO.length; index++) {
@@ -379,7 +386,7 @@ exports.getBoardPreview = async (req, res, next) => {
                 post_id: NOW_POST.id,
                 title: NOW_POST.title,
                 comments: COMMENT_LIST.length,
-                created_time: toJSONLocal(NOW_POST.createdAt),
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });
         }
         res.status(200).json(RES_POST_LIST);
@@ -499,7 +506,7 @@ exports.reportPost = async (req, res, next) => {
 
         //TODO: 사용자 권한 체크 아직 안함
 
-        const NOW_POST = await Post.findByPk(res.locals.decodes.user_id);
+        const NOW_POST = await Post.findByPk(req.params.post_id);
         if (!NOW_POST) return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
 
         const NOW_REPORT_STATU = await UserReportPost.findOne({
