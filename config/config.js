@@ -1,9 +1,9 @@
 module.exports = {
     development: {
-        username: 'admin',
-        password: '1Q5ACZnjz7jpISOCAn8M',
+        username: process.env.RDS_USERNAME,
+        password: process.env.RDS_PASSWORD,
         database: 'capstone',
-        host: 'smus.cdnw2s0ur6lu.ap-northeast-2.rds.amazonaws.com',
+        host: process.env.RDS_HOST,
         dialect: 'mysql',
     },
     test: {
