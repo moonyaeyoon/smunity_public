@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 const RES_ERROR_JSON = require('../../constants/resErrorJson');
 const SMU_STUDENT_EMAIL_DOMAIN = process.env.SMU_STUDENT_EMAIL_DOMAIN;
 const PASSWORD_SALT_OR_ROUNDS = process.env.PASSWORD_SALT_OR_ROUNDS;
+const nodemailer = require('nodemailer');
+const aws = require('aws-sdk');
+const ejs = require('ejs');
 
 const User = require('../../models/user');
 const Major = require('../../models/major');
@@ -273,4 +276,35 @@ exports.getUserInfo = async (req, res, next) => {
         console.error(error);
         next(error);
     }
+};
+
+const sendAuthMailing = async (authUrl, schoolId) => {
+    aws.config.update({
+        accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SES_ACCESS_KEY,
+        region: 'us-east-1',
+    });
+    const ses = new aws.SES({
+        apiVersion: '2010-12-01',
+    });
+
+    let transporter = nodemailer.createTransport({
+        SES: { ses, aws },
+    });
+
+    transporter.sendMail(
+        {
+            from: 'SMUS<sja3410@gmail.com>',
+            to: `${schoolId}@sangmyung.kr`,
+            subject: 'SMUS 회원가입 인증메일 입니다.',
+            text: `해당 링크를 클릭하면 회원인증이 완료됩니다. ${authUrl}`,
+        },
+        (err, info) => {
+            if (err) {
+                console.log(err);
+                return false;
+            }
+        }
+    );
+    return true;
 };
