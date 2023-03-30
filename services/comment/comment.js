@@ -46,12 +46,6 @@ const checkUserExist = async (userId) => {
     else return reqUser;
 };
 
-const toJSONLocal = (date) => {
-    var local = new Date(date);
-    local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-    return local.toJSON().slice(0, 10);
-};
-
 exports.createNewComment = async (req, res, next) => {
     try {
         if (!req.body.post_id || !req.body.content) {
