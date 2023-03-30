@@ -8,8 +8,8 @@ const SUPER_ACCOUNT = RESET_DB_CONST.SUPER_ACCOUNT;
 const COMMON_BOARD_LIST = RESET_DB_CONST.COMMON_BOARD_LIST;
 const MAJOR_LIST = RESET_DB_CONST.MAJOR_LIST;
 
-let nowBoardId = 1 // DB생성 시 순서를 강제로 정하기 위한 변수임
-let nowMajorId = 1 // DB생성 시 순서를 강제로 정하기 위한 변수임
+let nowBoardId = 1; // DB생성 시 순서를 강제로 정하기 위한 변수임
+let nowMajorId = 1; // DB생성 시 순서를 강제로 정하기 위한 변수임
 const createMajorBoards = async (majorName, majorId) => {
     COMMON_BOARD_LIST.forEach(async (BOARD_INFO) => {
         const NOW_BOARD = await Board.create({
@@ -18,9 +18,9 @@ const createMajorBoards = async (majorName, majorId) => {
             is_can_anonymous: BOARD_INFO.isCanAnonymous,
             is_notice: BOARD_INFO.isNotice,
             major_id: majorId,
-        })
-        if(NOW_BOARD.is_notice == true){
-            await NOW_BOARD.update({notice_user_id_list: 1})
+        });
+        if (NOW_BOARD.is_notice == true) {
+            await NOW_BOARD.update({ notice_user_id_list: 1 });
         }
     });
 };
@@ -42,6 +42,4 @@ exports.resetDB = async () => {
         await UserMajor.create({ user_id: superUser.id, major_id: NOW_MAJOR.id });
         await createMajorBoards(MAJOR_NAME, NOW_MAJOR.id);
     }
-
-    
 };

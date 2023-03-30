@@ -41,8 +41,8 @@ module.exports = class User extends Sequelize.Model {
                 },
                 email_auth_code: {
                     type: Sequelize.STRING(30),
-                    allowNull: true
-                }
+                    allowNull: true,
+                },
             },
             {
                 sequelize,
@@ -56,7 +56,5 @@ module.exports = class User extends Sequelize.Model {
             }
         );
     }
-    static associate(db) {
-        
-    }
+    static associate(db) {}
 };

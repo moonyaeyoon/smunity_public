@@ -25,7 +25,5 @@ module.exports = class UserUnlikeComment extends Sequelize.Model {
             }
         );
     }
-    static associate(db) {
-        
-    }
+    static associate(db) {}
 };

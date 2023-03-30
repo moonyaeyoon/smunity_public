@@ -10,10 +10,13 @@ const {
     getUserMajors,
     getMajorBoards,
     getBoardPreview,
+    likePost,
+    scrapPost,
+    reportPost,
+    getBoardInfo,
 } = require('../services/board/boardService');
 
 const router = express.Router();
-
 
 router.post('/create', verifyAToken, createNewPost);
 
@@ -28,5 +31,13 @@ router.get('/post_list/:board_id', verifyAToken, getPostList);
 router.get('/board_list/:major_id', getMajorBoards);
 
 router.get('/preview', verifyAToken, getBoardPreview);
+
+router.post('/like/:post_id', verifyAToken, likePost);
+
+router.post('/scrap/:post_id', verifyAToken, scrapPost);
+
+router.post('/report/:post_id', verifyAToken, reportPost);
+
+router.get('/info/:board_id', verifyAToken, getBoardInfo);
 
 module.exports = router;

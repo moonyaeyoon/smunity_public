@@ -1,6 +1,26 @@
-const { REQ_FORM_ERROR, USER_NOT_EXIST, USER_NO_AUTH, POST_NOT_EXIST, BOARD_NOT_EXIST } = require('../../constants/resErrorJson');
-const { ADD_POST_SUCCESS, UPDATE_POST_SUCCESS, DELETE_POST_SUCCESS } = require('../../constants/resSuccessJson');
-const { User, Board, Post, Comment, sequelize, Major, UserMajor, UserLikePost, UserScrapPost } = require('../../models');
+const { Transaction, LOCK } = require('sequelize');
+const {
+    REQ_FORM_ERROR,
+    USER_NOT_EXIST,
+    USER_NO_AUTH,
+    POST_NOT_EXIST,
+    BOARD_NOT_EXIST,
+    POST_ALREADY_REPORT,
+} = require('../../constants/resErrorJson');
+const {
+    ADD_POST_SUCCESS,
+    UPDATE_POST_SUCCESS,
+    DELETE_POST_SUCCESS,
+    LIKE_POST_SUCCESS,
+    UNDO_LIKE_POST_SUCCESS,
+    SCRAP_POST_SUCCESS,
+    UNDO_SCRAP_POST_SUCCESS,
+    REPORT_POST_SUCCESS,
+} = require('../../constants/resSuccessJson');
+const { User, Board, Post, Comment, sequelize, Major, UserMajor, UserLikePost, UserScrapPost, UserReportPost } = require('../../models');
+
+const env = process.env.NODE_ENV || 'development';
+const config = require('../../config/config')[env];
 
 const checkUserExist = async (userId) => {
     const REQ_USER = await User.findOne({
@@ -144,7 +164,7 @@ exports.getPostDatail = async (req, res, next) => {
                 comment_id: NOW_COMMENT.id,
                 username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_USER.nickname,
                 content: NOW_COMMENT.content,
-                created_time: Date(Date.parse(NOW_COMMENT.createdAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
+                created_time: Date(Date.parse(NOW_COMMENT.createdAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
                 updated_time: Date(Date.parse(NOW_COMMENT.updatedAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
             });
         }
@@ -161,8 +181,8 @@ exports.getPostDatail = async (req, res, next) => {
             isLiked: USER_LIKED_INFO ? true : false,
             isScrap: USER_SCRAP_INFO ? true : false,
             comments: COMMENT_LIST,
-            created_time: Date(Date.parse(NOW_POST.createdAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
-            updated_time: Date(Date.parse(NOW_POST.updatedAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
+            created_time: Date(Date.parse(NOW_POST.createdAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+            updated_time: Date(Date.parse(NOW_POST.updatedAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
         };
         return res.status(200).json(RES_POST_DETAIL);
     } catch (err) {
@@ -284,8 +304,8 @@ exports.getPostList = async (req, res, next) => {
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_LIST.length,
                 views: NOW_POST.views,
-                created_time: Date(Date.parse(NOW_POST.createdAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
-                updated_time: Date(Date.parse(NOW_POST.updatedAt)).toLocaleString("ko-KR", { timeZone: 'Asia/Seoul' }),
+                created_time: Date(Date.parse(NOW_POST.createdAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+                updated_time: Date(Date.parse(NOW_POST.updatedAt)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
             });
         }
 
@@ -359,12 +379,149 @@ exports.getBoardPreview = async (req, res, next) => {
                 post_id: NOW_POST.id,
                 title: NOW_POST.title,
                 comments: COMMENT_LIST.length,
-                created_time: toJSONLocal(NOW_POST.createdAt), 
+                created_time: toJSONLocal(NOW_POST.createdAt),
             });
         }
         res.status(200).json(RES_POST_LIST);
     } catch (err) {
         console.error(err);
         next(err);
+    }
+};
+
+exports.getBoardInfo = async (req, res, next) => {
+    try {
+        if (!req.params.board_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_BOARD = await Board.findOne({ where: { id: req.params.board_id } });
+        if (!NOW_BOARD) {
+            return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
+        }
+
+        const NOW_MAJOR = await Major.findByPk(NOW_BOARD.major_id);
+
+        const RES_BOARD_INFO = {
+            major_id: NOW_MAJOR.id,
+            major_name: NOW_MAJOR.major_name,
+            board_id: NOW_BOARD.id,
+            board_name: NOW_BOARD.board_name,
+            is_can_anonymous: NOW_BOARD.is_can_anonymous,
+            is_notice: NOW_BOARD.is_notice,
+        };
+        res.status(200).json(RES_BOARD_INFO);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
+
+exports.likePost = async (req, res, next) => {
+    try {
+        if (!req.params.post_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        //TODO: 사용자 권한 체크 아직 안함
+
+        const NOW_POST = await Post.findByPk(req.params.post_id);
+        if (!NOW_POST) return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
+
+        const NOW_LIKED_STATU = await UserLikePost.findOne({
+            where: {
+                user_id: res.locals.decodes.user_id,
+                post_id: req.params.post_id,
+            },
+        });
+
+        if (!NOW_LIKED_STATU) {
+            await UserLikePost.create({
+                user_id: res.locals.decodes.user_id,
+                post_id: req.params.post_id,
+            });
+
+            await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes+1 WHERE id = ${req.params.post_id}`);
+            return res.status(LIKE_POST_SUCCESS.status_code).json(LIKE_POST_SUCCESS.res_json);
+        } else {
+            await NOW_LIKED_STATU.destroy();
+            await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes-1 WHERE id = ${req.params.post_id}`);
+            return res.status(UNDO_LIKE_POST_SUCCESS.status_code).json(UNDO_LIKE_POST_SUCCESS.res_json);
+        }
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.scrapPost = async (req, res, next) => {
+    try {
+        if (!req.params.post_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        //TODO: 사용자 권한 체크 아직 안함
+
+        const NOW_POST = await Post.findByPk(req.params.post_id);
+        if (!NOW_POST) return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
+
+        const NOW_SCRAP_STATU = await UserScrapPost.findOne({
+            where: {
+                user_id: res.locals.decodes.user_id,
+                post_id: req.params.post_id,
+            },
+        });
+
+        if (!NOW_SCRAP_STATU) {
+            await UserScrapPost.create({
+                user_id: res.locals.decodes.user_id,
+                post_id: req.params.post_id,
+            });
+
+            await sequelize.query(`UPDATE ${config.database}.posts SET scraps = scraps+1 WHERE id = ${req.params.post_id}`);
+            return res.status(SCRAP_POST_SUCCESS.status_code).json(SCRAP_POST_SUCCESS.res_json);
+        } else {
+            await NOW_SCRAP_STATU.destroy();
+            await sequelize.query(`UPDATE ${config.database}.posts SET scraps = scraps-1 WHERE id = ${req.params.post_id}`);
+            return res.status(UNDO_SCRAP_POST_SUCCESS.status_code).json(UNDO_SCRAP_POST_SUCCESS.res_json);
+        }
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.reportPost = async (req, res, next) => {
+    try {
+        if (!req.params.post_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        //TODO: 사용자 권한 체크 아직 안함
+
+        const NOW_POST = await Post.findByPk(res.locals.decodes.user_id);
+        if (!NOW_POST) return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
+
+        const NOW_REPORT_STATU = await UserReportPost.findOne({
+            where: {
+                user_id: res.locals.decodes.user_id,
+                post_id: req.params.post_id,
+            },
+        });
+
+        if (!NOW_REPORT_STATU) {
+            await UserReportPost.create({
+                user_id: res.locals.decodes.user_id,
+                post_id: req.params.post_id,
+            });
+
+            await sequelize.query(`UPDATE ${config.database}.posts SET reports = reports+1 WHERE id = ${req.params.post_id}`);
+            return res.status(REPORT_POST_SUCCESS.status_code).json(REPORT_POST_SUCCESS.res_json);
+        } else {
+            return res.status(POST_ALREADY_REPORT.status_code).json(POST_ALREADY_REPORT.res_json);
+        }
+    } catch (error) {
+        console.error(error);
+        next(error);
     }
 };

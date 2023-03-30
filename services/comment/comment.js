@@ -5,6 +5,7 @@ const {
     POST_NOT_EXIST,
     BOARD_NOT_EXIST,
     COMMENT_NOT_EXIST,
+    COMMENT_ALREADY_REPORT,
 } = require('../../constants/resErrorJson');
 const {
     ADD_POST_SUCCESS,
@@ -13,8 +14,26 @@ const {
     ADD_COMMENT_SUCCESS,
     UPDATE_COMMENT_SUCCESS,
     DELETE_COMMENT_SUCCESS,
+    LIKE_COMMENT_SUCCESS,
+    UNDO_LIKE_COMMENT_SUCCESS,
+    REPORT_COMMENT_SUCCESS,
 } = require('../../constants/resSuccessJson');
-const { User, Board, Post, Comment, sequelize, Major, UserMajor, UserLikePost, UserScrapPost } = require('../../models');
+const {
+    User,
+    Board,
+    Post,
+    Comment,
+    sequelize,
+    Major,
+    UserMajor,
+    UserLikePost,
+    UserScrapPost,
+    UserLikeComment,
+    UserReportComment,
+} = require('../../models');
+
+const env = process.env.NODE_ENV || 'development';
+const config = require('../../config/config')[env];
 
 const checkUserExist = async (userId) => {
     const reqUser = await User.findOne({
@@ -175,6 +194,78 @@ exports.deleteComment = async (req, res, next) => {
         await NOW_COMMENT.destroy();
 
         return res.status(DELETE_COMMENT_SUCCESS.status_code).json(DELETE_COMMENT_SUCCESS.res_json);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.likeComment = async (req, res, next) => {
+    try {
+        if (!req.params.comment_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        //TODO: 사용자 권한 체크 아직 안함
+
+        const NOW_COMMENT = await Comment.findByPk(req.params.comment_id);
+        if (!NOW_COMMENT) return res.status(COMMENT_NOT_EXIST.status_code).json(COMMENT_NOT_EXIST.res_json);
+
+        const NOW_LIKED_STATU = await UserLikeComment.findOne({
+            where: {
+                user_id: res.locals.decodes.user_id,
+                comment_id: req.params.comment_id,
+            },
+        });
+
+        if (!NOW_LIKED_STATU) {
+            await UserLikeComment.create({
+                user_id: res.locals.decodes.user_id,
+                comment_id: req.params.comment_id,
+            });
+
+            await sequelize.query(`UPDATE ${config.database}.comments SET likes = likes+1 WHERE id = ${req.params.comment_id}`);
+            return res.status(LIKE_COMMENT_SUCCESS.status_code).json(LIKE_COMMENT_SUCCESS.res_json);
+        } else {
+            await NOW_LIKED_STATU.destroy();
+            await sequelize.query(`UPDATE ${config.database}.comments SET likes = likes-1 WHERE id = ${req.params.comment_id}`);
+            return res.status(UNDO_LIKE_COMMENT_SUCCESS.status_code).json(UNDO_LIKE_COMMENT_SUCCESS.res_json);
+        }
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.reportComment = async (req, res, next) => {
+    try {
+        if (!req.params.comment_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        //TODO: 사용자 권한 체크 아직 안함
+
+        const NOW_COMMENT = await Comment.findByPk(req.params.comment_id);
+        if (!NOW_COMMENT) return res.status(COMMENT_NOT_EXIST.status_code).json(COMMENT_NOT_EXIST.res_json);
+
+        const NOW_REPORT_STATU = await UserReportComment.findOne({
+            where: {
+                user_id: res.locals.decodes.user_id,
+                comment_id: req.params.comment_id,
+            },
+        });
+
+        if (!NOW_REPORT_STATU) {
+            await UserReportComment.create({
+                user_id: res.locals.decodes.user_id,
+                comment_id: req.params.comment_id,
+            });
+
+            await sequelize.query(`UPDATE ${config.database}.comments SET reports = reports+1 WHERE id = ${req.params.comment_id}`);
+            return res.status(REPORT_COMMENT_SUCCESS.status_code).json(REPORT_COMMENT_SUCCESS.res_json);
+        } else {
+            return res.status(COMMENT_ALREADY_REPORT.status_code).json(COMMENT_ALREADY_REPORT.res_json);
+        }
     } catch (error) {
         console.error(error);
         next(error);

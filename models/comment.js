@@ -64,7 +64,5 @@ module.exports = class comment extends Sequelize.Model {
             }
         );
     }
-    static associate(db) {
-        
-    }
+    static associate(db) {}
 };

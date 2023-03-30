@@ -25,7 +25,5 @@ module.exports = class UserScrapPost extends Sequelize.Model {
             }
         );
     }
-    static associate(db) {
-        
-    }
+    static associate(db) {}
 };
