@@ -13,6 +13,7 @@ const {
     likePost,
     scrapPost,
     reportPost,
+    getBoardInfo,
 } = require('../services/board/boardService');
 
 const router = express.Router();
@@ -36,5 +37,7 @@ router.post('/like/:post_id', verifyAToken, likePost);
 router.post('/scrap/:post_id', verifyAToken, scrapPost);
 
 router.post('/report/:post_id', verifyAToken, reportPost);
+
+router.get('/info/:board_id', verifyAToken, getBoardInfo);
 
 module.exports = router;

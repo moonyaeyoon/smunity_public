@@ -389,6 +389,34 @@ exports.getBoardPreview = async (req, res, next) => {
     }
 };
 
+exports.getBoardInfo = async (req, res, next) => {
+    try {
+        if (!req.params.board_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_BOARD = await Board.findOne({ where: { id: req.params.board_id } });
+        if (!NOW_BOARD) {
+            return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
+        }
+
+        const NOW_MAJOR = await Major.findByPk(NOW_BOARD.major_id);
+
+        const RES_BOARD_INFO = {
+            major_id: NOW_MAJOR.id,
+            major_name: NOW_MAJOR.major_name,
+            board_id: NOW_BOARD.id,
+            board_name: NOW_BOARD.board_name,
+            is_can_anonymous: NOW_BOARD.is_can_anonymous,
+            is_notice: NOW_BOARD.is_notice,
+        };
+        res.status(200).json(RES_BOARD_INFO);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
+
 exports.likePost = async (req, res, next) => {
     try {
         if (!req.params.post_id) {
