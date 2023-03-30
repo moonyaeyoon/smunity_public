@@ -7,6 +7,7 @@ const {
     POST_NOT_EXIST,
     BOARD_NOT_EXIST,
     POST_ALREADY_REPORT,
+    MAJOR_NOT_EXIST,
 } = require('../../constants/resErrorJson');
 const {
     ADD_POST_SUCCESS,
@@ -334,7 +335,7 @@ exports.getMajorBoards = async (req, res, next) => {
         }
 
         const BOARDS_INFO = await Board.findAll({ where: { major_id: req.params.major_id } });
-        if (!BOARDS_INFO) return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
+        if (!BOARDS_INFO) return res.status(MAJOR_NOT_EXIST.status_code).json(MAJOR_NOT_EXIST.res_json);
 
         const RES_BOARD_LIST = [];
         for (let index = 0; index < BOARDS_INFO.length; index++) {
