@@ -10,6 +10,8 @@ const {
     getUserMajors,
     getMajorBoards,
     getBoardPreview,
+    likePost,
+    scrapPost,
 } = require('../services/board/boardService');
 
 const router = express.Router();
@@ -27,5 +29,9 @@ router.get('/post_list/:board_id', verifyAToken, getPostList);
 router.get('/board_list/:major_id', getMajorBoards);
 
 router.get('/preview', verifyAToken, getBoardPreview);
+
+router.post('/like/:post_id', verifyAToken, likePost);
+
+router.post('/scrap/:post_id', verifyAToken, scrapPost);
 
 module.exports = router;
