@@ -315,8 +315,11 @@ exports.getPostList = async (req, res, next) => {
                     created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
                     updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
                 });
-            }  
-
+            }
+            if(res.header.sorting === 'likes'){ //요청 헤더로 정렬기준 받아서 판별
+                RES_POSTS.sort((a, b) => b.likes - a.likes); 
+            }
+          
         const RES_BOARD_AND_POSTS = {
             major_name: NOW_BOARD.board_name.split('-')[0],
             board_name: NOW_BOARD.board_name.split('-')[1],
