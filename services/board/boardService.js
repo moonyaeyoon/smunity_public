@@ -316,8 +316,8 @@ exports.getPostList = async (req, res, next) => {
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });
         }
+        //요청 헤더로 정렬기준 받아서 판별
         if (res.header.sorting === 'likes') {
-            //요청 헤더로 정렬기준 받아서 판별
             RES_POSTS.sort((a, b) => b.likes - a.likes);
         }
 
