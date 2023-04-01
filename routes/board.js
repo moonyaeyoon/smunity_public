@@ -14,6 +14,8 @@ const {
     scrapPost,
     reportPost,
     getBoardInfo,
+    getPostListByPaging,
+    getPostListByCursor,
 } = require('../services/board/boardService');
 
 const router = express.Router();
@@ -27,6 +29,10 @@ router.patch('/update/:post_id', verifyAToken, updatePost);
 router.delete('/delete/:post_id', verifyAToken, deletePost);
 
 router.get('/post_list/:board_id', verifyAToken, getPostList);
+
+router.get('/paging', verifyAToken, getPostListByPaging);
+
+router.get('/cursor', verifyAToken, getPostListByCursor);
 
 router.get('/board_list/:major_id', getMajorBoards);
 
