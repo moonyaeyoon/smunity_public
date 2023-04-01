@@ -92,12 +92,21 @@ exports.createNewPost = async (req, res, next) => {
             }
         }
 
+        //이미지 처리
+        let imageUrlsString = '';
+        console.log(req.body.image_url_list);
+        for (let index = 0; index < req.body.image_url_list.length; index++) {
+            imageUrlsString += req.body.image_url_list[index];
+            if (index != req.body.image_url_list.length - 1) imageUrlsString += ','; //마지막 사진이 아닐 때 뒤에 콤마 붙이기
+        }
+
         await Post.create({
             title: req.body.title,
             content: req.body.content,
             is_anonymous: isUserSelectedAnonymous,
             user_id: NOW_USER.id,
             board_id: NOW_BOARD.id,
+            img_urls: imageUrlsString,
         });
         return res.status(ADD_POST_SUCCESS.status_code).json(ADD_POST_SUCCESS.res_json);
     } catch (error) {
@@ -219,9 +228,16 @@ exports.updatePost = async (req, res, next) => {
             return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
         }
 
+        let imageUrlsString = '';
+        for (let index = 0; index < req.body.image_url_list.length; index++) {
+            imageUrlsString += image_url_list[index];
+            if (index != req.body.image_url_list.length - 1) imageUrlsString += ','; //마지막 사진이 아닐 때 뒤에 콤마 붙이기
+        }
+
         await NOW_POST.update({
             title: req.body.title,
             content: req.body.content,
+            img_urls: imageUrlsString,
         });
 
         return res.status(UPDATE_POST_SUCCESS.status_code).json(UPDATE_POST_SUCCESS.res_json);
@@ -589,11 +605,11 @@ exports.getPostListByPaging = async (req, res, next) => {
             const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 post_id: NOW_POST.id,
-                // username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
-                // title: NOW_POST.title,
-                // preview: NOW_POST.content.substr(0, 50),
-                // comments: COMMENT_LIST.length,
-                // views: NOW_POST.views,
+                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                title: NOW_POST.title,
+                preview: NOW_POST.content.substr(0, 50),
+                comments: COMMENT_LIST.length,
+                views: NOW_POST.views,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });
@@ -668,11 +684,11 @@ exports.getPostListByCursor = async (req, res, next) => {
             const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 post_id: NOW_POST.id,
-                // username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
-                // title: NOW_POST.title,
-                // preview: NOW_POST.content.substr(0, 50),
-                // comments: COMMENT_LIST.length,
-                // views: NOW_POST.views,
+                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                title: NOW_POST.title,
+                preview: NOW_POST.content.substr(0, 50),
+                comments: COMMENT_LIST.length,
+                views: NOW_POST.views,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });

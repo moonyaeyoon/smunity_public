@@ -19,8 +19,8 @@ exports.verifyAToken = (req, res, next) => {
     }
 };
 
-const LIMIT_SECOND = process.env.API_LIMIT_SECOND ? process.env.API_LIMIT_SECOND : 2;
-const LIMIT_TIMES = process.env.API_LIMIT_TIMES ? process.env.API_LIMIT_TIMES : 1;
+const LIMIT_SECOND = process.env.API_LIMIT_SECOND || 2;
+const LIMIT_TIMES = process.env.API_LIMIT_TIMES || 1;
 
 exports.apiLimiter = rateLimit({
     windowMs: 1000 * LIMIT_SECOND, // 괄호 안에 초/Second
