@@ -94,10 +94,11 @@ exports.createNewPost = async (req, res, next) => {
 
         //이미지 처리
         let imageUrlsString = '';
-        console.log(req.body.image_url_list);
-        for (let index = 0; index < req.body.image_url_list.length; index++) {
-            imageUrlsString += req.body.image_url_list[index];
-            if (index != req.body.image_url_list.length - 1) imageUrlsString += ','; //마지막 사진이 아닐 때 뒤에 콤마 붙이기
+        if (req.body.image_url_list) {
+            for (let index = 0; index < req.body.image_url_list.length; index++) {
+                imageUrlsString += req.body.image_url_list[index];
+                if (index != req.body.image_url_list.length - 1) imageUrlsString += ','; //마지막 사진이 아닐 때 뒤에 콤마 붙이기
+            }
         }
 
         await Post.create({
@@ -177,6 +178,7 @@ exports.getPostDatail = async (req, res, next) => {
             COMMENT_LIST.push({
                 comment_id: NOW_COMMENT.id,
                 username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_USER.nickname,
+                user_id: NOW_COMMENT.user_id,
                 content: NOW_COMMENT.content,
                 likes: NOW_COMMENT.likes,
                 isLiked: COMMENT_LIKED_INFO ? true : false,
@@ -188,6 +190,7 @@ exports.getPostDatail = async (req, res, next) => {
         const RES_POST_DETAIL = {
             post_id: NOW_POST.id,
             username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+            user_id: NOW_POST.user_id,
             title: NOW_POST.title,
             content: NOW_POST.content,
             image_urls: NOW_POST.img_urls || null,
@@ -229,9 +232,11 @@ exports.updatePost = async (req, res, next) => {
         }
 
         let imageUrlsString = '';
-        for (let index = 0; index < req.body.image_url_list.length; index++) {
-            imageUrlsString += image_url_list[index];
-            if (index != req.body.image_url_list.length - 1) imageUrlsString += ','; //마지막 사진이 아닐 때 뒤에 콤마 붙이기
+        if (req.body.image_url_list) {
+            for (let index = 0; index < req.body.image_url_list.length; index++) {
+                imageUrlsString += req.body.image_url_list[index];
+                if (index != req.body.image_url_list.length - 1) imageUrlsString += ','; //마지막 사진이 아닐 때 뒤에 콤마 붙이기
+            }
         }
 
         await NOW_POST.update({
@@ -242,7 +247,7 @@ exports.updatePost = async (req, res, next) => {
 
         return res.status(UPDATE_POST_SUCCESS.status_code).json(UPDATE_POST_SUCCESS.res_json);
     } catch (error) {
-        console.error(err);
+        console.error(error);
         next(error);
     }
 };
