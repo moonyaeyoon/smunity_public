@@ -56,6 +56,7 @@ app.use(
 
 const cors = require('cors');
 const { sendErrorLog } = require('./constants/resErrorJson');
+const { apiLimiter } = require('./middlewares');
 app.use(
     cors({
         // origin: "http://localhost:3000",
@@ -63,7 +64,7 @@ app.use(
     })
 );
 
-app.use('/', pageRouter);
+app.use('/', apiLimiter, pageRouter);
 
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
