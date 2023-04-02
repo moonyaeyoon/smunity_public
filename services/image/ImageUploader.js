@@ -3,6 +3,8 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');
 
+const allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp'];
+
 aws.config.update({
     region: 'ap-northeast-2',
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -28,6 +30,10 @@ const imageUploader = multer({
         s3: s3(),
         bucket: 'smus',
         key: (req, file, callback) => {
+            const extension = path.extname(file.originalname);
+            if(!allowedExtensions.includes(extension)){ 
+                return callback(new Error('wrong extension')); //이미지파일이 아닌경우 에러
+            }
             callback(null, `userProfile/${Date.now()}_${file.originalname}`); //s3내 저장될 경로 설정하기!!
         },
         acl: 'public-read-write',
