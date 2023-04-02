@@ -1,4 +1,4 @@
-const { Transaction, LOCK } = require('sequelize');
+const { Transaction, LOCK, Sequelize, Op } = require('sequelize');
 const moment = require('moment');
 const {
     REQ_FORM_ERROR,
@@ -92,12 +92,22 @@ exports.createNewPost = async (req, res, next) => {
             }
         }
 
+        //이미지 처리
+        let imageUrlsString = '';
+        if (req.body.image_url_list) {
+            for (let index = 0; index < req.body.image_url_list.length; index++) {
+                imageUrlsString += req.body.image_url_list[index];
+                if (index != req.body.image_url_list.length - 1) imageUrlsString += ','; //마지막 사진이 아닐 때 뒤에 콤마 붙이기
+            }
+        }
+
         await Post.create({
             title: req.body.title,
             content: req.body.content,
             is_anonymous: isUserSelectedAnonymous,
             user_id: NOW_USER.id,
             board_id: NOW_BOARD.id,
+            img_urls: imageUrlsString,
         });
         return res.status(ADD_POST_SUCCESS.status_code).json(ADD_POST_SUCCESS.res_json);
     } catch (error) {
@@ -168,6 +178,7 @@ exports.getPostDatail = async (req, res, next) => {
             COMMENT_LIST.push({
                 comment_id: NOW_COMMENT.id,
                 username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_USER.nickname,
+                user_id: NOW_COMMENT.user_id,
                 content: NOW_COMMENT.content,
                 likes: NOW_COMMENT.likes,
                 isLiked: COMMENT_LIKED_INFO ? true : false,
@@ -179,6 +190,7 @@ exports.getPostDatail = async (req, res, next) => {
         const RES_POST_DETAIL = {
             post_id: NOW_POST.id,
             username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+            user_id: NOW_POST.user_id,
             title: NOW_POST.title,
             content: NOW_POST.content,
             image_urls: NOW_POST.img_urls || null,
@@ -219,14 +231,23 @@ exports.updatePost = async (req, res, next) => {
             return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
         }
 
+        let imageUrlsString = '';
+        if (req.body.image_url_list) {
+            for (let index = 0; index < req.body.image_url_list.length; index++) {
+                imageUrlsString += req.body.image_url_list[index];
+                if (index != req.body.image_url_list.length - 1) imageUrlsString += ','; //마지막 사진이 아닐 때 뒤에 콤마 붙이기
+            }
+        }
+
         await NOW_POST.update({
             title: req.body.title,
             content: req.body.content,
+            img_urls: imageUrlsString,
         });
 
         return res.status(UPDATE_POST_SUCCESS.status_code).json(UPDATE_POST_SUCCESS.res_json);
     } catch (error) {
-        console.error(err);
+        console.error(error);
         next(error);
     }
 };
@@ -533,6 +554,162 @@ exports.reportPost = async (req, res, next) => {
         } else {
             return res.status(POST_ALREADY_REPORT.status_code).json(POST_ALREADY_REPORT.res_json);
         }
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.getPostListByPaging = async (req, res, next) => {
+    try {
+        if (!req.query.board_id || isNaN(req.query.board_id) || !req.query.now_page || isNaN(req.query.now_page)) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        //게시판 존재 여부
+        const NOW_BOARD = await Board.findOne({
+            where: {
+                id: req.query.board_id,
+            },
+        });
+        if (!NOW_BOARD) {
+            return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+
+        //사용자 권한 없음
+        let canRead = false;
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        for (let index = 0; index < NOW_USER_MAJOR_LIST.length; index++) {
+            if (NOW_USER_MAJOR_LIST[index].major_id === NOW_BOARD.major_id) {
+                canRead = true;
+                break;
+            }
+        }
+
+        if (!canRead) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
+
+        let countPerPage = 10;
+        if (!isNaN(req.query.per_page)) {
+            countPerPage = parseInt(req.query.per_page);
+        }
+        const LIMIT = countPerPage;
+        const OFFSET = 0 + (req.query.now_page - 1) * LIMIT;
+        const TOTAL_PAGE = Math.ceil((await Post.count()) / countPerPage);
+
+        const POSTS_INFO = await Post.findAll({
+            where: {
+                board_id: req.query.board_id,
+            },
+            order: [['created_at', 'DESC']],
+            offset: OFFSET,
+            limit: LIMIT,
+        });
+
+        const RES_POSTS = [];
+        for (let index = 0; index < POSTS_INFO.length; index++) {
+            const NOW_POST = POSTS_INFO[index];
+            const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
+            RES_POSTS.push({
+                post_id: NOW_POST.id,
+                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                title: NOW_POST.title,
+                preview: NOW_POST.content.substr(0, 50),
+                comments: COMMENT_LIST.length,
+                views: NOW_POST.views,
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
+                updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            });
+        }
+
+        const RES_BOARD_AND_POSTS = {
+            major_name: NOW_BOARD.board_name.split('-')[0],
+            board_name: NOW_BOARD.board_name.split('-')[1],
+            total_page: TOTAL_PAGE,
+            posts: RES_POSTS,
+        };
+        return res.status(200).json(RES_BOARD_AND_POSTS);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.getPostListByCursor = async (req, res, next) => {
+    try {
+        if (!req.query.board_id || isNaN(req.query.board_id) || !req.query.last_id || isNaN(req.query.last_id)) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        //게시판 존재 여부
+        const NOW_BOARD = await Board.findOne({
+            where: {
+                id: req.query.board_id,
+            },
+        });
+        if (!NOW_BOARD) {
+            return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+
+        //사용자 권한 없음
+        let canRead = false;
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        for (let index = 0; index < NOW_USER_MAJOR_LIST.length; index++) {
+            if (NOW_USER_MAJOR_LIST[index].major_id === NOW_BOARD.major_id) {
+                canRead = true;
+                break;
+            }
+        }
+
+        if (!canRead) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
+
+        let countPerPage = 5;
+        if (!isNaN(req.query.per_page)) {
+            countPerPage = parseInt(req.query.per_page);
+        }
+
+        const LIMIT = countPerPage;
+
+        const POSTS_INFO = await Post.findAll({
+            where: {
+                board_id: req.query.board_id,
+                id: {
+                    [Op.lt]: [req.query.last_id],
+                },
+            },
+            order: [['created_at', 'DESC']],
+            limit: LIMIT,
+        });
+
+        const RES_POSTS = [];
+        for (let index = 0; index < POSTS_INFO.length; index++) {
+            const NOW_POST = POSTS_INFO[index];
+            const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
+            RES_POSTS.push({
+                post_id: NOW_POST.id,
+                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                title: NOW_POST.title,
+                preview: NOW_POST.content.substr(0, 50),
+                comments: COMMENT_LIST.length,
+                views: NOW_POST.views,
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
+                updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            });
+        }
+
+        const RES_BOARD_AND_POSTS = {
+            major_name: NOW_BOARD.board_name.split('-')[0],
+            board_name: NOW_BOARD.board_name.split('-')[1],
+            posts: RES_POSTS,
+        };
+        return res.status(200).json(RES_BOARD_AND_POSTS);
     } catch (error) {
         console.error(error);
         next(error);
