@@ -4,11 +4,13 @@ const { verifyAToken } = require('../middlewares');
 
 const { checkSchoolId, join, login, refreshAToken, getUserMajors, addSchoolAuth, getUserInfo } = require('../services/auth/auth');
 
+const imageUploader = require('../services/image/ImageUploader');
+
 const router = express.Router();
 
 router.get('/check_school_id', checkSchoolId);
 
-router.post('/join', join);
+router.post('/join', imageUploader.single('profile_image'), join);
 
 router.get('/login', login);
 
