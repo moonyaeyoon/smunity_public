@@ -104,7 +104,7 @@ exports.join = async (req, res, next) => {
             email_auth_code: AUTH_CODE,
             profile_image_url: filePath
         });
-
+        ADD_USER_SUCCESS.res_json.profile_image_url = filePath;
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
