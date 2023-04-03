@@ -268,7 +268,7 @@ exports.getUserInfo = async (req, res, next) => {
         const RES_USER_INFO = {
             username: NOW_USER.nickname,
             school_id: NOW_USER.school_id,
-            profile_image_url: NOW_USER.profile_image_url,
+            profile_image_url: NOW_USER.profile_image_url || null,
             majors: RES_MAJOR_LIST,
         };
         res.status(200).json(RES_USER_INFO);

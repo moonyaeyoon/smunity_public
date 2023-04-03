@@ -1,4 +1,4 @@
-const { Transaction, LOCK, Sequelize, Op } = require('sequelize');
+const { Transaction, LOCK, Sequelize, Op, where } = require('sequelize');
 const moment = require('moment');
 const {
     REQ_FORM_ERROR,
@@ -18,6 +18,15 @@ const {
     SCRAP_POST_SUCCESS,
     UNDO_SCRAP_POST_SUCCESS,
     REPORT_POST_SUCCESS,
+    LIKE_POST_SUCCESS_STATUS,
+    likePostSuccessJson,
+    UNDO_LIKE_POST_SUCCESS_STATUS,
+    UndoLikePostSuccessJson,
+    SCRAP_POST_SUCCESS_STATUS,
+    scrapPostSuccessJson,
+    UNDO_SCRAP_POST_SUCCESS_STATUS,
+    UndoScrapPostSuccessJson,
+    END_OF_POST,
 } = require('../../constants/resSuccessJson');
 const {
     User,
@@ -324,13 +333,13 @@ exports.getPostList = async (req, res, next) => {
         const RES_POSTS = [];
         for (let index = 0; index < POSTS_INFO.length; index++) {
             const NOW_POST = POSTS_INFO[index];
-            const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 post_id: NOW_POST.id,
                 username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
-                comments: COMMENT_LIST.length,
+                comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 likes: NOW_POST.likes,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
@@ -476,11 +485,13 @@ exports.likePost = async (req, res, next) => {
             });
 
             await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes+1 WHERE id = ${req.params.post_id}`);
-            return res.status(LIKE_POST_SUCCESS.status_code).json(LIKE_POST_SUCCESS.res_json);
+            const NEW_POST = await Post.findByPk(req.params.post_id);
+            return res.status(LIKE_POST_SUCCESS_STATUS).json(likePostSuccessJson(NEW_POST.likes));
         } else {
             await NOW_LIKED_STATU.destroy();
             await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes-1 WHERE id = ${req.params.post_id}`);
-            return res.status(UNDO_LIKE_POST_SUCCESS.status_code).json(UNDO_LIKE_POST_SUCCESS.res_json);
+            const NEW_POST = await Post.findByPk(req.params.post_id);
+            return res.status(UNDO_LIKE_POST_SUCCESS_STATUS).json(UndoLikePostSuccessJson(NEW_POST.likes));
         }
     } catch (error) {
         console.error(error);
@@ -513,11 +524,13 @@ exports.scrapPost = async (req, res, next) => {
             });
 
             await sequelize.query(`UPDATE ${config.database}.posts SET scraps = scraps+1 WHERE id = ${req.params.post_id}`);
-            return res.status(SCRAP_POST_SUCCESS.status_code).json(SCRAP_POST_SUCCESS.res_json);
+            const NEW_POST = await Post.findByPk(req.params.post_id);
+            return res.status(SCRAP_POST_SUCCESS_STATUS).json(scrapPostSuccessJson(NEW_POST.scraps));
         } else {
             await NOW_SCRAP_STATU.destroy();
             await sequelize.query(`UPDATE ${config.database}.posts SET scraps = scraps-1 WHERE id = ${req.params.post_id}`);
-            return res.status(UNDO_SCRAP_POST_SUCCESS.status_code).json(UNDO_SCRAP_POST_SUCCESS.res_json);
+            const NEW_POST = await Post.findByPk(req.params.post_id);
+            return res.status(UNDO_SCRAP_POST_SUCCESS_STATUS).json(UndoScrapPostSuccessJson(NEW_POST.scraps));
         }
     } catch (error) {
         console.error(error);
@@ -609,16 +622,20 @@ exports.getPostListByPaging = async (req, res, next) => {
             limit: LIMIT,
         });
 
+        if (POSTS_INFO.length == 0) {
+            return res.status(END_OF_POST.status_code).json();
+        }
+
         const RES_POSTS = [];
         for (let index = 0; index < POSTS_INFO.length; index++) {
             const NOW_POST = POSTS_INFO[index];
-            const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 post_id: NOW_POST.id,
                 username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
-                comments: COMMENT_LIST.length,
+                comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
@@ -677,27 +694,42 @@ exports.getPostListByCursor = async (req, res, next) => {
 
         const LIMIT = countPerPage;
 
-        const POSTS_INFO = await Post.findAll({
-            where: {
-                board_id: req.query.board_id,
-                id: {
-                    [Op.lt]: [req.query.last_id],
+        let postsInfo = [];
+        if (req.query.last_id == 0) {
+            postsInfo = await Post.findAll({
+                where: {
+                    board_id: req.query.board_id,
                 },
-            },
-            order: [['created_at', 'DESC']],
-            limit: LIMIT,
-        });
+                order: [['created_at', 'DESC']],
+                limit: LIMIT,
+            });
+        } else {
+            postsInfo = await Post.findAll({
+                where: {
+                    board_id: req.query.board_id,
+                    id: {
+                        [Op.lt]: [req.query.last_id],
+                    },
+                },
+                order: [['created_at', 'DESC']],
+                limit: LIMIT,
+            });
+        }
+
+        if (postsInfo.length == 0) {
+            return res.status(END_OF_POST.status_code).json();
+        }
 
         const RES_POSTS = [];
-        for (let index = 0; index < POSTS_INFO.length; index++) {
-            const NOW_POST = POSTS_INFO[index];
-            const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
+        for (let index = 0; index < postsInfo.length; index++) {
+            const NOW_POST = postsInfo[index];
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 post_id: NOW_POST.id,
                 username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
-                comments: COMMENT_LIST.length,
+                comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
@@ -710,6 +742,294 @@ exports.getPostListByCursor = async (req, res, next) => {
             posts: RES_POSTS,
         };
         return res.status(200).json(RES_BOARD_AND_POSTS);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.searchTitleAndContent = async (req, res, next) => {
+    try {
+        if (!req.query.keyword) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const ALLOW_USER_MAJORS = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
+        const ALL_ALLOW_BOARD_ID = [];
+        for (let index = 0; index < ALLOW_USER_MAJORS.length; index++) {
+            const nowMajotId = ALLOW_USER_MAJORS[index].major_id;
+            const majorBoards = await Board.findAll({
+                where: {
+                    major_id: nowMajotId,
+                },
+            });
+            for (let i = 0; i < majorBoards.length; i++) {
+                ALL_ALLOW_BOARD_ID.push(majorBoards[i].id);
+            }
+        }
+
+        const SEARCH_POST_LIST = await Post.findAll({
+            where: {
+                board_id: ALL_ALLOW_BOARD_ID,
+                [Op.or]: [
+                    {
+                        title: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                    {
+                        content: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                ],
+            },
+            order: [['created_at', 'DESC']],
+        });
+
+        const RES_POSTS = [];
+        for (let index = 0; index < SEARCH_POST_LIST.length; index++) {
+            const NOW_POST = SEARCH_POST_LIST[index];
+            const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
+            RES_POSTS.push({
+                major_name: NOW_BOARD.board_name.split('-')[0],
+                board_name: NOW_BOARD.board_name.split('-')[1],
+                board_id: NOW_POST.board_id,
+                post_id: NOW_POST.id,
+                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                title: NOW_POST.title,
+                preview: NOW_POST.content.substr(0, 50),
+                comments: COMMENT_COUNT,
+                views: NOW_POST.views,
+                likes: NOW_POST.likes,
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
+                updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            });
+        }
+        //요청 헤더로 정렬기준 받아서 판별
+        if (res.header.sorting === 'likes') {
+            RES_POSTS.sort((a, b) => b.likes - a.likes);
+        }
+        return res.status(200).json(RES_POSTS);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.searchTitleAndContentByPaging = async (req, res, next) => {
+    try {
+        if (!req.query.keyword || !req.query.now_page || isNaN(req.query.now_page)) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const ALLOW_USER_MAJORS = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
+        const ALL_ALLOW_BOARD_ID = [];
+        for (let index = 0; index < ALLOW_USER_MAJORS.length; index++) {
+            const nowMajotId = ALLOW_USER_MAJORS[index].major_id;
+            const majorBoards = await Board.findAll({
+                where: {
+                    major_id: nowMajotId,
+                },
+            });
+            for (let i = 0; i < majorBoards.length; i++) {
+                ALL_ALLOW_BOARD_ID.push(majorBoards[i].id);
+            }
+        }
+
+        let countPerPage = 10;
+        if (!isNaN(req.query.per_page)) {
+            countPerPage = parseInt(req.query.per_page);
+        }
+        const LIMIT = countPerPage;
+        const OFFSET = 0 + (req.query.now_page - 1) * LIMIT;
+
+        const SEARCH_POST_LIST = await Post.findAll({
+            where: {
+                board_id: ALL_ALLOW_BOARD_ID,
+                [Op.or]: [
+                    {
+                        title: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                    {
+                        content: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                ],
+            },
+            order: [['created_at', 'DESC']],
+            offset: OFFSET,
+            limit: LIMIT,
+        });
+
+        if (SEARCH_POST_LIST.length == 0) {
+            return res.status(END_OF_POST.status_code).json();
+        }
+
+        const RES_POSTS = [];
+        for (let index = 0; index < SEARCH_POST_LIST.length; index++) {
+            const NOW_POST = SEARCH_POST_LIST[index];
+            const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
+            RES_POSTS.push({
+                major_name: NOW_BOARD.board_name.split('-')[0],
+                board_name: NOW_BOARD.board_name.split('-')[1],
+                board_id: NOW_POST.board_id,
+                post_id: NOW_POST.id,
+                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                title: NOW_POST.title,
+                preview: NOW_POST.content.substr(0, 50),
+                comments: COMMENT_COUNT,
+                views: NOW_POST.views,
+                likes: NOW_POST.likes,
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
+                updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            });
+        }
+        //요청 헤더로 정렬기준 받아서 판별
+        if (res.header.sorting === 'likes') {
+            RES_POSTS.sort((a, b) => b.likes - a.likes);
+        }
+
+        const SEARCH_POST_COUNT = await Post.count({
+            where: {
+                board_id: ALL_ALLOW_BOARD_ID,
+                [Op.or]: [
+                    {
+                        title: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                    {
+                        content: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                ],
+            },
+        });
+        const TOTAL_PAGE = Math.ceil(SEARCH_POST_COUNT / countPerPage);
+        const RES_BOARD_AND_POSTS = {
+            total_page: TOTAL_PAGE,
+            posts: RES_POSTS,
+        };
+
+        return res.status(200).json(RES_BOARD_AND_POSTS);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.searchTitleAndContentByCursor = async (req, res, next) => {
+    try {
+        if (!req.query.keyword || !req.query.last_id || isNaN(req.query.last_id)) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const ALLOW_USER_MAJORS = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
+        const ALL_ALLOW_BOARD_ID = [];
+        for (let index = 0; index < ALLOW_USER_MAJORS.length; index++) {
+            const nowMajotId = ALLOW_USER_MAJORS[index].major_id;
+            const majorBoards = await Board.findAll({
+                where: {
+                    major_id: nowMajotId,
+                },
+            });
+            for (let i = 0; i < majorBoards.length; i++) {
+                ALL_ALLOW_BOARD_ID.push(majorBoards[i].id);
+            }
+        }
+
+        let countPerPage = 5;
+        if (!isNaN(req.query.per_page)) {
+            countPerPage = parseInt(req.query.per_page);
+        }
+
+        const LIMIT = countPerPage;
+
+        let searcgPostsList = [];
+        if (req.query.last_id == 0) {
+            searcgPostsList = await Post.findAll({
+                where: {
+                    board_id: ALL_ALLOW_BOARD_ID,
+                    [Op.or]: [
+                        {
+                            title: {
+                                [Op.like]: `%${req.query.keyword}%`,
+                            },
+                        },
+                        {
+                            content: {
+                                [Op.like]: `%${req.query.keyword}%`,
+                            },
+                        },
+                    ],
+                },
+                order: [['created_at', 'DESC']],
+                limit: LIMIT,
+            });
+        } else {
+            searcgPostsList = await Post.findAll({
+                where: {
+                    board_id: ALL_ALLOW_BOARD_ID,
+                    id: {
+                        [Op.lt]: [req.query.last_id],
+                    },
+                    [Op.or]: [
+                        {
+                            title: {
+                                [Op.like]: `%${req.query.keyword}%`,
+                            },
+                        },
+                        {
+                            content: {
+                                [Op.like]: `%${req.query.keyword}%`,
+                            },
+                        },
+                    ],
+                },
+                order: [['created_at', 'DESC']],
+                limit: LIMIT,
+            });
+        }
+
+        if (searcgPostsList.length == 0) {
+            return res.status(END_OF_POST.status_code).json();
+        }
+
+        const RES_POSTS = [];
+        for (let index = 0; index < searcgPostsList.length; index++) {
+            const NOW_POST = searcgPostsList[index];
+            const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
+            RES_POSTS.push({
+                major_name: NOW_BOARD.board_name.split('-')[0],
+                board_name: NOW_BOARD.board_name.split('-')[1],
+                board_id: NOW_POST.board_id,
+                post_id: NOW_POST.id,
+                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                title: NOW_POST.title,
+                preview: NOW_POST.content.substr(0, 50),
+                comments: COMMENT_COUNT,
+                views: NOW_POST.views,
+                likes: NOW_POST.likes,
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
+                updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            });
+        }
+        //요청 헤더로 정렬기준 받아서 판별
+        if (res.header.sorting === 'likes') {
+            RES_POSTS.sort((a, b) => b.likes - a.likes);
+        }
+        return res.status(200).json(RES_POSTS);
     } catch (error) {
         console.error(error);
         next(error);
