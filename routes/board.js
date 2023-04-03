@@ -16,6 +16,7 @@ const {
     getBoardInfo,
     getPostListByPaging,
     getPostListByCursor,
+    searchTitleAndContent,
 } = require('../services/board/boardService');
 
 const router = express.Router();
@@ -45,5 +46,7 @@ router.post('/scrap/:post_id', verifyAToken, scrapPost);
 router.post('/report/:post_id', verifyAToken, reportPost);
 
 router.get('/info/:board_id', verifyAToken, getBoardInfo);
+
+router.get('/search', verifyAToken, searchTitleAndContent);
 
 module.exports = router;

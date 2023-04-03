@@ -1,4 +1,4 @@
-const { Transaction, LOCK, Sequelize, Op } = require('sequelize');
+const { Transaction, LOCK, Sequelize, Op, where } = require('sequelize');
 const moment = require('moment');
 const {
     REQ_FORM_ERROR,
@@ -722,6 +722,76 @@ exports.getPostListByCursor = async (req, res, next) => {
             posts: RES_POSTS,
         };
         return res.status(200).json(RES_BOARD_AND_POSTS);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.searchTitleAndContent = async (req, res, next) => {
+    try {
+        if (!req.query.keyword) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const ALLOW_USER_MAJORS = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
+        const ALL_ALLOW_BOARD_ID = [];
+        for (let index = 0; index < ALLOW_USER_MAJORS.length; index++) {
+            const nowMajotId = ALLOW_USER_MAJORS[index].major_id;
+            const majorBoards = await Board.findAll({
+                where: {
+                    major_id: nowMajotId,
+                },
+            });
+            for (let i = 0; i < majorBoards.length; i++) {
+                ALL_ALLOW_BOARD_ID.push(majorBoards[i].id);
+            }
+        }
+
+        const SEARCH_POST_LIST = await Post.findAll({
+            where: {
+                board_id: ALL_ALLOW_BOARD_ID,
+                [Op.or]: [
+                    {
+                        title: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                    {
+                        content: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                ],
+            },
+        });
+
+        const RES_POSTS = [];
+        for (let index = 0; index < SEARCH_POST_LIST.length; index++) {
+            const NOW_POST = SEARCH_POST_LIST[index];
+            const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
+            const COMMENT_LIST = await Comment.count({ where: { post_id: NOW_POST.id } });
+            RES_POSTS.push({
+                major_name: NOW_BOARD.board_name.split('-')[0],
+                board_name: NOW_BOARD.board_name.split('-')[1],
+                board_id: NOW_POST.board_id,
+                post_id: NOW_POST.id,
+                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                title: NOW_POST.title,
+                preview: NOW_POST.content.substr(0, 50),
+                comments: COMMENT_LIST.length,
+                views: NOW_POST.views,
+                likes: NOW_POST.likes,
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
+                updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            });
+        }
+        //요청 헤더로 정렬기준 받아서 판별
+        if (res.header.sorting === 'likes') {
+            RES_POSTS.sort((a, b) => b.likes - a.likes);
+        }
+        return res.status(200).json(RES_POSTS);
     } catch (error) {
         console.error(error);
         next(error);
