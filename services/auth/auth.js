@@ -102,7 +102,7 @@ exports.join = async (req, res, next) => {
             nickname,
             password: NEW_USER_PASSWORD_HASH,
             email_auth_code: AUTH_CODE,
-            profile_image_url: filePath
+            profile_image_url: filePath,
         });
         ADD_USER_SUCCESS.res_json.profile_image_url = filePath;
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);

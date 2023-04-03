@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.get('/check_school_id', checkSchoolId);
 
-router.post('/join', imageUploader.single('profile_image'), join);
+router.post('/join', imageUploader.single('image'), join);
 
 router.get('/login', login);
 
