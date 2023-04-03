@@ -333,13 +333,13 @@ exports.getPostList = async (req, res, next) => {
         const RES_POSTS = [];
         for (let index = 0; index < POSTS_INFO.length; index++) {
             const NOW_POST = POSTS_INFO[index];
-            const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 post_id: NOW_POST.id,
                 username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
-                comments: COMMENT_LIST.length,
+                comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 likes: NOW_POST.likes,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
@@ -629,13 +629,13 @@ exports.getPostListByPaging = async (req, res, next) => {
         const RES_POSTS = [];
         for (let index = 0; index < POSTS_INFO.length; index++) {
             const NOW_POST = POSTS_INFO[index];
-            const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 post_id: NOW_POST.id,
                 username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
-                comments: COMMENT_LIST.length,
+                comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
@@ -694,31 +694,42 @@ exports.getPostListByCursor = async (req, res, next) => {
 
         const LIMIT = countPerPage;
 
-        const POSTS_INFO = await Post.findAll({
-            where: {
-                board_id: req.query.board_id,
-                id: {
-                    [Op.lt]: [req.query.last_id],
+        let postsInfo = [];
+        if (req.query.last_id == 0) {
+            postsInfo = await Post.findAll({
+                where: {
+                    board_id: req.query.board_id,
                 },
-            },
-            order: [['created_at', 'DESC']],
-            limit: LIMIT,
-        });
+                order: [['created_at', 'DESC']],
+                limit: LIMIT,
+            });
+        } else {
+            postsInfo = await Post.findAll({
+                where: {
+                    board_id: req.query.board_id,
+                    id: {
+                        [Op.lt]: [req.query.last_id],
+                    },
+                },
+                order: [['created_at', 'DESC']],
+                limit: LIMIT,
+            });
+        }
 
-        if (POSTS_INFO.length == 0) {
+        if (postsInfo.length == 0) {
             return res.status(END_OF_POST.status_code).json();
         }
 
         const RES_POSTS = [];
-        for (let index = 0; index < POSTS_INFO.length; index++) {
-            const NOW_POST = POSTS_INFO[index];
-            const COMMENT_LIST = await Comment.findAll({ where: { post_id: NOW_POST.id } });
+        for (let index = 0; index < postsInfo.length; index++) {
+            const NOW_POST = postsInfo[index];
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 post_id: NOW_POST.id,
                 username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
-                comments: COMMENT_LIST.length,
+                comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
@@ -781,7 +792,7 @@ exports.searchTitleAndContent = async (req, res, next) => {
         for (let index = 0; index < SEARCH_POST_LIST.length; index++) {
             const NOW_POST = SEARCH_POST_LIST[index];
             const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
-            const COMMENT_LIST = await Comment.count({ where: { post_id: NOW_POST.id } });
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 major_name: NOW_BOARD.board_name.split('-')[0],
                 board_name: NOW_BOARD.board_name.split('-')[1],
@@ -790,7 +801,7 @@ exports.searchTitleAndContent = async (req, res, next) => {
                 username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
-                comments: COMMENT_LIST.length,
+                comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 likes: NOW_POST.likes,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
@@ -865,7 +876,7 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
         for (let index = 0; index < SEARCH_POST_LIST.length; index++) {
             const NOW_POST = SEARCH_POST_LIST[index];
             const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
-            const COMMENT_LIST = await Comment.count({ where: { post_id: NOW_POST.id } });
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 major_name: NOW_BOARD.board_name.split('-')[0],
                 board_name: NOW_BOARD.board_name.split('-')[1],
@@ -874,7 +885,7 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
                 username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
-                comments: COMMENT_LIST.length,
+                comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 likes: NOW_POST.likes,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
@@ -944,38 +955,61 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
 
         const LIMIT = countPerPage;
 
-        const SEARCH_POST_LIST = await Post.findAll({
-            where: {
-                board_id: ALL_ALLOW_BOARD_ID,
-                id: {
-                    [Op.lt]: [req.query.last_id],
+        let searcgPostsList = [];
+        if (req.query.last_id == 0) {
+            searcgPostsList = await Post.findAll({
+                where: {
+                    board_id: ALL_ALLOW_BOARD_ID,
+                    [Op.or]: [
+                        {
+                            title: {
+                                [Op.like]: `%${req.query.keyword}%`,
+                            },
+                        },
+                        {
+                            content: {
+                                [Op.like]: `%${req.query.keyword}%`,
+                            },
+                        },
+                    ],
                 },
-                [Op.or]: [
-                    {
-                        title: {
-                            [Op.like]: `%${req.query.keyword}%`,
-                        },
+                order: [['created_at', 'DESC']],
+                limit: LIMIT,
+            });
+        } else {
+            searcgPostsList = await Post.findAll({
+                where: {
+                    board_id: ALL_ALLOW_BOARD_ID,
+                    id: {
+                        [Op.lt]: [req.query.last_id],
                     },
-                    {
-                        content: {
-                            [Op.like]: `%${req.query.keyword}%`,
+                    [Op.or]: [
+                        {
+                            title: {
+                                [Op.like]: `%${req.query.keyword}%`,
+                            },
                         },
-                    },
-                ],
-            },
-            order: [['created_at', 'DESC']],
-            limit: LIMIT,
-        });
+                        {
+                            content: {
+                                [Op.like]: `%${req.query.keyword}%`,
+                            },
+                        },
+                    ],
+                },
+                order: [['created_at', 'DESC']],
+                limit: LIMIT,
+            });
+        }
 
-        if (SEARCH_POST_LIST.length == 0) {
+        if (searcgPostsList.length == 0) {
             return res.status(END_OF_POST.status_code).json();
         }
 
         const RES_POSTS = [];
-        for (let index = 0; index < SEARCH_POST_LIST.length; index++) {
-            const NOW_POST = SEARCH_POST_LIST[index];
+        for (let index = 0; index < searcgPostsList.length; index++) {
+            const NOW_POST = searcgPostsList[index];
             const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
-            const COMMENT_LIST = await Comment.count({ where: { post_id: NOW_POST.id } });
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
                 major_name: NOW_BOARD.board_name.split('-')[0],
                 board_name: NOW_BOARD.board_name.split('-')[1],
@@ -984,7 +1018,7 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
                 username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
-                comments: COMMENT_LIST.length,
+                comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 likes: NOW_POST.likes,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
