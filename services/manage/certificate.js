@@ -37,12 +37,18 @@ exports.updateMajorInCertificate = async (req, res, next) => {
     try {
         const isUserMajorsDeleted = await deleteUserMajorList(userId);
         if (isUserMajorsDeleted) {
+            await UserMajor.create({
+                user_id: userId,
+                major_id: 1,
+            });
             majorList.map(async (element) => {
                 console.log(element);
-                await UserMajor.create({
-                    user_id: userId,
-                    major_id: element,
-                });
+                if (element != '1') {
+                    await UserMajor.create({
+                        user_id: userId,
+                        major_id: element,
+                    });
+                }
             });
             res.json({ isSuccess: true });
         }
