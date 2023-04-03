@@ -248,9 +248,21 @@ exports.updatePost = async (req, res, next) => {
             }
         }
 
+        const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
+        //익명 여부 처리
+        let isUserSelectedAnonymous = req.body.is_anonymous || false;
+        if (isUserSelectedAnonymous) {
+            //사용자가 익명을 선택했지만
+            if (NOW_BOARD.is_can_anonymous == false) {
+                //실제로도 게시판이 익명을 허용하지 않으면
+                isUserSelectedAnonymous = false; //강제로 익명 선택 취소
+            }
+        }
+
         await NOW_POST.update({
             title: req.body.title,
             content: req.body.content,
+            is_anonymous: isUserSelectedAnonymous,
             img_urls: imageUrlsString,
         });
 
