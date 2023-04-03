@@ -17,6 +17,8 @@ const {
     getPostListByPaging,
     getPostListByCursor,
     searchTitleAndContent,
+    searchTitleAndContentByCursor,
+    searchTitleAndContentByPaging,
 } = require('../services/board/boardService');
 
 const router = express.Router();
@@ -48,5 +50,9 @@ router.post('/report/:post_id', verifyAToken, reportPost);
 router.get('/info/:board_id', verifyAToken, getBoardInfo);
 
 router.get('/search', verifyAToken, searchTitleAndContent);
+
+router.get('/search_paging', verifyAToken, searchTitleAndContentByPaging);
+
+router.get('/search_cursor', verifyAToken, searchTitleAndContentByCursor);
 
 module.exports = router;

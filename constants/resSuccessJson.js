@@ -57,6 +57,14 @@ exports.REPORT_POST_SUCCESS = {
     },
 };
 
+exports.END_OF_POST = {
+    status_code: 204,
+    res_json: {
+        status_code: 204,
+        message: '게시글이 더 이상 없습니다.',
+    },
+};
+
 exports.ADD_COMMENT_SUCCESS = {
     status_code: 201,
     res_json: {
