@@ -18,6 +18,14 @@ const {
     SCRAP_POST_SUCCESS,
     UNDO_SCRAP_POST_SUCCESS,
     REPORT_POST_SUCCESS,
+    LIKE_POST_SUCCESS_STATUS,
+    likePostSuccessJson,
+    UNDO_LIKE_POST_SUCCESS_STATUS,
+    UndoLikePostSuccessJson,
+    SCRAP_POST_SUCCESS_STATUS,
+    scrapPostSuccessJson,
+    UNDO_SCRAP_POST_SUCCESS_STATUS,
+    UndoScrapPostSuccessJson,
 } = require('../../constants/resSuccessJson');
 const {
     User,
@@ -476,11 +484,13 @@ exports.likePost = async (req, res, next) => {
             });
 
             await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes+1 WHERE id = ${req.params.post_id}`);
-            return res.status(LIKE_POST_SUCCESS.status_code).json(LIKE_POST_SUCCESS.res_json);
+            const NEW_POST = await Post.findByPk(req.params.post_id);
+            return res.status(LIKE_POST_SUCCESS_STATUS).json(likePostSuccessJson(NEW_POST.likes));
         } else {
             await NOW_LIKED_STATU.destroy();
             await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes-1 WHERE id = ${req.params.post_id}`);
-            return res.status(UNDO_LIKE_POST_SUCCESS.status_code).json(UNDO_LIKE_POST_SUCCESS.res_json);
+            const NEW_POST = await Post.findByPk(req.params.post_id);
+            return res.status(UNDO_LIKE_POST_SUCCESS_STATUS).json(UndoLikePostSuccessJson(NEW_POST.likes));
         }
     } catch (error) {
         console.error(error);
@@ -513,11 +523,13 @@ exports.scrapPost = async (req, res, next) => {
             });
 
             await sequelize.query(`UPDATE ${config.database}.posts SET scraps = scraps+1 WHERE id = ${req.params.post_id}`);
-            return res.status(SCRAP_POST_SUCCESS.status_code).json(SCRAP_POST_SUCCESS.res_json);
+            const NEW_POST = await Post.findByPk(req.params.post_id);
+            return res.status(SCRAP_POST_SUCCESS_STATUS).json(scrapPostSuccessJson(NEW_POST.scraps));
         } else {
             await NOW_SCRAP_STATU.destroy();
             await sequelize.query(`UPDATE ${config.database}.posts SET scraps = scraps-1 WHERE id = ${req.params.post_id}`);
-            return res.status(UNDO_SCRAP_POST_SUCCESS.status_code).json(UNDO_SCRAP_POST_SUCCESS.res_json);
+            const NEW_POST = await Post.findByPk(req.params.post_id);
+            return res.status(UNDO_SCRAP_POST_SUCCESS_STATUS).json(UndoScrapPostSuccessJson(NEW_POST.scraps));
         }
     } catch (error) {
         console.error(error);
