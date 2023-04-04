@@ -196,9 +196,10 @@ exports.getPostDatail = async (req, res, next) => {
             });
         }
 
+        const AUTHOR_USER = await User.findByPk(NOW_POST.user_id);
         const RES_POST_DETAIL = {
             post_id: NOW_POST.id,
-            username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+            username: NOW_POST.is_anonymous ? '익명' : AUTHOR_USER.nickname,
             user_id: NOW_POST.user_id,
             title: NOW_POST.title,
             content: NOW_POST.content,
