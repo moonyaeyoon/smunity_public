@@ -19,6 +19,7 @@ const {
     searchTitleAndContent,
     searchTitleAndContentByCursor,
     searchTitleAndContentByPaging,
+    getBoardInfoByPostId,
 } = require('../services/board/boardService');
 
 const router = express.Router();
@@ -48,6 +49,8 @@ router.post('/scrap/:post_id', verifyAToken, scrapPost);
 router.post('/report/:post_id', verifyAToken, reportPost);
 
 router.get('/info/:board_id', verifyAToken, getBoardInfo);
+
+router.get('/info_by_postid/:post_id', verifyAToken, getBoardInfoByPostId);
 
 router.get('/search', verifyAToken, searchTitleAndContent);
 
