@@ -16,6 +16,9 @@ const {
     getBoardInfo,
     getPostListByPaging,
     getPostListByCursor,
+    searchTitleAndContent,
+    searchTitleAndContentByCursor,
+    searchTitleAndContentByPaging,
     getSchoolNoticeList,
 } = require('../services/board/boardService');
 
@@ -46,6 +49,12 @@ router.post('/scrap/:post_id', verifyAToken, scrapPost);
 router.post('/report/:post_id', verifyAToken, reportPost);
 
 router.get('/info/:board_id', verifyAToken, getBoardInfo);
+
+router.get('/search', verifyAToken, searchTitleAndContent);
+
+router.get('/search_paging', verifyAToken, searchTitleAndContentByPaging);
+
+router.get('/search_cursor', verifyAToken, searchTitleAndContentByCursor);
 
 router.get('/notice', getSchoolNoticeList);
 

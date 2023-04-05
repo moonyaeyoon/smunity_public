@@ -22,6 +22,7 @@ exports.ADD_USER_SUCCESS = {
     res_json: {
         status_code: 201,
         message: '회원 가입이 완료되었습니다.',
+        profile_image_url: null
     },
 };
 
@@ -49,43 +50,19 @@ exports.DELETE_POST_SUCCESS = {
     },
 };
 
-exports.LIKE_POST_SUCCESS = {
-    status_code: 201,
-    res_json: {
-        status_code: 201,
-        message: '게시글에 좋아요를 추가했습니다.',
-    },
-};
-
-exports.UNDO_LIKE_POST_SUCCESS = {
-    status_code: 201,
-    res_json: {
-        status_code: 201,
-        message: '게시글에 좋아요를 취소했습니다.',
-    },
-};
-
-exports.SCRAP_POST_SUCCESS = {
-    status_code: 201,
-    res_json: {
-        status_code: 201,
-        message: '게시글에 스크랩을 추가했습니다.',
-    },
-};
-
-exports.UNDO_SCRAP_POST_SUCCESS = {
-    status_code: 201,
-    res_json: {
-        status_code: 201,
-        message: '게시글에 스크랩을 취소했습니다.',
-    },
-};
-
 exports.REPORT_POST_SUCCESS = {
     status_code: 201,
     res_json: {
         status_code: 201,
         message: '게시글 신고가 접수되었습니다.',
+    },
+};
+
+exports.END_OF_POST = {
+    status_code: 204,
+    res_json: {
+        status_code: 204,
+        message: '게시글이 더 이상 없습니다.',
     },
 };
 
@@ -113,22 +90,6 @@ exports.DELETE_COMMENT_SUCCESS = {
     },
 };
 
-exports.LIKE_COMMENT_SUCCESS = {
-    status_code: 201,
-    res_json: {
-        status_code: 201,
-        message: '댓글에 좋아요를 추가했습니다.',
-    },
-};
-
-exports.UNDO_LIKE_COMMENT_SUCCESS = {
-    status_code: 201,
-    res_json: {
-        status_code: 201,
-        message: '댓글에 좋아요를 취소했습니다.',
-    },
-};
-
 exports.REPORT_COMMENT_SUCCESS = {
     status_code: 201,
     res_json: {
@@ -148,4 +109,58 @@ exports.getNewAccessTokenJson = (aToken) => {
 
 exports.emailAuthSuccess = () => {
     return "<script>alert('이메일 인증이 완료되었습니다!');</script>";
+};
+
+exports.LIKE_POST_SUCCESS_STATUS = 201;
+exports.likePostSuccessJson = (totalLikes) => {
+    return {
+        status_code: 201,
+        message: '게시글에 좋아요를 추가했습니다.',
+        total_likes: totalLikes,
+    };
+};
+
+exports.UNDO_LIKE_POST_SUCCESS_STATUS = 201;
+exports.UndoLikePostSuccessJson = (totalLikes) => {
+    return {
+        status_code: 201,
+        message: '게시글에 좋아요를 취소했습니다.',
+        total_likes: totalLikes,
+    };
+};
+
+exports.SCRAP_POST_SUCCESS_STATUS = 201;
+exports.scrapPostSuccessJson = (totalScraps) => {
+    return {
+        status_code: 201,
+        message: '게시글에 스크랩을 추가했습니다.',
+        total_scraps: totalScraps,
+    };
+};
+
+exports.UNDO_SCRAP_POST_SUCCESS_STATUS = 201;
+exports.UndoScrapPostSuccessJson = (totalScraps) => {
+    return {
+        status_code: 201,
+        message: '게시글에 스크랩을 취소했습니다.',
+        total_scraps: totalScraps,
+    };
+};
+
+exports.LIKE_COMMENT_SUCCESS_STATUS = 201;
+exports.likeCommentSuccessJson = (totalLikes) => {
+    return {
+        status_code: 201,
+        message: '댓글에 좋아요를 추가했습니다.',
+        total_likes: totalLikes,
+    };
+};
+
+exports.UNDO_LIKE_COMMENT_SUCCESS_STATUS = 201;
+exports.UndoLikeCommentSuccessJson = (totalLikes) => {
+    return {
+        status_code: 201,
+        message: '댓글에 좋아요를 취소했습니다.',
+        total_likes: totalLikes,
+    };
 };

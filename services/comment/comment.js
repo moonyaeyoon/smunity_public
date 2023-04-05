@@ -17,6 +17,10 @@ const {
     LIKE_COMMENT_SUCCESS,
     UNDO_LIKE_COMMENT_SUCCESS,
     REPORT_COMMENT_SUCCESS,
+    LIKE_COMMENT_SUCCESS_STATUS,
+    likeCommentSuccessJson,
+    UNDO_LIKE_COMMENT_SUCCESS_STATUS,
+    UndoLikeCommentSuccessJson,
 } = require('../../constants/resSuccessJson');
 const {
     User,
@@ -219,11 +223,13 @@ exports.likeComment = async (req, res, next) => {
             });
 
             await sequelize.query(`UPDATE ${config.database}.comments SET likes = likes+1 WHERE id = ${req.params.comment_id}`);
-            return res.status(LIKE_COMMENT_SUCCESS.status_code).json(LIKE_COMMENT_SUCCESS.res_json);
+            const NEW_COMMENT = await Comment.findByPk(req.params.comment_id);
+            return res.status(LIKE_COMMENT_SUCCESS_STATUS).json(likeCommentSuccessJson(NEW_COMMENT.likes));
         } else {
             await NOW_LIKED_STATU.destroy();
             await sequelize.query(`UPDATE ${config.database}.comments SET likes = likes-1 WHERE id = ${req.params.comment_id}`);
-            return res.status(UNDO_LIKE_COMMENT_SUCCESS.status_code).json(UNDO_LIKE_COMMENT_SUCCESS.res_json);
+            const NEW_COMMENT = await Comment.findByPk(req.params.comment_id);
+            return res.status(UNDO_LIKE_COMMENT_SUCCESS_STATUS).json(UndoLikeCommentSuccessJson(NEW_COMMENT.likes));
         }
     } catch (error) {
         console.error(error);
