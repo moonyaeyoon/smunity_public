@@ -32,6 +32,7 @@ const {
     UserReportPost,
     UserLikeComment,
 } = require('../../models');
+const { getSchoolNotice } = require('../../crawling/mongo/getNotice');
 
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
@@ -710,6 +711,27 @@ exports.getPostListByCursor = async (req, res, next) => {
             posts: RES_POSTS,
         };
         return res.status(200).json(RES_BOARD_AND_POSTS);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.getSchoolNoticeList = async (req, res, next) => {
+    try {
+        const POSTS_INFO = await getSchoolNotice();
+
+        const RES_POSTS = [];
+        for (let index = 0; index < POSTS_INFO.length; index++) {
+            const NOW_POST = POSTS_INFO[index];
+            RES_POSTS.push({
+                post_id: NOW_POST['index'],
+                title: NOW_POST['title'],
+                views: NOW_POST['views'],
+                created_time: NOW_POST['date'],
+            });
+        }
+        return res.status(200).json(RES_POSTS);
     } catch (error) {
         console.error(error);
         next(error);

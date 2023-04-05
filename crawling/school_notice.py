@@ -23,9 +23,11 @@ table_tag = soup.find('ul', class_="board-thumb-wrap")
 noticeList = table_tag.find_all("dl")
 
 noticeTable.drop()
+
 for i in noticeList:
     NOW_TITLE = i.dt.table.tbody.find_all("td")[2].text.replace("\t", "").replace("\r", "").replace("\n", "")
     NOW_INDEX = i.dd.ul.find_all('li')[0].text.replace("\t", "").replace("\r", "").replace("\n", "").replace("No.", "")
+    # NOW_AUTHOR = i.dd.ul.find_all('li')[1].text.replace("\t", "").replace("\r", "").replace("\n", "").replace("작성자", "")
     NOW_DATE = i.dd.ul.find_all('li')[2].text.replace("\t", "").replace("\r", "").replace("\n", "").replace("작성일", "")
     NOW_VIEWS = i.dd.ul.find_all('li')[3].text.replace("\t", "").replace("\r", "").replace("\n", "").replace("조회수", "")
     noticeTable.insert_one({
