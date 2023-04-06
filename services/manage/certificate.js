@@ -13,7 +13,8 @@ exports.getCertificateList = async (req, res, next) => {
 exports.addCertificate = async (req, res, next) => {
     try {
         const USER_ID = res.locals.decodes.user_id;
-        const { imageUrl, content } = req.body;
+        const content = req.body;
+        const imageUrl = req.file.path;
         if (!imageUrl || !content) {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }

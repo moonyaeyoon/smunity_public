@@ -26,6 +26,22 @@ exports.ADD_USER_SUCCESS = {
     },
 };
 
+exports.EDIT_USER_NICKNAME = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '닉네임이 변경 되었습니다.',
+    },
+};
+
+exports.EDIT_USER_PROFILE_IMAGE = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '프로필 사진이 변경 되었습니다.',
+    },
+};
+
 exports.DELETE_USER_SUCCESS = {
     status_code: 201,
     res_json: {

@@ -19,6 +19,8 @@ const {
     USER_CAN_SIGNUP,
     ADD_USER_SUCCESS,
     emailAuthSuccess,
+    EDIT_USER_NICKNAME,
+    EDIT_USER_PROFILE_IMAGE,
     DELETE_USER_SUCCESS,
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
@@ -289,6 +291,44 @@ exports.getUserInfo = async (req, res, next) => {
             majors: RES_MAJOR_LIST,
         };
         res.status(200).json(RES_USER_INFO);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.editUserNickName = async (req, res, next) => {
+    try {
+        // 로그인한 사용자 정보 가져오기
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        // 사용자 닉네임 수정
+        const { nickname } = req.body;
+        await User.update({ nickname }, { where: { id: TARGET_USER.id } });
+
+        return res.status(EDIT_USER_NICKNAME.status_code).json(EDIT_USER_NICKNAME.res_json);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.editUserProfileImage = async (req, res, next) => {
+    try {
+        // 로그인한 사용자 정보 가져오기
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        // 사용자 프로필 이미지 수정
+        const { profile_image_url } = req.file.path;
+        await User.update({ profile_image_url }, { where: { id: TARGET_USER.id } });
+
+        return res.status(EDIT_USER_PROFILE_IMAGE.status_code).json(EDIT_USER_PROFILE_IMAGE.res_json);
     } catch (error) {
         console.error(error);
         next(error);
