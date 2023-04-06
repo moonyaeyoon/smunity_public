@@ -23,7 +23,7 @@ router.post('/join', imageUploader.single('image'), join);
 
 router.get('/login', login);
 
-router.delete('/withdrawal', verifyAToken, deleteUser);
+router.delete('/revoke', verifyAToken, deleteUser);
 
 router.get('/refresh_access_token', refreshAToken);
 
