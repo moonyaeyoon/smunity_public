@@ -297,23 +297,13 @@ exports.getUserInfo = async (req, res, next) => {
 
 exports.deleteUser = async (req, res, next) => {
     try {
-        if (!req.body.school_id || !req.body.password) {
-            return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
-        }
-
         const EX_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
         if (!EX_USER) {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
         }
-        if (req.body.school_id != EX_USER.school_id) {
-            return res.status(RES_ERROR_JSON.USER_NO_AUTH.status_code).json(RES_ERROR_JSON.USER_NO_AUTH.res_json);
-        }
-        if (await bcrypt.compare(req.body.password, EX_USER.password)) {
-            await EX_USER.destroy();
-            return res.status(DELETE_USER_SUCCESS.status_code).json(DELETE_USER_SUCCESS.res_json);
-        } else {
-            return res.status(RES_ERROR_JSON.USER_NO_AUTH.status_code).json(RES_ERROR_JSON.USER_NO_AUTH.res_json);
-        }
+
+        await EX_USER.destroy();
+        return res.status(DELETE_USER_SUCCESS.status_code).json(DELETE_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
         return next(error);
