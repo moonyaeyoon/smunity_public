@@ -19,6 +19,7 @@ const {
     USER_CAN_SIGNUP,
     ADD_USER_SUCCESS,
     emailAuthSuccess,
+    DELETE_USER_SUCCESS,
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
@@ -69,7 +70,7 @@ exports.checkSchoolId = async (req, res, next) => {
 
 exports.join = async (req, res, next) => {
     const { school_id, nickname, password } = req.body;
-    const filePath = req.file.location;
+    // const filePath = req.file.location;
     try {
         if (!school_id || !nickname || !password) {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
@@ -102,9 +103,9 @@ exports.join = async (req, res, next) => {
             nickname,
             password: NEW_USER_PASSWORD_HASH,
             email_auth_code: AUTH_CODE,
-            profile_image_url: filePath,
+            // profile_image_url: filePath,
         });
-        ADD_USER_SUCCESS.res_json.profile_image_url = filePath;
+        // ADD_USER_SUCCESS.res_json.profile_image_url = filePath;
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
@@ -277,6 +278,31 @@ exports.getUserInfo = async (req, res, next) => {
     } catch (error) {
         console.error(error);
         next(error);
+    }
+};
+
+exports.deleteUser = async (req, res, next) => {
+    try {
+        if (!req.body.school_id || !req.body.password) {
+            return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
+        }
+
+        const EX_USER = await User.findByPk(res.locals.decodes.user_id);
+        if (!EX_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+        if (req.body.school_id != EX_USER.school_id) {
+            return res.status(RES_ERROR_JSON.USER_NO_AUTH.status_code).json(RES_ERROR_JSON.USER_NO_AUTH.res_json);
+        }
+        if (await bcrypt.compare(req.body.password, EX_USER.password)) {
+            await EX_USER.destroy();
+            return res.status(DELETE_USER_SUCCESS.status_code).json(DELETE_USER_SUCCESS.res_json);
+        } else {
+            return res.status(RES_ERROR_JSON.USER_NO_AUTH.status_code).json(RES_ERROR_JSON.USER_NO_AUTH.res_json);
+        }
+    } catch (error) {
+        console.error(error);
+        return next(error);
     }
 };
 
