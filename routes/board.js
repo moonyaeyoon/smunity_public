@@ -19,6 +19,7 @@ const {
     searchTitleAndContent,
     searchTitleAndContentByCursor,
     searchTitleAndContentByPaging,
+    getSchoolNoticeList,
     getBoardInfoByPostId,
 } = require('../services/board/boardService');
 
@@ -57,5 +58,7 @@ router.get('/search', verifyAToken, searchTitleAndContent);
 router.get('/search_paging', verifyAToken, searchTitleAndContentByPaging);
 
 router.get('/search_cursor', verifyAToken, searchTitleAndContentByCursor);
+
+router.get('/notice', getSchoolNoticeList);
 
 module.exports = router;

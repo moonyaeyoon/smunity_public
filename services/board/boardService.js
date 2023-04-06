@@ -41,6 +41,7 @@ const {
     UserReportPost,
     UserLikeComment,
 } = require('../../models');
+const { getSchoolNotice } = require('../../crawling/mongo/getNotice');
 
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
@@ -1006,9 +1007,9 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
 
         const LIMIT = countPerPage;
 
-        let searcgPostsList = [];
+        let searcPostsList = [];
         if (req.query.last_id == 0) {
-            searcgPostsList = await Post.findAll({
+            searchPostsList = await Post.findAll({
                 where: {
                     board_id: ALL_ALLOW_BOARD_ID,
                     [Op.or]: [
@@ -1028,7 +1029,7 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
                 limit: LIMIT,
             });
         } else {
-            searcgPostsList = await Post.findAll({
+            searchPostsList = await Post.findAll({
                 where: {
                     board_id: ALL_ALLOW_BOARD_ID,
                     id: {
@@ -1052,13 +1053,13 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
             });
         }
 
-        if (searcgPostsList.length == 0) {
+        if (searchPostsList.length == 0) {
             return res.status(END_OF_POST.status_code).json();
         }
 
         const RES_POSTS = [];
-        for (let index = 0; index < searcgPostsList.length; index++) {
-            const NOW_POST = searcgPostsList[index];
+        for (let index = 0; index < searchPostsList.length; index++) {
+            const NOW_POST = searchPostsList[index];
             const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
             const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
@@ -1079,6 +1080,27 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
         //요청 헤더로 정렬기준 받아서 판별
         if (res.header.sorting === 'likes') {
             RES_POSTS.sort((a, b) => b.likes - a.likes);
+        }
+        return res.status(200).json(RES_POSTS);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.getSchoolNoticeList = async (req, res, next) => {
+    try {
+        const POSTS_INFO = await getSchoolNotice();
+
+        const RES_POSTS = [];
+        for (let index = 0; index < POSTS_INFO.length; index++) {
+            const NOW_POST = POSTS_INFO[index];
+            RES_POSTS.push({
+                post_id: NOW_POST['index'],
+                title: NOW_POST['title'],
+                views: NOW_POST['views'],
+                created_time: NOW_POST['date'],
+            });
         }
         return res.status(200).json(RES_POSTS);
     } catch (error) {
