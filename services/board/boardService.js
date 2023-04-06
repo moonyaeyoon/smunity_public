@@ -104,10 +104,10 @@ exports.createNewPost = async (req, res, next) => {
 
         //이미지 처리
         let imageUrlsString = '';
-        if (req.body.image_url_list) {
-            for (let index = 0; index < req.body.image_url_list.length; index++) {
-                imageUrlsString += req.body.image_url_list[index];
-                if (index != req.body.image_url_list.length - 1) imageUrlsString += ','; //마지막 사진이 아닐 때 뒤에 콤마 붙이기
+        if (req.files && req.files.length > 0) {
+            for (let index = 0; index < req.files.length; index++) {
+                imageUrlsString += req.files[index].path;
+                if (index != req.files.length - 1) imageUrlsString += ',';
             }
         }
 

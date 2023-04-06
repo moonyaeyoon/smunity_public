@@ -22,10 +22,11 @@ const {
     getSchoolNoticeList,
     getBoardInfoByPostId,
 } = require('../services/board/boardService');
+const imageUploader = require('../services/image/ImageUploader');
 
 const router = express.Router();
 
-router.post('/create', verifyAToken, createNewPost);
+router.post('/create', verifyAToken, imageUploader.array('image'), createNewPost);
 
 router.get('/detail/:post_id', verifyAToken, getPostDatail);
 
