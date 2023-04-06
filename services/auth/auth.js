@@ -305,17 +305,6 @@ exports.editUserNickName = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
         }
 
-        // 수정할 사용자 정보 가져오기
-        const TARGET_USER = await checkSchoolIdExist(req.params.schoolId);
-        if (!TARGET_USER) {
-            return res.status(RES_ERROR_JSON.USER_NOT_EXISTS.status_code).json(RES_ERROR_JSON.USER_NOT_EXISTS.res_json);
-        }
-
-        // 수정할 수 있는 권한이 있는지 확인하기
-        if (NOW_USER.id != TARGET_USER.id) {
-            return res.status(RES_ERROR_JSON.USER_NO_AUTH.status_code).json(RES_ERROR_JSON.USER_NO_AUTH.res_json);
-        }
-
         // 사용자 닉네임 수정
         const { nickname } = req.body;
         await User.update({ nickname }, { where: { id: TARGET_USER.id } });
@@ -333,17 +322,6 @@ exports.editUserProfileImage = async (req, res, next) => {
         const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
         if (!NOW_USER) {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
-        }
-
-        // 수정할 사용자 정보 가져오기
-        const TARGET_USER = await checkSchoolIdExist(req.params.schoolId);
-        if (!TARGET_USER) {
-            return res.status(RES_ERROR_JSON.USER_NOT_EXISTS.status_code).json(RES_ERROR_JSON.USER_NOT_EXISTS.res_json);
-        }
-
-        // 수정할 수 있는 권한이 있는지 확인하기
-        if (NOW_USER.id != TARGET_USER.id) {
-            return res.status(RES_ERROR_JSON.USER_NO_AUTH.status_code).json(RES_ERROR_JSON.USER_NO_AUTH.res_json);
         }
 
         // 사용자 프로필 이미지 수정

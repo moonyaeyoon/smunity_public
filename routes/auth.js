@@ -35,8 +35,8 @@ router.get('/user_info', verifyAToken, getUserInfo);
 
 router.get('/auth_email', addSchoolAuth);
 
-router.put('/user/nickname/:userId', editUserNickName);
+router.put('/user/nickname', verifyAToken, editUserNickName);
 
-router.put('/user/profile_image/:userId', imageUploader.single('image'), editUserProfileImage);
+router.put('/user/profile_image', verifyAToken, imageUploader.single('image'), editUserProfileImage);
 
 module.exports = router;
