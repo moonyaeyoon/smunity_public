@@ -25,6 +25,8 @@ router.post('/join', imageUploader.single('image'), join);
 
 router.get('/login', login);
 
+router.delete('/revoke', verifyAToken, deleteUser);
+
 router.get('/refresh_access_token', refreshAToken);
 
 router.get('/usermajors', verifyAToken, getUserMajors);
