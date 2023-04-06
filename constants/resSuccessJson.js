@@ -22,7 +22,23 @@ exports.ADD_USER_SUCCESS = {
     res_json: {
         status_code: 201,
         message: '회원 가입이 완료되었습니다.',
-        profile_image_url: null
+        profile_image_url: null,
+    },
+};
+
+exports.EDIT_USER_NICKNAME = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '닉네임이 변경 되었습니다.',
+    },
+};
+
+exports.EDIT_USER_PROFILE_IMAGE = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '프로필 사진이 변경 되었습니다.',
     },
 };
 

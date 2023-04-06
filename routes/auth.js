@@ -2,7 +2,17 @@ const express = require('express');
 
 const { verifyAToken } = require('../middlewares');
 
-const { checkSchoolId, join, login, refreshAToken, getUserMajors, addSchoolAuth, getUserInfo } = require('../services/auth/auth');
+const {
+    checkSchoolId,
+    join,
+    login,
+    refreshAToken,
+    getUserMajors,
+    addSchoolAuth,
+    getUserInfo,
+    editUserNickName,
+    editUserProfileImage,
+} = require('../services/auth/auth');
 
 const imageUploader = require('../services/image/ImageUploader');
 
@@ -22,6 +32,8 @@ router.get('/user_info', verifyAToken, getUserInfo);
 
 router.get('/auth_email', addSchoolAuth);
 
-router.put('/users/:userId/nickname', editUserNickName);
+router.put('/user/nickname/:userId', editUserNickName);
+
+router.put('/user/profile_image/:userId', imageUploader.single('image'), editUserProfileImage);
 
 module.exports = router;

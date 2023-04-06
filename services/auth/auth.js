@@ -20,6 +20,7 @@ const {
     ADD_USER_SUCCESS,
     emailAuthSuccess,
     EDIT_USER_NICKNAME,
+    EDIT_USER_PROFILE_IMAGE,
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
@@ -304,6 +305,35 @@ exports.editUserNickName = async (req, res, next) => {
         await User.update({ nickname }, { where: { id: TARGET_USER.id } });
 
         return res.status(EDIT_USER_NICKNAME.status_code).json(EDIT_USER_NICKNAME.res_json);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.editUserProfileImage = async (req, res, next) => {
+    try {
+        // 로그인한 사용자 정보 가져오기
+        const NOW_USER = await checkSchoolIdExist(res.locals.decodes.user_id);
+
+        // 수정할 사용자 정보 가져오기
+        const TARGET_USER = await User.findOne({
+            where: { id: req.params.userId },
+        });
+        if (!TARGET_USER) {
+            return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
+        }
+
+        // 수정할 수 있는 권한이 있는지 확인하기
+        if (NOW_USER.id != TARGET_USER.id) {
+            return res.status(RES_ERROR_JSON.USER_NO_AUTH.status_code).json(RES_ERROR_JSON.USER_NO_AUTH.res_json);
+        }
+
+        // 사용자 프로필 이미지 수정
+        const { profile_image_url } = req.file.path;
+        await User.update({ profile_image_url }, { where: { id: TARGET_USER.id } });
+
+        return res.status(EDIT_USER_PROFILE_IMAGE.status_code).json(EDIT_USER_PROFILE_IMAGE.res_json);
     } catch (error) {
         console.error(error);
         next(error);
