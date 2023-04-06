@@ -1007,9 +1007,9 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
 
         const LIMIT = countPerPage;
 
-        let searcgPostsList = [];
+        let searcPostsList = [];
         if (req.query.last_id == 0) {
-            searcgPostsList = await Post.findAll({
+            searchPostsList = await Post.findAll({
                 where: {
                     board_id: ALL_ALLOW_BOARD_ID,
                     [Op.or]: [
@@ -1029,7 +1029,7 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
                 limit: LIMIT,
             });
         } else {
-            searcgPostsList = await Post.findAll({
+            searchPostsList = await Post.findAll({
                 where: {
                     board_id: ALL_ALLOW_BOARD_ID,
                     id: {
@@ -1053,13 +1053,13 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
             });
         }
 
-        if (searcgPostsList.length == 0) {
+        if (searchPostsList.length == 0) {
             return res.status(END_OF_POST.status_code).json();
         }
 
         const RES_POSTS = [];
-        for (let index = 0; index < searcgPostsList.length; index++) {
-            const NOW_POST = searcgPostsList[index];
+        for (let index = 0; index < searchPostsList.length; index++) {
+            const NOW_POST = searchPostsList[index];
             const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
             const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             RES_POSTS.push({
