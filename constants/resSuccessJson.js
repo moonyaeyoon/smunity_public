@@ -42,6 +42,14 @@ exports.EDIT_USER_PROFILE_IMAGE = {
     },
 };
 
+exports.DELETE_USER_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '회원 탈퇴가 완료되었습니다.',
+    },
+};
+
 exports.ADD_POST_SUCCESS = {
     status_code: 201,
     res_json: {

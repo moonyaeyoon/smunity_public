@@ -21,6 +21,7 @@ const {
     emailAuthSuccess,
     EDIT_USER_NICKNAME,
     EDIT_USER_PROFILE_IMAGE,
+    DELETE_USER_SUCCESS,
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');

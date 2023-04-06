@@ -12,6 +12,7 @@ const {
     getUserInfo,
     editUserNickName,
     editUserProfileImage,
+    deleteUser,
 } = require('../services/auth/auth');
 
 const imageUploader = require('../services/image/ImageUploader');
