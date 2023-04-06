@@ -300,14 +300,15 @@ exports.getUserInfo = async (req, res, next) => {
 exports.editUserNickName = async (req, res, next) => {
     try {
         // 로그인한 사용자 정보 가져오기
-        const NOW_USER = await checkSchoolIdExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
 
         // 수정할 사용자 정보 가져오기
-        const TARGET_USER = await User.findOne({
-            where: { id: req.params.userId },
-        });
+        const TARGET_USER = await checkSchoolIdExist(req.params.schoolId);
         if (!TARGET_USER) {
-            return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
+            return res.status(RES_ERROR_JSON.USER_NOT_EXISTS.status_code).json(RES_ERROR_JSON.USER_NOT_EXISTS.res_json);
         }
 
         // 수정할 수 있는 권한이 있는지 확인하기
@@ -329,14 +330,15 @@ exports.editUserNickName = async (req, res, next) => {
 exports.editUserProfileImage = async (req, res, next) => {
     try {
         // 로그인한 사용자 정보 가져오기
-        const NOW_USER = await checkSchoolIdExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
 
         // 수정할 사용자 정보 가져오기
-        const TARGET_USER = await User.findOne({
-            where: { id: req.params.userId },
-        });
+        const TARGET_USER = await checkSchoolIdExist(req.params.schoolId);
         if (!TARGET_USER) {
-            return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
+            return res.status(RES_ERROR_JSON.USER_NOT_EXISTS.status_code).json(RES_ERROR_JSON.USER_NOT_EXISTS.res_json);
         }
 
         // 수정할 수 있는 권한이 있는지 확인하기
