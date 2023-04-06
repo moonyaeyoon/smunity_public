@@ -12,7 +12,7 @@ router.get('/check_school_id', checkSchoolId);
 
 router.post('/join', imageUploader.single('image'), join);
 
-router.get('/login', login);
+router.post('/login', login);
 
 router.get('/refresh_access_token', refreshAToken);
 
