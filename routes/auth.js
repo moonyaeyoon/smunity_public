@@ -22,4 +22,6 @@ router.get('/user_info', verifyAToken, getUserInfo);
 
 router.get('/auth_email', addSchoolAuth);
 
+router.put('/users/:userId/nickname', editUserNickName);
+
 module.exports = router;

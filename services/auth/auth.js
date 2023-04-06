@@ -280,6 +280,35 @@ exports.getUserInfo = async (req, res, next) => {
     }
 };
 
+exports.editUserNickName = async (req, res, next) => {
+    try {
+        // 로그인한 사용자 정보 가져오기
+        const NOW_USER = await checkSchoolIdExist(res.locals.decodes.user_id);
+
+        // 수정할 사용자 정보 가져오기
+        const TARGET_USER = await User.findOne({
+            where: { id: req.params.userId },
+        });
+        if (!TARGET_USER) {
+            return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
+        }
+
+        // 수정할 수 있는 권한이 있는지 확인하기
+        if (NOW_USER.id != TARGET_USER.id) {
+            return res.status(RES_ERROR_JSON.USER_NO_AUTH.status_code).json(RES_ERROR_JSON.USER_NO_AUTH.res_json);
+        }
+
+        // 사용자 닉네임 수정
+        const { nickname } = req.body;
+        await User.update({ nickname }, { where: { id: TARGET_USER.id } });
+
+        return res.status(USER_INFO_EDIT_SUCCESS.status_code).json(USER_INFO_EDIT_SUCCESS.res_json);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
 const sendAuthMailing = async (authUrl, schoolId) => {
     aws.config.update({
         accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID,
