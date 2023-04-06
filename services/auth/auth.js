@@ -30,6 +30,17 @@ const checkSchoolIdExist = async (schoolId) => {
     else return null;
 };
 
+const checkUserExistByUserId = async (userId) => {
+    const REQ_USER = await User.findOne({
+        where: {
+            id: userId,
+        },
+    });
+    //사용자 미존재
+    if (REQ_USER === null) return false;
+    else return REQ_USER;
+};
+
 const generateRandomCode = (digit) => {
     let randomNumberCode = '';
     for (let i = 0; i < digit; i++) {
@@ -76,7 +87,7 @@ exports.join = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
 
-        const EX_USER = await User.findOne({ where: { school_id: school_id } });
+        const EX_USER = await checkSchoolIdExist(school_id);
         if (EX_USER) {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         }
@@ -267,7 +278,10 @@ exports.getUserInfo = async (req, res, next) => {
             });
         }
 
-        const NOW_USER = await User.findOne({ where: { id: res.locals.decodes.user_id } });
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
         const RES_USER_INFO = {
             username: NOW_USER.nickname,
             school_id: NOW_USER.school_id,
@@ -287,7 +301,7 @@ exports.deleteUser = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
 
-        const EX_USER = await User.findByPk(res.locals.decodes.user_id);
+        const EX_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
         if (!EX_USER) {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
         }

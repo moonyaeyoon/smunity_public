@@ -39,21 +39,26 @@ const {
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
 
-const checkUserExist = async (userId) => {
-    const reqUser = await User.findOne({
+const checkUserExistByUserId = async (userId) => {
+    const REQ_USER = await User.findOne({
         where: {
             id: userId,
         },
     });
     //사용자 미존재
-    if (reqUser === null) return false;
-    else return reqUser;
+    if (REQ_USER === null) return false;
+    else return REQ_USER;
 };
 
 exports.createNewComment = async (req, res, next) => {
     try {
         if (!req.body.post_id || !req.body.content) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
         }
 
         const NOW_POST = await Post.findOne({ where: { id: req.body.post_id } });
@@ -122,6 +127,11 @@ exports.updateComment = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
+
         //댓글 존재 여부
         const NOW_COMMENT = await Comment.findOne({
             where: {
@@ -164,6 +174,11 @@ exports.deleteComment = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
+
         //댓글 존재 여부
         const NOW_COMMENT = await Comment.findOne({
             where: {
@@ -204,10 +219,29 @@ exports.likeComment = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
-        //TODO: 사용자 권한 체크 아직 안함
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
 
         const NOW_COMMENT = await Comment.findByPk(req.params.comment_id);
         if (!NOW_COMMENT) return res.status(COMMENT_NOT_EXIST.status_code).json(COMMENT_NOT_EXIST.res_json);
+
+        //사용자 권한 체크
+        let canRead = false;
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        const NOW_POST = await Post.findByPk(NOW_COMMENT.post_id);
+        const NOW_BOARD = await Board.findOne({ where: { id: NOW_POST.board_id } });
+        for (let index = 0; index < NOW_USER_MAJOR_LIST.length; index++) {
+            if (NOW_USER_MAJOR_LIST[index].major_id === NOW_BOARD.major_id) {
+                canRead = true;
+                break;
+            }
+        }
+
+        if (!canRead) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
 
         const NOW_LIKED_STATU = await UserLikeComment.findOne({
             where: {
@@ -243,10 +277,24 @@ exports.reportComment = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
-        //TODO: 사용자 권한 체크 아직 안함
-
         const NOW_COMMENT = await Comment.findByPk(req.params.comment_id);
         if (!NOW_COMMENT) return res.status(COMMENT_NOT_EXIST.status_code).json(COMMENT_NOT_EXIST.res_json);
+
+        //사용자 권한 체크
+        let canRead = false;
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        const NOW_POST = await Post.findByPk(NOW_COMMENT.post_id);
+        const NOW_BOARD = await Board.findOne({ where: { id: NOW_POST.board_id } });
+        for (let index = 0; index < NOW_USER_MAJOR_LIST.length; index++) {
+            if (NOW_USER_MAJOR_LIST[index].major_id === NOW_BOARD.major_id) {
+                canRead = true;
+                break;
+            }
+        }
+
+        if (!canRead) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
 
         const NOW_REPORT_STATU = await UserReportComment.findOne({
             where: {

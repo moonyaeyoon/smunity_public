@@ -45,7 +45,7 @@ const {
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
 
-const checkUserExist = async (userId) => {
+const checkUserExistByUserId = async (userId) => {
     const REQ_USER = await User.findOne({
         where: {
             id: userId,
@@ -62,7 +62,10 @@ exports.createNewPost = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
-        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
 
         //사용자 권한 없음
         let canWrite = false;
@@ -131,7 +134,10 @@ exports.getPostDatail = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
-        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
 
         //게시글 존재 여부
         const NOW_POST = await Post.findOne({
@@ -182,12 +188,13 @@ exports.getPostDatail = async (req, res, next) => {
         const COMMENT_LIST = [];
         for (let index = 0; index < COMMENTS_INFO.length; index++) {
             const NOW_COMMENT = COMMENTS_INFO[index];
-            const NOW_COMMENT_USER = await User.findOne({ where: { id: NOW_COMMENT.user_id } });
+            const NOW_COMMENT_USER = await checkUserExistByUserId(NOW_COMMENT.user_id);
+            const NOW_COMMENT_NICKNAME = NOW_COMMENT_USER.nickname || '알 수 없음';
             const COMMENT_LIKED_INFO = await UserLikeComment.findOne({ where: { user_id: NOW_USER.id, comment_id: NOW_COMMENT.id } });
             COMMENT_LIST.push({
                 comment_id: NOW_COMMENT.id,
-                username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_USER.nickname,
-                user_id: NOW_COMMENT.user_id,
+                username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_NICKNAME,
+                user_id: NOW_COMMENT_USER ? NOW_COMMENT.user_id : 0,
                 content: NOW_COMMENT.content,
                 likes: NOW_COMMENT.likes,
                 isLiked: COMMENT_LIKED_INFO ? true : false,
@@ -196,11 +203,12 @@ exports.getPostDatail = async (req, res, next) => {
             });
         }
 
-        const AUTHOR_USER = await User.findByPk(NOW_POST.user_id);
+        const AUTHOR_USER = await checkUserExistByUserId(NOW_POST.user_id);
+        const AUTHOR_NICKNAME = AUTHOR_USER ? AUTHOR_USER.nickname : '알 수 없음';
         const RES_POST_DETAIL = {
             post_id: NOW_POST.id,
-            username: NOW_POST.is_anonymous ? '익명' : AUTHOR_USER.nickname,
-            user_id: NOW_POST.user_id,
+            username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
+            user_id: AUTHOR_USER ? NOW_POST.user_id : 0,
             title: NOW_POST.title,
             content: NOW_POST.content,
             image_urls: NOW_POST.img_urls || null,
@@ -310,7 +318,10 @@ exports.getPostList = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
-        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
 
         //게시판 존재 여부
         const NOW_BOARD = await Board.findOne({
@@ -640,7 +651,10 @@ exports.getPostListByPaging = async (req, res, next) => {
             return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
         }
 
-        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
 
         //사용자 권한 없음
         let canRead = false;
@@ -722,7 +736,10 @@ exports.getPostListByCursor = async (req, res, next) => {
             return res.status(BOARD_NOT_EXIST.status_code).json(BOARD_NOT_EXIST.res_json);
         }
 
-        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
 
         //사용자 권한 없음
         let canRead = false;
@@ -805,7 +822,10 @@ exports.searchTitleAndContent = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
-        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
         const ALLOW_USER_MAJORS = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
         const ALL_ALLOW_BOARD_ID = [];
         for (let index = 0; index < ALLOW_USER_MAJORS.length; index++) {
@@ -876,7 +896,10 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
-        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
         const ALLOW_USER_MAJORS = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
         const ALL_ALLOW_BOARD_ID = [];
         for (let index = 0; index < ALLOW_USER_MAJORS.length; index++) {
@@ -984,7 +1007,10 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
-        const NOW_USER = await checkUserExist(res.locals.decodes.user_id);
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
+        }
         const ALLOW_USER_MAJORS = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
         const ALL_ALLOW_BOARD_ID = [];
         for (let index = 0; index < ALLOW_USER_MAJORS.length; index++) {
