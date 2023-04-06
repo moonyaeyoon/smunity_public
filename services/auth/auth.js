@@ -19,6 +19,7 @@ const {
     USER_CAN_SIGNUP,
     ADD_USER_SUCCESS,
     emailAuthSuccess,
+    EDIT_USER_NICKNAME,
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
@@ -302,7 +303,7 @@ exports.editUserNickName = async (req, res, next) => {
         const { nickname } = req.body;
         await User.update({ nickname }, { where: { id: TARGET_USER.id } });
 
-        return res.status(USER_INFO_EDIT_SUCCESS.status_code).json(USER_INFO_EDIT_SUCCESS.res_json);
+        return res.status(EDIT_USER_NICKNAME.status_code).json(EDIT_USER_NICKNAME.res_json);
     } catch (error) {
         console.error(error);
         next(error);
