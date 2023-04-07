@@ -218,6 +218,7 @@ exports.getPostDatail = async (req, res, next) => {
             scraps: NOW_POST.scraps,
             isLiked: USER_LIKED_INFO ? true : false,
             isScrap: USER_SCRAP_INFO ? true : false,
+            isAuthor: NOW_POST.user_id == NOW_USER.id ? true : false,
             comments: COMMENT_LIST,
             created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
