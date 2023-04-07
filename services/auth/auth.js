@@ -113,7 +113,7 @@ exports.join = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-    const { school_id, password } = req.headers;
+    const { school_id, password } = req.body;
     try {
         if (!school_id || !password)
             //요청 양식 틀림
