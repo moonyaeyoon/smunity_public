@@ -60,7 +60,7 @@ const generateAuthUrl = (schoolId, randomCode) => {
 
     const LINK_DOMAIN = process.env.NODE_ENV == 'test' ? 'http://localhost' : process.env.EMAIL_AUTH_DOMAIN;
 
-    return `${LINK_DOMAIN}:8001/auth/auth_email?code=${ENCODED_QUERY}`;
+    return `${LINK_DOMAIN}/auth/auth_email?code=${ENCODED_QUERY}`;
 };
 
 exports.checkSchoolId = async (req, res, next) => {
