@@ -69,8 +69,8 @@ exports.checkSchoolId = async (req, res, next) => {
 
 exports.join = async (req, res, next) => {
     const { school_id, nickname, password } = req.body;
+    const filePath = req.file.location;
     try {
-        // const filePath = req.file.location;
         if (!school_id || !nickname || !password) {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
@@ -102,9 +102,9 @@ exports.join = async (req, res, next) => {
             nickname,
             password: NEW_USER_PASSWORD_HASH,
             email_auth_code: AUTH_CODE,
-            // profile_image_url: filePath,
+            profile_image_url: filePath,
         });
-        // ADD_USER_SUCCESS.res_json.profile_image_url = filePath;
+        ADD_USER_SUCCESS.res_json.profile_image_url = filePath;
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
