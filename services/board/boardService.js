@@ -348,11 +348,17 @@ exports.getPostList = async (req, res, next) => {
             return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
         }
 
+        let orderBy = [['created_at', 'DESC']];
+        //요청 헤더로 정렬기준 받아서 판별
+        if (req.headers.sorting === 'likes') {
+            orderBy = [['likes', 'DESC']];
+        }
+
         const POSTS_INFO = await Post.findAll({
             where: {
                 board_id: req.params.board_id,
             },
-            order: [['created_at', 'DESC']],
+            order: orderBy,
         });
 
         const RES_POSTS = [];
@@ -370,10 +376,6 @@ exports.getPostList = async (req, res, next) => {
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });
-        }
-        //요청 헤더로 정렬기준 받아서 판별
-        if (res.header.sorting === 'likes') {
-            RES_POSTS.sort((a, b) => b.likes - a.likes);
         }
 
         const RES_BOARD_AND_POSTS = {
@@ -679,11 +681,17 @@ exports.getPostListByPaging = async (req, res, next) => {
         const OFFSET = 0 + (req.query.now_page - 1) * LIMIT;
         const TOTAL_PAGE = Math.ceil((await Post.count()) / countPerPage);
 
+        let orderBy = [['created_at', 'DESC']];
+        //요청 헤더로 정렬기준 받아서 판별
+        if (req.headers.sorting === 'likes') {
+            orderBy = [['likes', 'DESC']];
+        }
+
         const POSTS_INFO = await Post.findAll({
             where: {
                 board_id: req.query.board_id,
             },
-            order: [['created_at', 'DESC']],
+            order: orderBy,
             offset: OFFSET,
             limit: LIMIT,
         });
@@ -763,13 +771,19 @@ exports.getPostListByCursor = async (req, res, next) => {
 
         const LIMIT = countPerPage;
 
+        let orderBy = [['created_at', 'DESC']];
+        //요청 헤더로 정렬기준 받아서 판별
+        if (req.headers.sorting === 'likes') {
+            orderBy = [['likes', 'DESC']];
+        }
+
         let postsInfo = [];
         if (req.query.last_id == 0) {
             postsInfo = await Post.findAll({
                 where: {
                     board_id: req.query.board_id,
                 },
-                order: [['created_at', 'DESC']],
+                order: orderBy,
                 limit: LIMIT,
             });
         } else {
@@ -780,7 +794,7 @@ exports.getPostListByCursor = async (req, res, next) => {
                         [Op.lt]: [req.query.last_id],
                     },
                 },
-                order: [['created_at', 'DESC']],
+                order: orderBy,
                 limit: LIMIT,
             });
         }
@@ -841,6 +855,12 @@ exports.searchTitleAndContent = async (req, res, next) => {
             }
         }
 
+        let orderBy = [['created_at', 'DESC']];
+        //요청 헤더로 정렬기준 받아서 판별
+        if (req.headers.sorting === 'likes') {
+            orderBy = [['likes', 'DESC']];
+        }
+
         const SEARCH_POST_LIST = await Post.findAll({
             where: {
                 board_id: ALL_ALLOW_BOARD_ID,
@@ -857,7 +877,7 @@ exports.searchTitleAndContent = async (req, res, next) => {
                     },
                 ],
             },
-            order: [['created_at', 'DESC']],
+            order: orderBy,
         });
 
         const RES_POSTS = [];
@@ -880,10 +900,7 @@ exports.searchTitleAndContent = async (req, res, next) => {
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });
         }
-        //요청 헤더로 정렬기준 받아서 판별
-        if (res.header.sorting === 'likes') {
-            RES_POSTS.sort((a, b) => b.likes - a.likes);
-        }
+
         return res.status(200).json(RES_POSTS);
     } catch (error) {
         console.error(error);
@@ -922,6 +939,12 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
         const LIMIT = countPerPage;
         const OFFSET = 0 + (req.query.now_page - 1) * LIMIT;
 
+        let orderBy = [['created_at', 'DESC']];
+        //요청 헤더로 정렬기준 받아서 판별
+        if (req.headers.sorting === 'likes') {
+            orderBy = [['likes', 'DESC']];
+        }
+
         const SEARCH_POST_LIST = await Post.findAll({
             where: {
                 board_id: ALL_ALLOW_BOARD_ID,
@@ -938,7 +961,7 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
                     },
                 ],
             },
-            order: [['created_at', 'DESC']],
+            order: orderBy,
             offset: OFFSET,
             limit: LIMIT,
         });
@@ -966,10 +989,6 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });
-        }
-        //요청 헤더로 정렬기준 받아서 판별
-        if (res.header.sorting === 'likes') {
-            RES_POSTS.sort((a, b) => b.likes - a.likes);
         }
 
         const SEARCH_POST_COUNT = await Post.count({
@@ -1033,7 +1052,12 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
 
         const LIMIT = countPerPage;
 
-        let searcPostsList = [];
+        let orderBy = [['created_at', 'DESC']];
+        //요청 헤더로 정렬기준 받아서 판별
+        if (req.headers.sorting === 'likes') {
+            orderBy = [['likes', 'DESC']];
+        }
+
         if (req.query.last_id == 0) {
             searchPostsList = await Post.findAll({
                 where: {
@@ -1051,7 +1075,7 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
                         },
                     ],
                 },
-                order: [['created_at', 'DESC']],
+                order: orderBy,
                 limit: LIMIT,
             });
         } else {
@@ -1074,7 +1098,7 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
                         },
                     ],
                 },
-                order: [['created_at', 'DESC']],
+                order: orderBy,
                 limit: LIMIT,
             });
         }
@@ -1103,10 +1127,7 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
                 updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
             });
         }
-        //요청 헤더로 정렬기준 받아서 판별
-        if (res.header.sorting === 'likes') {
-            RES_POSTS.sort((a, b) => b.likes - a.likes);
-        }
+
         return res.status(200).json(RES_POSTS);
     } catch (error) {
         console.error(error);
