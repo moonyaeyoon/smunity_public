@@ -95,6 +95,14 @@ exports.EMAIL_AUTH_ERROR = {
     },
 };
 
+exports.NO_IMAGE = {
+    status_code: 400,
+    res_json: {
+        status_code: 400,
+        message: '이미지가 없습니다.',
+    },
+};
+
 //JWT관련
 exports.JWT_TOKEN_NOT_FOUND = {
     status_code: 440,

@@ -25,6 +25,7 @@ const {
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
+const { imageRemover } = require('../image/ImageUploader');
 
 const checkSchoolIdExist = async (schoolId) => {
     const EX_USER = await User.findOne({ where: { school_id: schoolId } });
@@ -82,9 +83,8 @@ exports.checkSchoolId = async (req, res, next) => {
 };
 
 exports.join = async (req, res, next) => {
-    const { school_id, nickname, password } = req.body;
+    const { school_id, nickname, password, image } = req.body;
     try {
-        // const filePath = req.file.location;
         if (!school_id || !nickname || !password) {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
@@ -93,7 +93,10 @@ exports.join = async (req, res, next) => {
         if (EX_USER) {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         }
-
+        //프사 지정안하면 기본프사 url 할당
+        if (image === null) {
+            image = process.env.DEFAULT_PROFILE_IMAGE;
+        }
         const NEW_USER_EMAIL = `${school_id}@${SMU_STUDENT_EMAIL_DOMAIN}`;
         const NEW_USER_PASSWORD_HASH = await bcrypt.hash(password, Number(PASSWORD_SALT_OR_ROUNDS));
         console.log('passwod hash is: ' + NEW_USER_PASSWORD_HASH);
@@ -116,9 +119,8 @@ exports.join = async (req, res, next) => {
             nickname,
             password: NEW_USER_PASSWORD_HASH,
             email_auth_code: AUTH_CODE,
-            // profile_image_url: filePath,
+            profile_image_url: image,
         });
-        // ADD_USER_SUCCESS.res_json.profile_image_url = filePath;
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
@@ -306,7 +308,7 @@ exports.editUserNickName = async (req, res, next) => {
         }
 
         // 사용자 닉네임 수정
-        const { nickname } = req.body;
+        const nickname = req.body.nickname;
         await User.update({ nickname }, { where: { id: TARGET_USER.id } });
 
         return res.status(EDIT_USER_NICKNAME.status_code).json(EDIT_USER_NICKNAME.res_json);
@@ -324,8 +326,11 @@ exports.editUserProfileImage = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
         }
 
+        //이미지 s3버킷에서 삭제하기
+        await imageRemover(NOW_USER.profile_image_url);
+
         // 사용자 프로필 이미지 수정
-        const { profile_image_url } = req.file.path;
+        const profile_image_url = req.body.image;
         await User.update({ profile_image_url }, { where: { id: TARGET_USER.id } });
 
         return res.status(EDIT_USER_PROFILE_IMAGE.status_code).json(EDIT_USER_PROFILE_IMAGE.res_json);
@@ -341,7 +346,7 @@ exports.deleteUser = async (req, res, next) => {
         if (!EX_USER) {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
         }
-
+        await imageRemover(EX_USER.profile_image_url);
         await EX_USER.destroy();
         return res.status(DELETE_USER_SUCCESS.status_code).json(DELETE_USER_SUCCESS.res_json);
     } catch (error) {
