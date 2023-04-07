@@ -23,7 +23,7 @@ router.get('/check_school_id', checkSchoolId);
 
 router.post('/join', imageUploader.single('image'), join);
 
-router.get('/login', login);
+router.post('/login', login);
 
 router.delete('/revoke', verifyAToken, deleteUser);
 
