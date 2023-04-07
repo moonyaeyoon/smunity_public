@@ -248,7 +248,7 @@ exports.addSchoolAuth = async (req, res, next) => {
             return res.status(201).send(emailAuthSuccess());
         } else if (REQ_USER.email_auth_code === 'finish') {
             console.log(`Email Auth Error: 이미 인증된 링크 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`);
-            return res.status(401).send(RES_ERROR_JSON.authCompleted());
+            return res.status(401).send(RES_ERROR_JSON.alreadyAuth());
         } else {
             console.log(`Email Auth Error: 인증코드 일치하지 않음 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`);
             return res.status(404).send(RES_ERROR_JSON.emailAuthError());
