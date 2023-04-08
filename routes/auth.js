@@ -13,6 +13,7 @@ const {
     editUserNickName,
     editUserProfileImage,
     deleteUser,
+    changePassword,
 } = require('../services/auth/auth');
 
 const router = express.Router();
@@ -36,5 +37,7 @@ router.get('/auth_email', addSchoolAuth);
 router.put('/user/nickname', verifyAToken, editUserNickName);
 
 router.put('/user/profile_image', verifyAToken, editUserProfileImage);
+
+router.put('/user/password', verifyAToken, changePassword);
 
 module.exports = router;

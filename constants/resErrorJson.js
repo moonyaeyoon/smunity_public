@@ -103,6 +103,22 @@ exports.NO_IMAGE = {
     },
 };
 
+exports.WRONG_PASSWORD = {
+    status_code: 400,
+    res_json: {
+        status_code: 400,
+        message: '비밀번호가 틀립니다.',
+    },
+};
+
+exports.DO_NOT_MATCH_PASSWORD = {
+    status_code: 400,
+    res_json: {
+        status_code: 400,
+        message: '비밀번호가 일치하지 않습니다.',
+    },
+};
+
 //JWT관련
 exports.JWT_TOKEN_NOT_FOUND = {
     status_code: 440,

@@ -22,6 +22,7 @@ const {
     EDIT_USER_NICKNAME,
     EDIT_USER_PROFILE_IMAGE,
     DELETE_USER_SUCCESS,
+    CHANGE_PASSWORD_SUCCESS,
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
@@ -83,7 +84,8 @@ exports.checkSchoolId = async (req, res, next) => {
 };
 
 exports.join = async (req, res, next) => {
-    const { school_id, nickname, password, image } = req.body;
+    const { school_id, nickname, password } = req.body;
+    let image = req.body.image;
     try {
         if (!school_id || !nickname || !password) {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
@@ -353,6 +355,39 @@ exports.deleteUser = async (req, res, next) => {
         await imageRemover(EX_USER.profile_img_url);
         await EX_USER.destroy();
         return res.status(DELETE_USER_SUCCESS.status_code).json(DELETE_USER_SUCCESS.res_json);
+    } catch (error) {
+        console.error(error);
+        return next(error);
+    }
+};
+
+exports.changePassword = async (req, res, next) => {
+    try {
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+        const { old_password, new_password, confirm_password } = req.body;
+        //요청양식 틀릴경우
+        if (!old_password || !new_password || !confirm_password) {
+            console.log(`${old_password}`);
+            return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
+        }
+
+        const PASSWORD_COMPARE_RESULT = await bcrypt.compare(old_password, NOW_USER.password);
+        //예전 비밀번호가 맞고
+        if (PASSWORD_COMPARE_RESULT) {
+            //새로운 비밀번호와 확인 비밀번호가 일치하면
+            if (new_password === confirm_password) {
+                // 비밀번호 업데이트
+                const NEW_USER_PASSWORD_HASH = await bcrypt.hash(new_password, Number(PASSWORD_SALT_OR_ROUNDS));
+                await User.update({ password: NEW_USER_PASSWORD_HASH }, { where: { id: NOW_USER.id } });
+
+                return res.status(CHANGE_PASSWORD_SUCCESS.status_code).json(CHANGE_PASSWORD_SUCCESS.res_json);
+            } //비밀번호가 확인 비밀번호와 일치하지 않을 때
+            return res.status(RES_ERROR_JSON.DO_NOT_MATCH_PASSWORD.status_code).json(RES_ERROR_JSON.DO_NOT_MATCH_PASSWORD.res_json);
+        } //예전 비밀번호가 틀릴 때
+        return res.status(RES_ERROR_JSON.WRONG_PASSWORD.status_code).json(RES_ERROR_JSON.WRONG_PASSWORD.res_json);
     } catch (error) {
         console.error(error);
         return next(error);
