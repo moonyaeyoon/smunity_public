@@ -119,8 +119,9 @@ exports.join = async (req, res, next) => {
             nickname,
             password: NEW_USER_PASSWORD_HASH,
             email_auth_code: AUTH_CODE,
-            profile_image_url: image,
+            profile_img_url: image,
         });
+        ADD_USER_SUCCESS.res_json.profile_img_url = image;
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
@@ -289,7 +290,7 @@ exports.getUserInfo = async (req, res, next) => {
         const RES_USER_INFO = {
             username: NOW_USER.nickname,
             school_id: NOW_USER.school_id,
-            profile_image_url: NOW_USER.profile_image_url || null,
+            profile_img_url: NOW_USER.profile_img_url || null,
             majors: RES_MAJOR_LIST,
         };
         res.status(200).json(RES_USER_INFO);
@@ -309,7 +310,7 @@ exports.editUserNickName = async (req, res, next) => {
 
         // 사용자 닉네임 수정
         const nickname = req.body.nickname;
-        await User.update({ nickname }, { where: { id: TARGET_USER.id } });
+        await User.update({ nickname: nickname }, { where: { id: NOW_USER.id } });
 
         return res.status(EDIT_USER_NICKNAME.status_code).json(EDIT_USER_NICKNAME.res_json);
     } catch (error) {
@@ -327,11 +328,10 @@ exports.editUserProfileImage = async (req, res, next) => {
         }
 
         //이미지 s3버킷에서 삭제하기
-        await imageRemover(NOW_USER.profile_image_url);
+        await imageRemover(NOW_USER.profile_img_url);
 
         // 사용자 프로필 이미지 수정
-        const profile_image_url = req.body.image;
-        await User.update({ profile_image_url }, { where: { id: TARGET_USER.id } });
+        await User.update({ profile_img_url: req.body.image }, { where: { id: NOW_USER.id } });
 
         return res.status(EDIT_USER_PROFILE_IMAGE.status_code).json(EDIT_USER_PROFILE_IMAGE.res_json);
     } catch (error) {
@@ -346,7 +346,7 @@ exports.deleteUser = async (req, res, next) => {
         if (!EX_USER) {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
         }
-        await imageRemover(EX_USER.profile_image_url);
+        await imageRemover(EX_USER.profile_img_url);
         await EX_USER.destroy();
         return res.status(DELETE_USER_SUCCESS.status_code).json(DELETE_USER_SUCCESS.res_json);
     } catch (error) {
