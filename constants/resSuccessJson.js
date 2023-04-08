@@ -22,7 +22,7 @@ exports.ADD_USER_SUCCESS = {
     res_json: {
         status_code: 201,
         message: '회원 가입이 완료되었습니다.',
-        profile_image_url: null,
+        profile_img_url: null,
     },
 };
 

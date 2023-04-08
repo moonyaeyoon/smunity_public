@@ -42,7 +42,7 @@ const {
     UserLikeComment,
 } = require('../../models');
 const { getSchoolNotice } = require('../../crawling/mongo/getNotice');
-
+const { imageRemover } = require('../image/ImageUploader');
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
 
@@ -102,15 +102,6 @@ exports.createNewPost = async (req, res, next) => {
             if (NOW_BOARD.is_can_anonymous == false) {
                 //실제로도 게시판이 익명을 허용하지 않으면
                 isUserSelectedAnonymous = false; //강제로 익명 선택 취소
-            }
-        }
-
-        //이미지 처리
-        let imageUrlsString = '';
-        if (req.files && req.files.length > 0) {
-            for (let index = 0; index < req.files.length; index++) {
-                imageUrlsString += req.files[index].path;
-                if (index != req.files.length - 1) imageUrlsString += ',';
             }
         }
 
@@ -305,6 +296,7 @@ exports.deletePost = async (req, res, next) => {
             return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
         }
 
+        await imageRemover(NOW_POST.img_urls);
         await NOW_POST.destroy();
 
         return res.status(DELETE_POST_SUCCESS.status_code).json(DELETE_POST_SUCCESS.res_json);

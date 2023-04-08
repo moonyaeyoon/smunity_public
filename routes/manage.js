@@ -8,12 +8,11 @@ const {
     deletePostMajor,
     rejectCertificate,
 } = require('../services/manage/certificate');
-const imageUploader = require('../services/image/ImageUploader');
 
 const router = express.Router();
 
 router.get('/certificate/list', getCertificateList);
-router.post('/certificate/create', verifyAToken, imageUploader.single('image'), addCertificate);
+router.post('/certificate/create', verifyAToken, addCertificate);
 router.put('/certificate/update', updateMajorInCertificate);
 router.post('/certificate/postInfo', getCertificateInfo);
 router.post('/certificate/deletePost', deletePostMajor);

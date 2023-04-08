@@ -15,13 +15,11 @@ const {
     deleteUser,
 } = require('../services/auth/auth');
 
-const imageUploader = require('../services/image/ImageUploader');
-
 const router = express.Router();
 
 router.get('/check_school_id', checkSchoolId);
 
-router.post('/join', imageUploader.single('image'), join);
+router.post('/join', join);
 
 router.post('/login', login);
 
@@ -37,6 +35,6 @@ router.get('/auth_email', addSchoolAuth);
 
 router.put('/user/nickname', verifyAToken, editUserNickName);
 
-router.put('/user/profile_image', verifyAToken, imageUploader.single('image'), editUserProfileImage);
+router.put('/user/profile_image', verifyAToken, editUserProfileImage);
 
 module.exports = router;
