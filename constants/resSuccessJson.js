@@ -26,6 +26,14 @@ exports.ADD_USER_SUCCESS = {
     },
 };
 
+exports.DELETE_S3 = {
+    status_code: 200,
+    res_json: {
+        status_code: 200,
+        message: '이미지가 삭제 되었습니다.',
+    },
+};
+
 exports.EDIT_USER_NICKNAME = {
     status_code: 201,
     res_json: {

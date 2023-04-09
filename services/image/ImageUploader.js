@@ -2,7 +2,8 @@ const aws = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');
-
+const { DELETE_S3 } = require('../../constants/resSuccessJson');
+const { NO_IMAGE } = require('../../constants/resErrorJson');
 const allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp'];
 
 //aws 설정 및 s3객체 생성 함수
@@ -32,18 +33,26 @@ exports.imageUploader = multer({
 });
 
 //이미지 삭제 함수
-exports.imageRemover = (imageUrls) => {
-    if (!imageUrls) {
-        return;
+exports.imageRemover = async (req, res) => {
+    try {
+        const imageUrls = req.body.image;
+        if (!imageUrls) {
+            return res.status(NO_IMAGE.status_code).json(NO_IMAGE.res_json);
+        }
+        const S3Bucket = s3();
+        const bucketName = process.env.S3_BUCKET;
+
+        const urlArray = await imageUrls.split(',');
+
+        await Promise.all(
+            urlArray.map(async (imageUrl) => {
+                //파일의 이름만 추출
+                const key = imageUrl.replace(process.env.COMMON_FILE_URL, '');
+                const result = await S3Bucket.deleteObject({ Bucket: bucketName, Key: key }).promise();
+            })
+        );
+        return res.status(DELETE_S3.status_code).json(DELETE_S3.res_json);
+    } catch (err) {
+        console.error(err);
     }
-    const S3Bucket = s3();
-    const bucketName = process.env.S3_BUCKET;
-
-    const urlArray = imageUrls.split(',');
-
-    urlArray.forEach((imageUrl) => {
-        //파일의 위치만 추출
-        const key = imageUrl.replace(`https://${bucketName}.s3.amazonaws.com/`, '');
-        S3Bucket.deleteObject({ Bucket: bucketName, Key: key });
-    });
 };
