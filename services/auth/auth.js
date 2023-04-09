@@ -367,27 +367,22 @@ exports.changePassword = async (req, res, next) => {
         if (!NOW_USER) {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
         }
-        const { old_password, new_password, confirm_password } = req.body;
+        const { old_password, new_password } = req.body;
         //요청양식 틀릴경우
-        if (!old_password || !new_password || !confirm_password) {
+        if (!old_password || !new_password) {
             console.log(`${old_password}`);
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
 
         const PASSWORD_COMPARE_RESULT = await bcrypt.compare(old_password, NOW_USER.password);
-        //예전 비밀번호가 맞고
-        if (PASSWORD_COMPARE_RESULT) {
-            //새로운 비밀번호와 확인 비밀번호가 일치하면
-            if (new_password === confirm_password) {
-                // 비밀번호 업데이트
-                const NEW_USER_PASSWORD_HASH = await bcrypt.hash(new_password, Number(PASSWORD_SALT_OR_ROUNDS));
-                await User.update({ password: NEW_USER_PASSWORD_HASH }, { where: { id: NOW_USER.id } });
-
-                return res.status(CHANGE_PASSWORD_SUCCESS.status_code).json(CHANGE_PASSWORD_SUCCESS.res_json);
-            } //비밀번호가 확인 비밀번호와 일치하지 않을 때
-            return res.status(RES_ERROR_JSON.DO_NOT_MATCH_PASSWORD.status_code).json(RES_ERROR_JSON.DO_NOT_MATCH_PASSWORD.res_json);
-        } //예전 비밀번호가 틀릴 때
-        return res.status(RES_ERROR_JSON.WRONG_PASSWORD.status_code).json(RES_ERROR_JSON.WRONG_PASSWORD.res_json);
+        //예전 비밀번호가 틀리면
+        if (!PASSWORD_COMPARE_RESULT) {
+            return res.status(RES_ERROR_JSON.WRONG_PASSWORD.status_code).json(RES_ERROR_JSON.WRONG_PASSWORD.res_json);
+        }
+        //비밀번호 변경
+        const NEW_USER_PASSWORD_HASH = await bcrypt.hash(new_password, Number(PASSWORD_SALT_OR_ROUNDS));
+        await User.update({ password: NEW_USER_PASSWORD_HASH }, { where: { id: NOW_USER.id } });
+        return res.status(CHANGE_PASSWORD_SUCCESS.status_code).json(CHANGE_PASSWORD_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
         return next(error);
