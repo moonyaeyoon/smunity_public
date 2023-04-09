@@ -1,3 +1,4 @@
+const { REQ_FORM_ERROR } = require('../../constants/resErrorJson');
 const { MajorAuthPost, UserMajor, MajorRejectPost } = require('../../models');
 
 exports.getCertificateList = async (req, res, next) => {
@@ -13,15 +14,15 @@ exports.getCertificateList = async (req, res, next) => {
 exports.addCertificate = async (req, res, next) => {
     try {
         const USER_ID = res.locals.decodes.user_id;
-        const content = req.body.content;
-        const imageUrl = req.body.image;
-        if (!imageUrl || !content) {
-            return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
+        const CONTENT = req.body.content;
+        const IMAGE_URL = req.body.image_url;
+        if (!IMAGE_URL) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
         await MajorAuthPost.create({
             user_id: USER_ID,
-            image_url: imageUrl,
-            content: content,
+            image_url: IMAGE_URL,
+            content: CONTENT || null,
         });
         res.json({ isSuccess: true });
     } catch (err) {

@@ -111,7 +111,7 @@ exports.createNewPost = async (req, res, next) => {
             is_anonymous: isUserSelectedAnonymous,
             user_id: NOW_USER.id,
             board_id: NOW_BOARD.id,
-            img_urls: imageUrlsString,
+            img_urls: req.body.image_url_list || null,
         });
         return res.status(ADD_POST_SUCCESS.status_code).json(ADD_POST_SUCCESS.res_json);
     } catch (error) {
@@ -265,7 +265,7 @@ exports.updatePost = async (req, res, next) => {
             title: req.body.title,
             content: req.body.content,
             is_anonymous: isUserSelectedAnonymous,
-            img_urls: imageUrlsString,
+            img_urls: req.body.image_url_list || null,
         });
 
         return res.status(UPDATE_POST_SUCCESS.status_code).json(UPDATE_POST_SUCCESS.res_json);
@@ -674,7 +674,6 @@ exports.getPostListByPaging = async (req, res, next) => {
         }
         const LIMIT = countPerPage;
         const OFFSET = 0 + (req.query.now_page - 1) * LIMIT;
-        const TOTAL_PAGE = Math.ceil((await Post.count()) / countPerPage);
 
         let orderBy = [['created_at', 'DESC']];
         //요청 헤더로 정렬기준 받아서 판별
@@ -682,9 +681,30 @@ exports.getPostListByPaging = async (req, res, next) => {
             orderBy = [['likes', 'DESC']];
         }
 
+        let searchQuery = {};
+        //요청 헤더로 정렬기준 받아서 판별
+        // 요청 헤더로 검색어 받아서 판별
+        if (req.query.keyword) {
+            searchQuery = {
+                [Op.or]: [
+                    {
+                        title: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                    {
+                        content: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                ],
+            };
+        }
+
         const POSTS_INFO = await Post.findAll({
             where: {
                 board_id: req.query.board_id,
+                ...searchQuery,
             },
             order: orderBy,
             offset: OFFSET,
@@ -713,10 +733,18 @@ exports.getPostListByPaging = async (req, res, next) => {
             });
         }
 
+        const SEARCH_POST_COUNT = await Post.count({
+            where: {
+                board_id: req.query.board_id,
+                ...searchQuery,
+            },
+        });
+        const TOTAL_PAGR = Math.ceil(SEARCH_POST_COUNT / countPerPage);
+
         const RES_BOARD_AND_POSTS = {
             major_name: NOW_BOARD.board_name.split('-')[0],
             board_name: NOW_BOARD.board_name.split('-')[1],
-            total_page: TOTAL_PAGE,
+            total_page: TOTAL_PAGR,
             posts: RES_POSTS,
         };
         return res.status(200).json(RES_BOARD_AND_POSTS);
@@ -768,41 +796,105 @@ exports.getPostListByCursor = async (req, res, next) => {
 
         const LIMIT = countPerPage;
 
+        let where = {
+            board_id: req.query.board_id,
+        };
+
         let orderBy = [['created_at', 'DESC']];
-        //요청 헤더로 정렬기준 받아서 판별
-        if (req.headers.sorting === 'likes') {
-            orderBy = [['likes', 'DESC']];
-        }
 
-        let postsInfo = [];
-        if (req.query.last_id == 0) {
-            postsInfo = await Post.findAll({
-                where: {
-                    board_id: req.query.board_id,
-                },
-                order: orderBy,
-                limit: LIMIT,
-            });
-        } else {
-            postsInfo = await Post.findAll({
-                where: {
-                    board_id: req.query.board_id,
-                    id: {
-                        [Op.lt]: [req.query.last_id],
+        // let whereQuery = {};
+        if (req.query.last_id != 0) {
+            //sorting방식에 따라 쿼리가 달라짐
+            if (!req.headers.sorting) {
+                //sorting가 없을 때
+                where['id'] = {
+                    [Op.lt]: req.query.last_id,
+                };
+            } else if (req.headers.sorting === 'likes') {
+                //sorting가 likes일 때
+                orderBy = [
+                    //정렬 설정
+                    ['likes', 'DESC'],
+                    ['created_at', 'DESC'],
+                ];
+                //where설정
+                const LAST_POST_LIKES = (await Post.findByPk(req.query.last_id)).likes;
+                where[Op.or] = [
+                    {
+                        [Op.and]: [
+                            {
+                                likes: {
+                                    [Op.eq]: LAST_POST_LIKES,
+                                },
+                            },
+                            {
+                                id: {
+                                    [Op.lt]: [req.query.last_id],
+                                },
+                            },
+                        ],
                     },
-                },
-                order: orderBy,
-                limit: LIMIT,
-            });
+                    {
+                        likes: {
+                            [Op.lt]: LAST_POST_LIKES,
+                        },
+                    },
+                ];
+            }
         }
 
-        if (postsInfo.length == 0) {
+        //검색 키워드가 있을 때
+        if (req.query.keyword) {
+            if (!where[Op.or]) {
+                //sort를 선택하지 않을 때
+                where[Op.or] = [
+                    {
+                        title: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                    {
+                        content: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                ];
+            } else {
+                //sort선택했을 때
+                where[Op.and] = [
+                    { [Op.or]: where[Op.or] },
+                    {
+                        [Op.or]: [
+                            {
+                                title: {
+                                    [Op.like]: `%${req.query.keyword}%`,
+                                },
+                            },
+                            {
+                                content: {
+                                    [Op.like]: `%${req.query.keyword}%`,
+                                },
+                            },
+                        ],
+                    },
+                ];
+                delete where[Op.or];
+            }
+        }
+
+        const POSTS_INFO = await Post.findAll({
+            where,
+            order: orderBy,
+            limit: LIMIT,
+        });
+
+        if (POSTS_INFO.length == 0) {
             return res.status(END_OF_POST.status_code).json();
         }
 
         const RES_POSTS = [];
-        for (let index = 0; index < postsInfo.length; index++) {
-            const NOW_POST = postsInfo[index];
+        for (let index = 0; index < POSTS_INFO.length; index++) {
+            const NOW_POST = POSTS_INFO[index];
             const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
             const AUTHOR_USER = await checkUserExistByUserId(NOW_POST.user_id);
             const AUTHOR_NICKNAME = AUTHOR_USER ? AUTHOR_USER.nickname : '알 수 없음';
@@ -860,21 +952,27 @@ exports.searchTitleAndContent = async (req, res, next) => {
             orderBy = [['likes', 'DESC']];
         }
 
+        let searchQuery = [];
+        //요청 헤더로 정렬기준 받아서 판별
+        if (req.query.keyword != '') {
+            searchQuery = [
+                {
+                    title: {
+                        [Op.like]: `%${req.query.keyword}%`,
+                    },
+                },
+                {
+                    content: {
+                        [Op.like]: `%${req.query.keyword}%`,
+                    },
+                },
+            ];
+        }
+
         const SEARCH_POST_LIST = await Post.findAll({
             where: {
                 board_id: ALL_ALLOW_BOARD_ID,
-                [Op.or]: [
-                    {
-                        title: {
-                            [Op.like]: `%${req.query.keyword}%`,
-                        },
-                    },
-                    {
-                        content: {
-                            [Op.like]: `%${req.query.keyword}%`,
-                        },
-                    },
-                ],
+                [Op.or]: searchQuery,
             },
             order: orderBy,
         });
@@ -911,7 +1009,7 @@ exports.searchTitleAndContent = async (req, res, next) => {
 
 exports.searchTitleAndContentByPaging = async (req, res, next) => {
     try {
-        if (!req.query.keyword || !req.query.now_page || isNaN(req.query.now_page)) {
+        if (!req.query.now_page || isNaN(req.query.now_page)) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
@@ -946,9 +1044,11 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
             orderBy = [['likes', 'DESC']];
         }
 
-        const SEARCH_POST_LIST = await Post.findAll({
-            where: {
-                board_id: ALL_ALLOW_BOARD_ID,
+        let searchQuery = {};
+        //요청 헤더로 정렬기준 받아서 판별
+        // 요청 헤더로 검색어 받아서 판별
+        if (req.query.keyword) {
+            searchQuery = {
                 [Op.or]: [
                     {
                         title: {
@@ -961,6 +1061,13 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
                         },
                     },
                 ],
+            };
+        }
+
+        const SEARCH_POST_LIST = await Post.findAll({
+            where: {
+                board_id: ALL_ALLOW_BOARD_ID,
+                ...searchQuery,
             },
             order: orderBy,
             offset: OFFSET,
@@ -997,18 +1104,7 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
         const SEARCH_POST_COUNT = await Post.count({
             where: {
                 board_id: ALL_ALLOW_BOARD_ID,
-                [Op.or]: [
-                    {
-                        title: {
-                            [Op.like]: `%${req.query.keyword}%`,
-                        },
-                    },
-                    {
-                        content: {
-                            [Op.like]: `%${req.query.keyword}%`,
-                        },
-                    },
-                ],
+                ...searchQuery,
             },
         });
         const TOTAL_PAGE = Math.ceil(SEARCH_POST_COUNT / countPerPage);
@@ -1026,7 +1122,7 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
 
 exports.searchTitleAndContentByCursor = async (req, res, next) => {
     try {
-        if (!req.query.keyword || !req.query.last_id || isNaN(req.query.last_id)) {
+        if (!req.query.last_id || isNaN(req.query.last_id)) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
@@ -1061,22 +1157,31 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
             orderBy = [['likes', 'DESC']];
         }
 
+        let searchQuery = {};
+        //요청 헤더로 정렬기준 받아서 판별
+        // 요청 헤더로 검색어 받아서 판별
+        if (req.query.keyword) {
+            searchQuery = {
+                [Op.or]: [
+                    {
+                        title: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                    {
+                        content: {
+                            [Op.like]: `%${req.query.keyword}%`,
+                        },
+                    },
+                ],
+            };
+        }
+
         if (req.query.last_id == 0) {
             searchPostsList = await Post.findAll({
                 where: {
                     board_id: ALL_ALLOW_BOARD_ID,
-                    [Op.or]: [
-                        {
-                            title: {
-                                [Op.like]: `%${req.query.keyword}%`,
-                            },
-                        },
-                        {
-                            content: {
-                                [Op.like]: `%${req.query.keyword}%`,
-                            },
-                        },
-                    ],
+                    ...searchQuery,
                 },
                 order: orderBy,
                 limit: LIMIT,
@@ -1088,18 +1193,7 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
                     id: {
                         [Op.lt]: [req.query.last_id],
                     },
-                    [Op.or]: [
-                        {
-                            title: {
-                                [Op.like]: `%${req.query.keyword}%`,
-                            },
-                        },
-                        {
-                            content: {
-                                [Op.like]: `%${req.query.keyword}%`,
-                            },
-                        },
-                    ],
+                    ...searchQuery,
                 },
                 order: orderBy,
                 limit: LIMIT,
