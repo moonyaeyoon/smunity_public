@@ -789,20 +789,10 @@ exports.getPostListByCursor = async (req, res, next) => {
             return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
         }
 
-        let countPerPage = 5;
-        if (!isNaN(req.query.per_page)) {
-            countPerPage = parseInt(req.query.per_page);
-        }
-
-        const LIMIT = countPerPage;
-
+        //where설정
         let where = {
             board_id: req.query.board_id,
         };
-
-        let orderBy = [['created_at', 'DESC']];
-
-        // let whereQuery = {};
         if (req.query.last_id != 0) {
             //sorting방식에 따라 쿼리가 달라짐
             if (!req.headers.sorting) {
@@ -812,13 +802,8 @@ exports.getPostListByCursor = async (req, res, next) => {
                 };
             } else if (req.headers.sorting === 'likes') {
                 //sorting가 likes일 때
-                orderBy = [
-                    //정렬 설정
-                    ['likes', 'DESC'],
-                    ['created_at', 'DESC'],
-                ];
-                //where설정
                 const LAST_POST_LIKES = (await Post.findByPk(req.query.last_id)).likes;
+                if (!LAST_POST_LIKES) return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
                 where[Op.or] = [
                     {
                         [Op.and]: [
@@ -843,7 +828,7 @@ exports.getPostListByCursor = async (req, res, next) => {
             }
         }
 
-        //검색 키워드가 있을 때
+        //검색 키워드가 있을 때의 where설정
         if (req.query.keyword) {
             if (!where[Op.or]) {
                 //sort를 선택하지 않을 때
@@ -881,6 +866,23 @@ exports.getPostListByCursor = async (req, res, next) => {
                 delete where[Op.or];
             }
         }
+
+        //orderBy설정
+        let orderBy = [['created_at', 'DESC']];
+        if (req.headers.sorting) {
+            orderBy = [
+                //정렬 설정
+                ['likes', 'DESC'],
+                ['created_at', 'DESC'],
+            ];
+        }
+
+        //limit설정
+        let countPerPage = 5;
+        if (!isNaN(req.query.per_page)) {
+            countPerPage = parseInt(req.query.per_page);
+        }
+        const LIMIT = countPerPage;
 
         const POSTS_INFO = await Post.findAll({
             where,
