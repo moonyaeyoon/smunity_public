@@ -358,9 +358,11 @@ exports.getPostList = async (req, res, next) => {
         for (let index = 0; index < POSTS_INFO.length; index++) {
             const NOW_POST = POSTS_INFO[index];
             const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
+            const AUTHOR_USER = await checkUserExistByUserId(NOW_POST.user_id);
+            const AUTHOR_NICKNAME = AUTHOR_USER ? AUTHOR_USER.nickname : '알 수 없음';
             RES_POSTS.push({
                 post_id: NOW_POST.id,
-                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_COUNT,
@@ -697,9 +699,11 @@ exports.getPostListByPaging = async (req, res, next) => {
         for (let index = 0; index < POSTS_INFO.length; index++) {
             const NOW_POST = POSTS_INFO[index];
             const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
+            const AUTHOR_USER = await checkUserExistByUserId(NOW_POST.user_id);
+            const AUTHOR_NICKNAME = AUTHOR_USER ? AUTHOR_USER.nickname : '알 수 없음';
             RES_POSTS.push({
                 post_id: NOW_POST.id,
-                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_COUNT,
@@ -800,9 +804,11 @@ exports.getPostListByCursor = async (req, res, next) => {
         for (let index = 0; index < postsInfo.length; index++) {
             const NOW_POST = postsInfo[index];
             const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
+            const AUTHOR_USER = await checkUserExistByUserId(NOW_POST.user_id);
+            const AUTHOR_NICKNAME = AUTHOR_USER ? AUTHOR_USER.nickname : '알 수 없음';
             RES_POSTS.push({
                 post_id: NOW_POST.id,
-                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_COUNT,
@@ -878,12 +884,14 @@ exports.searchTitleAndContent = async (req, res, next) => {
             const NOW_POST = SEARCH_POST_LIST[index];
             const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
             const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
+            const AUTHOR_USER = await checkUserExistByUserId(NOW_POST.user_id);
+            const AUTHOR_NICKNAME = AUTHOR_USER ? AUTHOR_USER.nickname : '알 수 없음';
             RES_POSTS.push({
                 major_name: NOW_BOARD.board_name.split('-')[0],
                 board_name: NOW_BOARD.board_name.split('-')[1],
                 board_id: NOW_POST.board_id,
                 post_id: NOW_POST.id,
-                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_COUNT,
@@ -968,12 +976,14 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
             const NOW_POST = SEARCH_POST_LIST[index];
             const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
             const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
+            const AUTHOR_USER = await checkUserExistByUserId(NOW_POST.user_id);
+            const AUTHOR_NICKNAME = AUTHOR_USER ? AUTHOR_USER.nickname : '알 수 없음';
             RES_POSTS.push({
                 major_name: NOW_BOARD.board_name.split('-')[0],
                 board_name: NOW_BOARD.board_name.split('-')[1],
                 board_id: NOW_POST.board_id,
                 post_id: NOW_POST.id,
-                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_COUNT,
@@ -1105,12 +1115,14 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
             const NOW_POST = searchPostsList[index];
             const NOW_BOARD = await Board.findByPk(NOW_POST.board_id);
             const COMMENT_COUNT = await Comment.count({ where: { post_id: NOW_POST.id } });
+            const AUTHOR_USER = await checkUserExistByUserId(NOW_POST.user_id);
+            const AUTHOR_NICKNAME = AUTHOR_USER ? AUTHOR_USER.nickname : '알 수 없음';
             RES_POSTS.push({
                 major_name: NOW_BOARD.board_name.split('-')[0],
                 board_name: NOW_BOARD.board_name.split('-')[1],
                 board_id: NOW_POST.board_id,
                 post_id: NOW_POST.id,
-                username: NOW_POST.is_anonymous ? '익명' : NOW_USER.nickname,
+                username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
                 comments: COMMENT_COUNT,
