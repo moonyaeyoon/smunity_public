@@ -42,6 +42,14 @@ exports.EDIT_USER_PROFILE_IMAGE = {
     },
 };
 
+exports.CHANGE_PASSWORD_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '비밀번호 변경이 완료 되었습니다.',
+    },
+};
+
 exports.DELETE_USER_SUCCESS = {
     status_code: 201,
     res_json: {
