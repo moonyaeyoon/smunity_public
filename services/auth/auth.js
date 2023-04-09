@@ -83,7 +83,8 @@ exports.checkSchoolId = async (req, res, next) => {
 };
 
 exports.join = async (req, res, next) => {
-    const { school_id, nickname, password, image } = req.body;
+    const { school_id, nickname, password } = req.body;
+    let image = req.body.image;
     try {
         if (!school_id || !nickname || !password) {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
