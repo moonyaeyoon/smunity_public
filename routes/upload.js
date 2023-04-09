@@ -9,7 +9,7 @@ router.post('/', imageUploader.array('image'), (req, res) => {
     }
 
     const imageUrl = req.files.map((file) => file.location);
-    const imageUrls = imageUrls.join(',');
+    const imageUrls = imageUrl.join(',');
     res.json({ imageUrls });
 });
 
