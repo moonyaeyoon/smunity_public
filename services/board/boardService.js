@@ -105,13 +105,15 @@ exports.createNewPost = async (req, res, next) => {
             }
         }
 
+        const image_urls = req.body.image_url_list.join(',');
+
         await Post.create({
             title: req.body.title,
             content: req.body.content,
             is_anonymous: isUserSelectedAnonymous,
             user_id: NOW_USER.id,
             board_id: NOW_BOARD.id,
-            img_urls: req.body.image_url_list || null,
+            img_urls: image_urls || null,
         });
         return res.status(ADD_POST_SUCCESS.status_code).json(ADD_POST_SUCCESS.res_json);
     } catch (error) {
