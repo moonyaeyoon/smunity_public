@@ -35,11 +35,13 @@ def getSchoolNotice():
         NOW_INDEX = i.dd.ul.find_all('li')[0].text.replace("\t", "").replace("\r", "").replace("\n", "").replace("No.", "")
         # NOW_AUTHOR = i.dd.ul.find_all('li')[1].text.replace("\t", "").replace("\r", "").replace("\n", "").replace("작성자", "")
         NOW_DATE = i.dd.ul.find_all('li')[2].text.replace("\t", "").replace("\r", "").replace("\n", "").replace("작성일", "")
+        SITE_DATE_LIST = NOW_DATE.split('-')
+        SERVER_TIME = f'{SITE_DATE_LIST[0]}.{SITE_DATE_LIST[1]}.{SITE_DATE_LIST[2]}_00:00:00' # 2023.04.02_01:06:23
         NOW_VIEWS = i.dd.ul.find_all('li')[3].text.replace("\t", "").replace("\r", "").replace("\n", "").replace("조회수", "")
         noticeTable.insert_one({
             "title": NOW_TITLE,
             "index": NOW_INDEX,
-            "date": NOW_DATE,
+            "date": SERVER_TIME,
             "views": NOW_VIEWS
         })
     print("Crawling Done")
