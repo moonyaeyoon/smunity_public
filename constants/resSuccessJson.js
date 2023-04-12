@@ -23,6 +23,7 @@ exports.ADD_USER_SUCCESS = {
         status_code: 201,
         message: '회원 가입이 완료되었습니다.',
         profile_img_url: null,
+        auth_url: null,
     },
 };
 

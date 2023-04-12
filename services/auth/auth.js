@@ -96,7 +96,8 @@ exports.join = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         }
         //프사 지정안하면 기본프사 url 할당
-        if (image === null) {
+        if (image === null || image === '') {
+            console.log('no image');
             image = process.env.DEFAULT_PROFILE_IMAGE;
         }
         const NEW_USER_EMAIL = `${school_id}@${SMU_STUDENT_EMAIL_DOMAIN}`;
@@ -123,7 +124,9 @@ exports.join = async (req, res, next) => {
             email_auth_code: AUTH_CODE,
             profile_img_url: image,
         });
+        ADD_USER_SUCCESS.res_json.auth_url = AUTH_URL;
         ADD_USER_SUCCESS.res_json.profile_img_url = image;
+
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
         console.error(error);
