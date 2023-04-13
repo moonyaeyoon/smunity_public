@@ -43,11 +43,11 @@ router.get('/board_list/:major_id', getMajorBoards);
 
 router.get('/preview', verifyAToken, getBoardPreview);
 
-router.post('/like/:post_id', verifyAToken, likePost);
+router.put('/like/:post_id', verifyAToken, likePost);
 
-router.post('/scrap/:post_id', verifyAToken, scrapPost);
+router.put('/scrap/:post_id', verifyAToken, scrapPost);
 
-router.post('/report/:post_id', verifyAToken, reportPost);
+router.put('/report/:post_id', verifyAToken, reportPost);
 
 router.get('/info/:board_id', verifyAToken, getBoardInfo);
 

@@ -19,9 +19,9 @@ router.patch('/update/:comment_id', verifyAToken, updateComment);
 //댓글 삭제
 router.delete('/delete/:comment_id', verifyAToken, deleteComment);
 
-router.post('/like/:comment_id', verifyAToken, likeComment);
+router.put('/like/:comment_id', verifyAToken, likeComment);
 
-router.post('/report/:comment_id', verifyAToken, reportComment);
+router.put('/report/:comment_id', verifyAToken, reportComment);
 
 //test: 댓글 작성 확인용 API
 router.get('/list', getCommentList);

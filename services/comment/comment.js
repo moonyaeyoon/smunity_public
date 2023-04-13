@@ -282,7 +282,7 @@ exports.reportComment = async (req, res, next) => {
 
         //사용자 권한 체크
         let canRead = false;
-        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: res.locals.decodes.user_id } });
         const NOW_POST = await Post.findByPk(NOW_COMMENT.post_id);
         const NOW_BOARD = await Board.findOne({ where: { id: NOW_POST.board_id } });
         for (let index = 0; index < NOW_USER_MAJOR_LIST.length; index++) {
