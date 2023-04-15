@@ -30,19 +30,67 @@ jobs:
             - name: Check Npm -v
               run: npm -v
 
-            - name: create env file #깃헙에 등록한 환경변수들로 .env 파일 생성
-              working-directory: ./
+            - name: Set Secrets to Env
               run: |
-                  pwd
-                  touch .env
-                  echo PORT=${{ secrets.PORT }} >> .env
-                  echo MONGODB_URI=${{ secrets.MONGODB_URI }} >> .env
-                  echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env
-                  echo JWT_ALGO=${{ secrets.JWT_ALGO }} >> .env
-                  cat .env
+                  # secrets 목록
+                  secrets=(
+                    API_LIMIT_SECOND
+                    API_LIMIT_TIMES
+                    AUTH_QUERY_SECRET_KEY
+                    AWS_ACCESS_KEY_ID
+                    AWS_SECRET_ACCESS_KEY
+                    COMMON_FILE_URL
+                    COOKIE_SECRET
+                    DEFAULT_PROFILE_IMAGE
+                    EMAIL_AUTH_DOMAIN
+                    JWT_ACCESS_TOKEN_EXPIRESIN
+                    JWT_REFRESH_TOKEN_EXPIRESIN
+                    JWT_SECRET
+                    JWT_SIGN_ALGORITHM
+                    MONGODB_IP
+                    PASSWORD_SALT_OR_ROUNDS
+                    RDS_HOST
+                    RDS_PASSWORD
+                    RDS_USERNAME
+                    REDIS_PORT
+                    S3_BUCKET
+                    S3_REGION
+                    SES_AWS_ACCESS_KEY
+                    SES_AWS_ACCESS_KEY_ID
+                    SMU_STUDENT_EMAIL_DOMAIN
+                  )
+
+                  # .env 파일 작성
+                  for secret in "${secrets[@]}"
+                  do
+                    echo "${secret}=${{ secrets.${secret} }}" >> .env
+                  done
+
+            - name: Check .env file
+              run: cat .env
 
             - name: build server files #필ㄹ요한 dependency들을 설치하고 빌드
               working-directory: ./
               run: |
                   npm i
                   npm run build
+
+            - name: zip file
+              run: zip -r smus.zip ./dist ./scripts ./appspec.yml ./.env ./package.json
+
+            - name: AWS configure credentials
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ap-northeast-2
+
+            - name: upload to S3
+              run: aws s3 cp --region ap-northeast-2 ./smus.zip s3://smus/BE
+
+            - name: deploy with AWS codeDeploy
+              run: aws deploy create-deployment
+                  --application-name smus-cd
+                  --deployment-config-name CodeDeployDefault.OneAtATime
+                  --deployment-group-name smus-cdg
+                  --s3-location bucket=smus,bundleType=zip,key=BE/smus.zip
