@@ -24,7 +24,7 @@ router.use('/auth', AuthRouter);
 router.use('/upload', ImageRouter);
 
 router.get('/', (req, res, next) => {
-    res.send('랜딩페이지2');
+    res.send('랜딩페이지3');
     //res.render('/', {title: "랜딩 페이지"});
 });
 
