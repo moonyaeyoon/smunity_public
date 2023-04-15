@@ -63,7 +63,7 @@ jobs:
                   # .env 파일 작성
                   for secret in "${secrets[@]}"
                   do
-                    echo "${secret}=${{ secrets[secret] }}" >> .env
+                    echo "${secret}=$${secret}" >> .env
                   done
 
             - name: Check .env file
