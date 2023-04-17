@@ -24,7 +24,7 @@ router.use('/auth', AuthRouter);
 router.use('/upload', ImageRouter);
 
 router.get('/', (req, res, next) => {
-    res.send('랜딩페이지이');
+    res.send('랜딩페이지이dl');
     //res.render('/', {title: "랜딩 페이지"});
 });
 
