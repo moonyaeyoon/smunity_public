@@ -1305,3 +1305,157 @@ exports.getSchoolNoticeList = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.getHotPostPreview = async (req, res, next) => {
+    try {
+        const BOARD_PREVIEW_POSTS_INFO = await Post.findAll({
+            where: {
+                board_id: 1,
+            },
+            order: [['views', 'DESC']],
+            limit: parseInt(6),
+        });
+
+        const RES_POST_LIST = [];
+
+        for (let index = 0; index < BOARD_PREVIEW_POSTS_INFO.length; index++) {
+            const NOW_POST = BOARD_PREVIEW_POSTS_INFO[index];
+            const COMMENT_LENGTH = await Comment.count({ where: { post_id: NOW_POST.id } });
+            RES_POST_LIST.push({
+                post_id: NOW_POST.id,
+                title: NOW_POST.title,
+                comments: COMMENT_LENGTH,
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            });
+        }
+        res.status(200).json(RES_POST_LIST);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
+
+exports.getLostPostPreview = async (req, res, next) => {
+    try {
+        const BOARD_PREVIEW_POSTS_INFO = await Post.findAll({
+            where: {
+                board_id: process.env.LOST_BOARD_INDEX,
+            },
+            order: [['created_at', 'DESC']],
+            limit: parseInt(6),
+        });
+
+        const RES_POST_LIST = [];
+
+        for (let index = 0; index < BOARD_PREVIEW_POSTS_INFO.length; index++) {
+            const NOW_POST = BOARD_PREVIEW_POSTS_INFO[index];
+            const COMMENT_LENGTH = await Comment.count({ where: { post_id: NOW_POST.id } });
+            RES_POST_LIST.push({
+                post_id: NOW_POST.id,
+                title: NOW_POST.title,
+                comments: COMMENT_LENGTH,
+                created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            });
+        }
+        res.status(200).json(RES_POST_LIST);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
+
+exports.getLostPostDatail = async (req, res, next) => {
+    try {
+        if (!req.params.post_id) {
+            return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
+        }
+
+        //게시글 존재 여부
+        const NOW_POST = await Post.findOne({
+            where: {
+                id: req.params.post_id,
+            },
+        });
+        if (!NOW_POST) {
+            return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
+        }
+
+        //사용자 권한 없음
+        if (NOW_POST.board_id != process.env.LOST_BOARD_INDEX) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
+
+        //post조회수 + 1 (UpdatedAt가 바뀌지 않도록 수동으로 쿼리문 작성함.)
+        if (!res.locals.decodes || NOW_POST.user_id != res.locals.decodes.user_id) {
+            //자신이 보면 조회수 안 올라가게 함.
+            const env = process.env.NODE_ENV || 'development';
+            const config = require('../../config/config')[env];
+            const [result, metadata] = await sequelize.query(
+                `UPDATE ${config.database}.posts SET views = ${NOW_POST.views + 1} WHERE id = ${NOW_POST.id}`
+            );
+        }
+
+        //좋아요/스크랩 체크여부
+        let USER_LIKED_INFO = null;
+        let USER_SCRAP_INFO = null;
+        if (res.locals.decodes) {
+            USER_LIKED_INFO = await UserLikePost.findOne({ where: { user_id: NOW_USER.id, post_id: NOW_POST.id } });
+            USER_SCRAP_INFO = await UserScrapPost.findOne({ where: { user_id: NOW_USER.id, post_id: NOW_POST.id } });
+        }
+
+        const COMMENTS_INFO = await Comment.findAll({
+            where: {
+                post_id: req.params.post_id,
+            },
+            order: [['created_at', 'DESC']],
+        });
+
+        const COMMENT_LIST = [];
+        for (let index = 0; index < COMMENTS_INFO.length; index++) {
+            const NOW_COMMENT = COMMENTS_INFO[index];
+            const NOW_COMMENT_USER = await checkUserExistByUserId(NOW_COMMENT.user_id);
+            const NOW_COMMENT_NICKNAME = NOW_COMMENT_USER.nickname || '알 수 없음';
+            let COMMENT_LIKED_INFO = null;
+            if (res.locals.decodes) {
+                COMMENT_LIKED_INFO = await UserLikeComment.findOne({
+                    where: { user_id: res.locals.decodes.user_id, comment_id: NOW_COMMENT.id },
+                });
+            }
+            COMMENT_LIST.push({
+                comment_id: NOW_COMMENT.id,
+                username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_NICKNAME,
+                user_id: NOW_COMMENT_USER ? NOW_COMMENT.user_id : 0,
+                content: NOW_COMMENT.content,
+                likes: NOW_COMMENT.likes,
+                isLiked: COMMENT_LIKED_INFO ? true : false,
+                created_time: moment(NOW_COMMENT.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+                updated_time: moment(NOW_COMMENT.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            });
+        }
+
+        const AUTHOR_USER = await checkUserExistByUserId(NOW_POST.user_id);
+        const AUTHOR_NICKNAME = AUTHOR_USER ? AUTHOR_USER.nickname : '알 수 없음';
+
+        const RES_POST_DETAIL = {
+            post_id: NOW_POST.id,
+            username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
+            user_id: AUTHOR_USER ? NOW_POST.user_id : 0,
+            title: NOW_POST.title,
+            content: NOW_POST.content,
+            image_urls: NOW_POST.img_urls || null,
+            views: NOW_POST.views + 1,
+            likes: NOW_POST.likes,
+            scraps: NOW_POST.scraps,
+            isLiked: USER_LIKED_INFO ? true : false,
+            isScrap: USER_SCRAP_INFO ? true : false,
+            is_author: res.locals.decodes && NOW_POST.user_id == res.locals.decodes.user_id ? true : false,
+            comments: COMMENT_LIST,
+            created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            updated_time: moment(NOW_POST.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+        };
+        return res.status(200).json(RES_POST_DETAIL);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+};
