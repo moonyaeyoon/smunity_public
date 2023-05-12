@@ -21,6 +21,9 @@ const {
     searchTitleAndContentByPaging,
     getSchoolNoticeList,
     getBoardInfoByPostId,
+    getHotPostPreview,
+    getLostPostPreview,
+    getLostPostDatail,
 } = require('../services/board/boardService');
 
 const router = express.Router();
@@ -60,5 +63,11 @@ router.get('/search_paging', verifyAToken, searchTitleAndContentByPaging);
 router.get('/search_cursor', verifyAToken, searchTitleAndContentByCursor);
 
 router.get('/notice', getSchoolNoticeList);
+
+router.get('/hot', getHotPostPreview);
+
+router.get('/lost', getLostPostPreview);
+
+router.get('/lost/detail/:post_id', getLostPostDatail);
 
 module.exports = router;
