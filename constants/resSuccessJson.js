@@ -1,8 +1,9 @@
 exports.USER_SIGNIN_SUCCESS_STATUS = 200;
-exports.getSuccessSignInJson = (aToken, rToken) => {
+exports.getSuccessSignInJson = (userId, aToken, rToken) => {
     return {
         status_code: 200,
         message: '로그인이 성공했습니다.',
+        user_id: userId,
         access_token: aToken,
         refresh_token: rToken,
     };
