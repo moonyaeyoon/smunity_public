@@ -60,7 +60,7 @@ const generateAuthUrl = (schoolId, randomCode) => {
     const ENCODED_QUERY = encodeURIComponent(CRYPTED_QUERY);
     console.log('encoded query: ', ENCODED_QUERY);
 
-    const LINK_DOMAIN = process.env.NODE_ENV == 'test' ? 'http://localhost' : process.env.EMAIL_AUTH_DOMAIN;
+    const LINK_DOMAIN = process.env.NODE_ENV == 'test' ? 'http://localhost:8001' : process.env.EMAIL_AUTH_DOMAIN;
 
     return `${LINK_DOMAIN}/auth/auth_email?code=${ENCODED_QUERY}`;
 };
@@ -111,8 +111,6 @@ exports.join = async (req, res, next) => {
         const AUTH_URL = generateAuthUrl(school_id, AUTH_CODE);
 
         //이메일 보내기 => 테스트할 때는 해당 링크를 서버에 log남기기
-        //TODO: 링크가 포함한 이메일 보내기
-
         sendAuthMailing(AUTH_URL, school_id);
         console.log(`Sign Up: 인증 링크: ${AUTH_URL}`);
 
@@ -124,7 +122,7 @@ exports.join = async (req, res, next) => {
             email_auth_code: AUTH_CODE,
             profile_img_url: image,
         });
-        ADD_USER_SUCCESS.res_json.auth_url = AUTH_URL;
+        // ADD_USER_SUCCESS.res_json.auth_url = AUTH_URL;
         ADD_USER_SUCCESS.res_json.profile_img_url = image;
 
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
@@ -247,16 +245,16 @@ exports.addSchoolAuth = async (req, res, next) => {
             return res.status(404).send(RES_ERROR_JSON.emailAuthError());
         }
 
-        if (REQ_USER.email_auth_code === URL_AUTH_CODE) {
+        if (REQ_USER.email_auth_code == URL_AUTH_CODE) {
             await UserMajor.create({
                 user_id: REQ_USER.id,
                 major_id: 1,
             });
             await REQ_USER.update({ email_auth_code: 'finish' });
             return res.status(201).send(emailAuthSuccess());
-        } else if (REQ_USER.email_auth_code === 'finish') {
+        } else if (REQ_USER.email_auth_code == 'finish') {
             console.log(`Email Auth Error: 이미 인증된 링크 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`);
-            return res.status(401).send(emailAuthSuccess());
+            return res.status(401).send(RES_ERROR_JSON.alreadyAuth());
         } else {
             console.log(`Email Auth Error: 인증코드 일치하지 않음 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`);
             return res.status(404).send(RES_ERROR_JSON.emailAuthError());
@@ -421,4 +419,35 @@ const sendAuthMailing = async (authUrl, schoolId) => {
         }
     );
     return true;
+};
+
+exports.sendUserAuthLinkForTest = async (req, res, next) => {
+    try {
+        const REQ_SCHOOL_ID = req.headers.school_id;
+        if (!REQ_SCHOOL_ID) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+        const REQ_USER = await checkSchoolIdExist(REQ_SCHOOL_ID);
+        if (!REQ_USER) {
+            console.log('Email Auth Error: 사용자 존재하지 않음');
+            return res.status(401).json({
+                message: '해당 사용자가 없습니다.',
+            });
+        }
+        const AUTH_CODE = REQ_USER.email_auth_code;
+
+        if (AUTH_CODE != 'finish') {
+            const AUTH_URL = generateAuthUrl(REQ_USER.school_id, AUTH_CODE);
+            res.status(200).json({
+                message: AUTH_URL,
+            });
+        } else {
+            res.status(402).json({
+                message: '이미 인증된 링크입니다.',
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        return next(error);
+    }
 };
