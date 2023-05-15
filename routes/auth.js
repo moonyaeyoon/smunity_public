@@ -14,6 +14,7 @@ const {
     editUserProfileImage,
     deleteUser,
     changePassword,
+    sendUserAuthLinkForTest,
 } = require('../services/auth/auth');
 
 const router = express.Router();
@@ -39,5 +40,7 @@ router.put('/user/nickname', verifyAToken, editUserNickName);
 router.put('/user/profile_image', verifyAToken, editUserProfileImage);
 
 router.put('/user/password', verifyAToken, changePassword);
+
+router.get('/rhksflwkdlapdlffldzmcpzmapi', sendUserAuthLinkForTest); //관리자이메일링크체크api
 
 module.exports = router;
