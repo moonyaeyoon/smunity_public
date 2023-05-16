@@ -1380,6 +1380,10 @@ exports.getLostPostDatail = async (req, res, next) => {
             return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
         }
 
+        if (NOW_POST.board_id != process.env.LOST_BOARD_INDEX) {
+            return res.status(USER_NO_AUTH.status_code).json(USER_NO_AUTH.res_json);
+        }
+
         //post조회수 + 1 (UpdatedAt가 바뀌지 않도록 수동으로 쿼리문 작성함.)
         if (!res.locals.decodes || NOW_POST.user_id != res.locals.decodes.user_id) {
             //자신이 보면 조회수 안 올라가게 함.
