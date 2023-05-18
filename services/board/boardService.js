@@ -447,6 +447,7 @@ exports.getBoardPreview = async (req, res, next) => {
                 title: NOW_POST.title,
                 comments: COMMENT_LIST.length,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+                likes: NOW_POST.likes,
             });
         }
         res.status(200).json(RES_POST_LIST);
@@ -1326,6 +1327,7 @@ exports.getHotPostPreview = async (req, res, next) => {
                 title: NOW_POST.title,
                 comments: COMMENT_LENGTH,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+                likes: NOW_POST.likes,
             });
         }
         res.status(200).json(RES_POST_LIST);
@@ -1355,6 +1357,7 @@ exports.getLostPostPreview = async (req, res, next) => {
                 title: NOW_POST.title,
                 comments: COMMENT_LENGTH,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+                likes: NOW_POST.likes,
             });
         }
         res.status(200).json(RES_POST_LIST);
