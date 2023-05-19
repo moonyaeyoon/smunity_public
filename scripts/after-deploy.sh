@@ -3,8 +3,8 @@ REPOSITORY=/home/ubuntu/build
 
 cd $REPOSITORY
 
-npm i
+sudo /usr/bin/yarn
 
-pm2 start app.js
+sudo /usr/bin/pm2 start dist
 
-#nvm으로 node를 설치하면 직접 경로를 지정해야함
+#nvm으로 node를 설치하면 직접 경로를 지정해야함.
