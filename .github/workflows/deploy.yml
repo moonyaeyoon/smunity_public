@@ -90,7 +90,7 @@ jobs:
 
             - name: deploy with AWS codeDeploy
               run: aws deploy create-deployment
-                  --application-name smus-deploy
+                  --application-name smus-test-deploy
                   --deployment-config-name CodeDeployDefault.OneAtATime
                   --deployment-group-name smus-deploy-dg
                   --s3-location bucket=smus,bundleType=zip,key=BE/smus.zip
