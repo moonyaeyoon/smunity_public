@@ -67,12 +67,13 @@ exports.DELETE_USER_SUCCESS = {
     },
 };
 
-exports.ADD_POST_SUCCESS = {
-    status_code: 201,
-    res_json: {
+exports.ADD_POST_SUCCESS_STATUS = 200;
+exports.addPostSuccessJson = (post_id) => {
+    return {
         status_code: 201,
         message: '게시글의 추가가 완료되었습니다.',
-    },
+        post_id: post_id,
+    };
 };
 
 exports.UPDATE_POST_SUCCESS = {

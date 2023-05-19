@@ -10,7 +10,8 @@ const {
     MAJOR_NOT_EXIST,
 } = require('../../constants/resErrorJson');
 const {
-    ADD_POST_SUCCESS,
+    ADD_POST_SUCCESS_STATUS,
+    addPostSuccessJson,
     UPDATE_POST_SUCCESS,
     DELETE_POST_SUCCESS,
     LIKE_POST_SUCCESS,
@@ -107,7 +108,7 @@ exports.createNewPost = async (req, res, next) => {
 
         const image_urls = req.body.image_url_list.join(',');
 
-        await Post.create({
+        const newPost = await Post.create({
             title: req.body.title,
             content: req.body.content,
             is_anonymous: isUserSelectedAnonymous,
@@ -115,7 +116,9 @@ exports.createNewPost = async (req, res, next) => {
             board_id: NOW_BOARD.id,
             img_urls: image_urls || null,
         });
-        return res.status(ADD_POST_SUCCESS.status_code).json(ADD_POST_SUCCESS.res_json);
+        const post_id = newPost.id;
+
+        return res.status(ADD_POST_SUCCESS_STATUS).json(addPostSuccessJson(post_id));
     } catch (error) {
         console.error(error);
         next(error);
