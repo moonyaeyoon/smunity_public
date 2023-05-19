@@ -15,7 +15,7 @@ jobs:
 
         strategy:
             matrix:
-                node-version: [18.15.0]
+                node-version: [18.16.0]
                 # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
         steps:
@@ -69,7 +69,7 @@ jobs:
             - name: Check .env file
               run: cat .env
 
-            - name: build server files #필ㄹ요한 dependency들을 설치하고 빌드
+            - name: build server files #필요한 dependency들을 설치하고 빌드
               working-directory: ./
               run: |
                   npm i
@@ -90,7 +90,7 @@ jobs:
 
             - name: deploy with AWS codeDeploy
               run: aws deploy create-deployment
-                  --application-name smus-cd
+                  --application-name smus-deploy
                   --deployment-config-name CodeDeployDefault.OneAtATime
-                  --deployment-group-name smus-cdg
+                  --deployment-group-name smus-deploy-dg
                   --s3-location bucket=smus,bundleType=zip,key=BE/smus.zip
