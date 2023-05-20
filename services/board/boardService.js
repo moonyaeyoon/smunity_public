@@ -404,7 +404,7 @@ exports.getMajorBoards = async (req, res, next) => {
             const NOW_BOARD = BOARDS_INFO[index];
             RES_BOARD_LIST.push({
                 board_id: NOW_BOARD.id,
-                board_name: NOW_BOARD.board_name,
+                board_name: NOW_BOARD.board_name.split('-')[1],
                 is_can_anonymous: NOW_BOARD.is_can_anonymous,
                 is_notice: NOW_BOARD.is_notice,
             });
