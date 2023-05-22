@@ -30,6 +30,9 @@ exports.imageUploader = multer({
         },
         acl: 'public-read-write',
     }),
+    limits: {
+        fileSize: 1024 * 1024 * 1, // 5MB 이하로 제한 (원하는 크기로 수정)
+    },
 });
 
 //이미지 삭제 함수
