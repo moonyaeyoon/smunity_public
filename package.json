@@ -5,7 +5,7 @@
     "main": "app.js",
     "scripts": {
         "start": "nodemon app",
-        "build": "babel app.js -d dist"
+        "build": "babel app.js -o dist.js"
     },
     "repository": {
         "type": "git",
