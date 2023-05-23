@@ -69,11 +69,10 @@ jobs:
             - name: Check .env file
               run: cat .env
 
-            - name: build server files #필요한 dependency들을 설치하고 빌드
+            - name: dependency #필요한 dependency들을 설치하고 빌드
               working-directory: ./
               run: |
                   npm i
-                  npm run build
 
             - name: zip file
               run: zip -r smus.zip ./be-nodejs

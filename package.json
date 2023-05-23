@@ -4,8 +4,7 @@
     "description": "상명대학교 커뮤니티 앱",
     "main": "app.js",
     "scripts": {
-        "start": "nodemon app",
-        "build": "babel be-nodejs -o dist.js"
+        "start": "nodemon app"
     },
     "repository": {
         "type": "git",
