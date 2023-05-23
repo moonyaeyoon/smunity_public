@@ -5,7 +5,7 @@
     "main": "app.js",
     "scripts": {
         "start": "nodemon app",
-        "build": "babel app.js -o dist.js"
+        "build": "babel be-nodejs -o dist.js"
     },
     "repository": {
         "type": "git",
@@ -42,7 +42,8 @@
         "passport-local": "^1.0.0",
         "redis": "^4.6.5",
         "sequelize": "^6.28.1",
-        "sequelize-cli": "^6.6.0"
+        "sequelize-cli": "^6.6.0",
+        "yarn": "^1.22.19"
     },
     "devDependencies": {
         "@babel/cli": "^7.21.0",
