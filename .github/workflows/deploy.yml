@@ -76,7 +76,7 @@ jobs:
                   npm run build
 
             - name: zip file
-              run: zip -r smus.zip ./dist ./scripts ./appspec.yml ./.env ./package.json
+              run: zip -r smus.zip dist.js ./scripts ./appspec.yml ./.env ./package.json
 
             - name: AWS configure credentials
               uses: aws-actions/configure-aws-credentials@v1
