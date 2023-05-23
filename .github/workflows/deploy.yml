@@ -75,7 +75,7 @@ jobs:
                   npm i
 
             - name: zip file
-              run: zip -r smus.zip ./be-nodejs
+              run: zip -r smus.zip ../be-nodejs
 
             - name: AWS configure credentials
               uses: aws-actions/configure-aws-credentials@v1
