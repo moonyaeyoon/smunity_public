@@ -91,6 +91,9 @@ exports.join = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
         }
 
+        //비번 버그 수정
+        console.log('회원가입 요청 id: ' + school_id + ', 닉네임: ' + nickname + ', 비번: ' + password);
+
         const EX_USER = await checkSchoolIdExist(school_id);
         if (EX_USER) {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
@@ -102,7 +105,7 @@ exports.join = async (req, res, next) => {
         }
         const NEW_USER_EMAIL = `${school_id}@${SMU_STUDENT_EMAIL_DOMAIN}`;
         const NEW_USER_PASSWORD_HASH = await bcrypt.hash(password, Number(PASSWORD_SALT_OR_ROUNDS));
-        console.log('passwod hash is: ' + NEW_USER_PASSWORD_HASH);
+        console.log('passwod hash is: ' + NEW_USER_PASSWORD_HASH + ', and the password is: ' + password);
 
         //이메일 인증을 위한 랜덤 코드 생성
         const AUTH_CODE = generateRandomCode(10);
@@ -139,6 +142,7 @@ exports.login = async (req, res, next) => {
             //요청 양식 틀림
             return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
 
+        console.log('로그인 요청 id: ' + school_id + ', 비번: ' + password);
         const USER_INFO = await checkSchoolIdExist(school_id); //사용자 미존재
         if (USER_INFO === null) {
             console.log('Login Error: school donot exist');
@@ -150,6 +154,10 @@ exports.login = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
         }
         //local로 회원가입한 사람이 이닐 경우
+
+        //비번 버그 수정
+        const NEW_USER_PASSWORD_HASH = await bcrypt.hash(password, Number(PASSWORD_SALT_OR_ROUNDS));
+        console.log('입력한 비번은' + password + '이고, 해싱된 데이터가: ' + NEW_USER_PASSWORD_HASH + '이다.');
 
         //비번 해싱하고 DB와 비교하기
         const PASSWORD_COMPARE_RESULT = await bcrypt.compare(password, USER_INFO.password);
