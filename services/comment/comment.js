@@ -215,7 +215,7 @@ exports.deleteComment = async (req, res, next) => {
 
 exports.likeComment = async (req, res, next) => {
     try {
-        if (!req.params.comment_id) {
+        if (!req.body.comment_id) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
@@ -224,7 +224,7 @@ exports.likeComment = async (req, res, next) => {
             return res.status(USER_NOT_EXIST.status_code).json(USER_NOT_EXIST.res_json);
         }
 
-        const NOW_COMMENT = await Comment.findByPk(req.params.comment_id);
+        const NOW_COMMENT = await Comment.findByPk(req.body.comment_id);
         if (!NOW_COMMENT) return res.status(COMMENT_NOT_EXIST.status_code).json(COMMENT_NOT_EXIST.res_json);
 
         //사용자 권한 체크
@@ -246,23 +246,23 @@ exports.likeComment = async (req, res, next) => {
         const NOW_LIKED_STATU = await UserLikeComment.findOne({
             where: {
                 user_id: res.locals.decodes.user_id,
-                comment_id: req.params.comment_id,
+                comment_id: req.body.comment_id,
             },
         });
 
         if (!NOW_LIKED_STATU) {
             await UserLikeComment.create({
                 user_id: res.locals.decodes.user_id,
-                comment_id: req.params.comment_id,
+                comment_id: req.body.comment_id,
             });
 
-            await sequelize.query(`UPDATE ${config.database}.comments SET likes = likes+1 WHERE id = ${req.params.comment_id}`);
-            const NEW_COMMENT = await Comment.findByPk(req.params.comment_id);
+            await sequelize.query(`UPDATE ${config.database}.comments SET likes = likes+1 WHERE id = ${req.body.comment_id}`);
+            const NEW_COMMENT = await Comment.findByPk(req.body.comment_id);
             return res.status(LIKE_COMMENT_SUCCESS_STATUS).json(likeCommentSuccessJson(NEW_COMMENT.likes));
         } else {
             await NOW_LIKED_STATU.destroy();
-            await sequelize.query(`UPDATE ${config.database}.comments SET likes = likes-1 WHERE id = ${req.params.comment_id}`);
-            const NEW_COMMENT = await Comment.findByPk(req.params.comment_id);
+            await sequelize.query(`UPDATE ${config.database}.comments SET likes = likes-1 WHERE id = ${req.body.comment_id}`);
+            const NEW_COMMENT = await Comment.findByPk(req.body.comment_id);
             return res.status(UNDO_LIKE_COMMENT_SUCCESS_STATUS).json(UndoLikeCommentSuccessJson(NEW_COMMENT.likes));
         }
     } catch (error) {
