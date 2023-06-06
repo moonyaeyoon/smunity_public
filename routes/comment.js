@@ -19,7 +19,7 @@ router.patch('/update/:comment_id', verifyAToken, updateComment);
 //댓글 삭제
 router.delete('/delete/:comment_id', verifyAToken, deleteComment);
 
-router.put('/like/:comment_id', verifyAToken, likeComment);
+router.put('/like/', verifyAToken, likeComment);
 
 router.put('/report/:comment_id', verifyAToken, reportComment);
 

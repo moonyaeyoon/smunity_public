@@ -127,7 +127,7 @@ exports.createNewPost = async (req, res, next) => {
 
 exports.getPostDatail = async (req, res, next) => {
     try {
-        if (!req.body.post_id) {
+        if (!req.params.post_id) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
@@ -139,7 +139,7 @@ exports.getPostDatail = async (req, res, next) => {
         //게시글 존재 여부
         const NOW_POST = await Post.findOne({
             where: {
-                id: req.body.post_id,
+                id: req.params.post_id,
             },
         });
         if (!NOW_POST) {
@@ -177,7 +177,7 @@ exports.getPostDatail = async (req, res, next) => {
 
         const COMMENTS_INFO = await Comment.findAll({
             where: {
-                post_id: req.body.post_id,
+                post_id: req.params.post_id,
             },
             order: [['created_at', 'DESC']],
         });
