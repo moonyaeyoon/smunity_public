@@ -46,7 +46,7 @@ router.get('/board_list/:major_id', getMajorBoards);
 
 router.get('/preview', verifyAToken, getBoardPreview);
 
-router.put('/like/:post_id', verifyAToken, likePost);
+router.post('/like', verifyAToken, likePost);
 
 router.put('/scrap/:post_id', verifyAToken, scrapPost);
 
