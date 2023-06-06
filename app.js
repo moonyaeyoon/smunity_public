@@ -13,6 +13,34 @@ const { sequelize } = require('./models');
 const { resetDB } = require('./reset/resetDB');
 
 const app = express();
+
+//SENTRY
+const Sentry = require('@sentry/node');
+Sentry.init({
+    dsn: 'https://17e09c44367c451ebbf4cab8568721f5@o4505250218180608.ingest.sentry.io/4505250221981696',
+    integrations: [
+        // enable HTTP calls tracing
+        new Sentry.Integrations.Http({ tracing: true }),
+        // enable Express.js middleware tracing
+        new Sentry.Integrations.Express({ app }),
+        // Automatically instrument Node.js libraries and frameworks
+        ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+    ],
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for performance monitoring.
+    // We recommend adjusting this value in production
+    tracesSampleRate: 1.0,
+});
+
+// RequestHandler creates a separate execution context, so that all
+// transactions/spans/breadcrumbs are isolated across requests
+app.use(Sentry.Handlers.requestHandler());
+// TracingHandler creates a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
+
+//SENTRY END
+
 app.set('views', './public/views'); // New!!
 app.set('view engine', 'ejs'); // New!!
 app.set('port', process.env.PORT || 8001);
@@ -65,6 +93,9 @@ app.use(
 );
 
 app.use('/', apiLimiter, pageRouter);
+
+// The error handler must be before any other error middleware and after all controllers
+app.use(Sentry.Handlers.errorHandler());
 
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
