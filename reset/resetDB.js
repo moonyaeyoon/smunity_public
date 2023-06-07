@@ -11,18 +11,17 @@ const MAJOR_LIST = RESET_DB_CONST.MAJOR_LIST;
 let nowBoardId = 1; // DB생성 시 순서를 강제로 정하기 위한 변수임
 let nowMajorId = 1; // DB생성 시 순서를 강제로 정하기 위한 변수임
 const createMajorBoards = async (majorName, majorId) => {
-    COMMON_BOARD_LIST.forEach(async (BOARD_INFO) => {
+    for (let index = 0; index < COMMON_BOARD_LIST.length; index++) {
         const NOW_BOARD = await Board.create({
-            id: nowBoardId++,
-            board_name: `${majorName}-${BOARD_INFO.boardName}`,
-            is_can_anonymous: BOARD_INFO.isCanAnonymous,
-            is_notice: BOARD_INFO.isNotice,
+            board_name: `${majorName}-${COMMON_BOARD_LIST[index].boardName}`,
+            is_can_anonymous: COMMON_BOARD_LIST[index].isCanAnonymous,
+            is_notice: COMMON_BOARD_LIST[index].isNotice,
             major_id: majorId,
         });
         if (NOW_BOARD.is_notice == true) {
             await NOW_BOARD.update({ notice_user_id_list: 1 });
         }
-    });
+    }
 };
 
 exports.resetDB = async () => {
