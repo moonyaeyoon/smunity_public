@@ -24,7 +24,7 @@ nunjucks.configure('views', {
 
 // const IS_RESET_DB = process.argv[2] | "false";
 let isResetDB = false;
-if (process.argv[2] === 'reset') isResetDB = true;
+if (process.argv[2] === 'realwanttoreset') isResetDB = true;
 
 sequelize
     .sync({ force: isResetDB })
