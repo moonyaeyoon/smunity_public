@@ -120,7 +120,7 @@ exports.createNewPost = async (req, res, next) => {
 
         return res.status(ADD_POST_SUCCESS_STATUS).json(addPostSuccessJson(post_id));
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -275,7 +275,7 @@ exports.updatePost = async (req, res, next) => {
 
         return res.status(UPDATE_POST_SUCCESS.status_code).json(UPDATE_POST_SUCCESS.res_json);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -385,7 +385,7 @@ exports.getPostList = async (req, res, next) => {
         };
         return res.status(200).json(RES_BOARD_AND_POSTS);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -411,7 +411,7 @@ exports.getMajorBoards = async (req, res, next) => {
         }
         res.status(200).json(RES_BOARD_LIST);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -560,7 +560,7 @@ exports.likePost = async (req, res, next) => {
             return res.status(UNDO_LIKE_POST_SUCCESS_STATUS).json(UndoLikePostSuccessJson(NEW_POST.likes));
         }
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -599,7 +599,7 @@ exports.scrapPost = async (req, res, next) => {
             return res.status(UNDO_SCRAP_POST_SUCCESS_STATUS).json(UndoScrapPostSuccessJson(NEW_POST.scraps));
         }
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -634,7 +634,7 @@ exports.reportPost = async (req, res, next) => {
             return res.status(POST_ALREADY_REPORT.status_code).json(POST_ALREADY_REPORT.res_json);
         }
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -755,7 +755,7 @@ exports.getPostListByPaging = async (req, res, next) => {
         };
         return res.status(200).json(RES_BOARD_AND_POSTS);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -926,7 +926,7 @@ exports.getPostListByCursor = async (req, res, next) => {
         };
         return res.status(200).json(RES_BOARD_AND_POSTS);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -1011,7 +1011,7 @@ exports.searchTitleAndContent = async (req, res, next) => {
 
         return res.status(200).json(RES_POSTS);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -1124,7 +1124,7 @@ exports.searchTitleAndContentByPaging = async (req, res, next) => {
 
         return res.status(200).json(RES_BOARD_AND_POSTS);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -1284,7 +1284,7 @@ exports.searchTitleAndContentByCursor = async (req, res, next) => {
 
         return res.status(200).json(RES_POSTS);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
@@ -1305,7 +1305,7 @@ exports.getSchoolNoticeList = async (req, res, next) => {
         }
         return res.status(200).json(RES_POSTS);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         next(error);
     }
 };
