@@ -27,7 +27,7 @@ const {
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
 const { imageRemover } = require('../image/ImageUploader');
-const { logger } = require('../../config/winstonConfig');
+const logger = require('../../config/winstonConfig');
 
 const checkSchoolIdExist = async (schoolId) => {
     const EX_USER = await User.findOne({ where: { school_id: schoolId } });
@@ -232,7 +232,6 @@ exports.getUserMajors = async (req, res, next) => {
         }
         res.status(200).json(RES_MAJOR_LIST);
     } catch (error) {
-        logger.error(error);
         return next(error);
     }
 };
@@ -313,7 +312,6 @@ exports.getUserInfo = async (req, res, next) => {
         };
         res.status(200).json(RES_USER_INFO);
     } catch (error) {
-        logger.error(error);
         return next(error);
     }
 };
@@ -397,7 +395,6 @@ exports.changePassword = async (req, res, next) => {
         await User.update({ password: NEW_USER_PASSWORD_HASH }, { where: { id: NOW_USER.id } });
         return res.status(CHANGE_PASSWORD_SUCCESS.status_code).json(CHANGE_PASSWORD_SUCCESS.res_json);
     } catch (error) {
-        logger.error(error);
         return next(error);
     }
 };
@@ -459,7 +456,6 @@ exports.sendUserAuthLinkForTest = async (req, res, next) => {
             });
         }
     } catch (error) {
-        logger.error(error);
         return next(error);
     }
 };

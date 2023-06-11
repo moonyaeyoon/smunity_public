@@ -70,4 +70,4 @@ if (process.env.NODE_ENV !== 'production') {
     );
 }
 
-export { logger };
+module.exports = logger;

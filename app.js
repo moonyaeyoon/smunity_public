@@ -13,7 +13,7 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const path = require('path');
 const session = require('express-session');
-const { logger } = require('./config/winstonConfig');
+const logger = require('./config/winstonConfig');
 
 const app = express();
 sentryConfig.initbeforeStart(app);
@@ -76,7 +76,7 @@ app.use((err, req, res, next) => {
     res.locals.message = err.message;
     res.locals.error = process.env.NODE_ENV !== 'production' ? err : {};
     res.status(err.status || 500);
-    console.log(err);
+    logger.error(err);
     return res.json(sendErrorLog(err));
 });
 
