@@ -162,10 +162,10 @@ exports.likePostSuccessJson = (totalLikes) => {
     };
 };
 
-exports.UNDO_LIKE_POST_SUCCESS_STATUS = 201;
+exports.UNDO_LIKE_POST_SUCCESS_STATUS = 200;
 exports.UndoLikePostSuccessJson = (totalLikes) => {
     return {
-        status_code: 201,
+        status_code: 200,
         message: '게시글에 좋아요를 취소했습니다.',
         total_likes: totalLikes,
     };
@@ -180,10 +180,10 @@ exports.scrapPostSuccessJson = (totalScraps) => {
     };
 };
 
-exports.UNDO_SCRAP_POST_SUCCESS_STATUS = 201;
+exports.UNDO_SCRAP_POST_SUCCESS_STATUS = 200;
 exports.UndoScrapPostSuccessJson = (totalScraps) => {
     return {
-        status_code: 201,
+        status_code: 200,
         message: '게시글에 스크랩을 취소했습니다.',
         total_scraps: totalScraps,
     };
@@ -198,10 +198,10 @@ exports.likeCommentSuccessJson = (totalLikes) => {
     };
 };
 
-exports.UNDO_LIKE_COMMENT_SUCCESS_STATUS = 201;
+exports.UNDO_LIKE_COMMENT_SUCCESS_STATUS = 200;
 exports.UndoLikeCommentSuccessJson = (totalLikes) => {
     return {
-        status_code: 201,
+        status_code: 200,
         message: '댓글에 좋아요를 취소했습니다.',
         total_likes: totalLikes,
     };

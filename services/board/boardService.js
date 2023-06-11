@@ -528,35 +528,35 @@ exports.getBoardInfoByPostId = async (req, res, next) => {
 
 exports.likePost = async (req, res, next) => {
     try {
-        if (!req.params.post_id) {
+        if (!req.body.post_id) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
         //TODO: 사용자 권한 체크 아직 안함
 
-        const NOW_POST = await Post.findByPk(req.params.post_id);
+        const NOW_POST = await Post.findByPk(req.body.post_id);
         if (!NOW_POST) return res.status(POST_NOT_EXIST.status_code).json(POST_NOT_EXIST.res_json);
 
         const NOW_LIKED_STATU = await UserLikePost.findOne({
             where: {
                 user_id: res.locals.decodes.user_id,
-                post_id: req.params.post_id,
+                post_id: req.body.post_id,
             },
         });
 
         if (!NOW_LIKED_STATU) {
             await UserLikePost.create({
                 user_id: res.locals.decodes.user_id,
-                post_id: req.params.post_id,
+                post_id: req.body.post_id,
             });
 
-            await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes+1 WHERE id = ${req.params.post_id}`);
-            const NEW_POST = await Post.findByPk(req.params.post_id);
+            await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes+1 WHERE id = ${req.body.post_id}`);
+            const NEW_POST = await Post.findByPk(req.body.post_id);
             return res.status(LIKE_POST_SUCCESS_STATUS).json(likePostSuccessJson(NEW_POST.likes));
         } else {
             await NOW_LIKED_STATU.destroy();
-            await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes-1 WHERE id = ${req.params.post_id}`);
-            const NEW_POST = await Post.findByPk(req.params.post_id);
+            await sequelize.query(`UPDATE ${config.database}.posts SET likes = likes-1 WHERE id = ${req.body.post_id}`);
+            const NEW_POST = await Post.findByPk(req.body.post_id);
             return res.status(UNDO_LIKE_POST_SUCCESS_STATUS).json(UndoLikePostSuccessJson(NEW_POST.likes));
         }
     } catch (error) {

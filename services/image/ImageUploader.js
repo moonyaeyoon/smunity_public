@@ -4,7 +4,7 @@ const multerS3 = require('multer-s3');
 const path = require('path');
 const { DELETE_S3 } = require('../../constants/resSuccessJson');
 const { NO_IMAGE } = require('../../constants/resErrorJson');
-const allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp'];
+const allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp', '.PNG'];
 
 //aws 설정 및 s3객체 생성 함수
 const s3 = () => {
