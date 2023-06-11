@@ -16,7 +16,7 @@ const session = require('express-session');
 const logger = require('./config/winstonConfig');
 
 const app = express();
-sentryConfig.initbeforeStart(app);
+if (!process.env.NODE_ENV) sentryConfig.initbeforeStart(app);
 app.set('views', './public/views'); // New!!
 app.set('view engine', 'ejs'); // New!!
 app.set('view engine', 'html');
@@ -64,7 +64,7 @@ app.use(
 
 app.use('/', apiLimiter, pageRouter);
 
-app.use(sentryConfig.initErrorHandler);
+if (!process.env.NODE_ENV) app.use(sentryConfig.initErrorHandler);
 
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
