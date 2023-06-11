@@ -1,3 +1,4 @@
 .env
 /crawling/my-venv
 /node_modules
+/logs

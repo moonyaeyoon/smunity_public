@@ -27,6 +27,7 @@ const {
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
 const { imageRemover } = require('../image/ImageUploader');
+const { logger } = require('../../config/winstonConfig');
 
 const checkSchoolIdExist = async (schoolId) => {
     const EX_USER = await User.findOne({ where: { school_id: schoolId } });
