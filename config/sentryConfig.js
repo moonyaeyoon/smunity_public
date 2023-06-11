@@ -1,5 +1,6 @@
 //SENTRY
 const Sentry = require('@sentry/node');
+const App = require('./slackConfig');
 const initbeforeStart = (expressApp) => {
     Sentry.init({
         dsn: process.env.SENTRY_DSN,
@@ -16,6 +17,15 @@ const initbeforeStart = (expressApp) => {
         // of transactions for performance monitoring.
         // We recommend adjusting this value in production
         tracesSampleRate: 1.0,
+        beforeSend: (event, hint) => {
+            const error = hint.originalException;
+            App.client.chat.postMessage({
+                token: process.env.SLACK_BOT_TOKEN,
+                channel: process.env.SLACK_ERROR_CHANNEL,
+                text: error.message,
+            });
+            return event;
+        },
     });
     // RequestHandler creates a separate execution context, so that all
     // transactions/spans/breadcrumbs are isolated across requests
