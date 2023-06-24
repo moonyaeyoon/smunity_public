@@ -27,7 +27,6 @@ const {
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
 const { imageRemover } = require('../image/ImageUploader');
-const logger = require('../../config/winstonConfig');
 
 const checkSchoolIdExist = async (schoolId) => {
     const EX_USER = await User.findOne({ where: { school_id: schoolId } });
@@ -128,10 +127,10 @@ exports.join = async (req, res, next) => {
         });
         // ADD_USER_SUCCESS.res_json.auth_url = AUTH_URL;
         ADD_USER_SUCCESS.res_json.profile_img_url = image;
-        logger.info(`회원 가입 성공: {학번:${school_id}, 인증 링크:${AUTH_URL}}`);
+
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
-        logger.error(`회원 가입 에러: {학번: ${school_id}, 에러문: ${error}}`);
+        console.error(error);
         return next(error);
     }
 };
@@ -176,8 +175,8 @@ exports.login = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
         }
     } catch (error) {
-        logger.error(`로그인 에러: {학번: ${school_id}, 에러문: ${error}}`);
-        return next(error);
+        console.error(error);
+        next(error);
     }
 };
 
@@ -201,8 +200,7 @@ exports.refreshAToken = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.JWT_REFRESH_TOKEN_EXPIRED.status_code).json(RES_ERROR_JSON.JWT_REFRESH_TOKEN_EXPIRED.res_json);
         }
     } catch (error) {
-        logger.error(`토큰 재발급 에러: {에러문: ${error}}`);
-        return next(error);
+        console.error(error);
     }
 };
 
@@ -232,7 +230,8 @@ exports.getUserMajors = async (req, res, next) => {
         }
         res.status(200).json(RES_MAJOR_LIST);
     } catch (error) {
-        return next(error);
+        console.error(error);
+        next(error);
     }
 };
 
@@ -260,7 +259,6 @@ exports.addSchoolAuth = async (req, res, next) => {
                 major_id: 1,
             });
             await REQ_USER.update({ email_auth_code: 'finish' });
-            logger.info(`이메일 인증 성공: {학번: ${REQ_USER.school_id}}`);
             return res.status(201).send(emailAuthSuccess());
         } else if (REQ_USER.email_auth_code == 'finish') {
             console.log(`Email Auth Error: 이미 인증된 링크 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`);
@@ -270,7 +268,7 @@ exports.addSchoolAuth = async (req, res, next) => {
             return res.status(404).send(RES_ERROR_JSON.emailAuthError());
         }
     } catch (error) {
-        logger.error(`이메일 인증 에러: {에러문: ${error}}}`);
+        console.error(error);
         return res.status(404).send(RES_ERROR_JSON.emailAuthError());
     }
 };
@@ -312,7 +310,8 @@ exports.getUserInfo = async (req, res, next) => {
         };
         res.status(200).json(RES_USER_INFO);
     } catch (error) {
-        return next(error);
+        console.error(error);
+        next(error);
     }
 };
 
@@ -330,7 +329,7 @@ exports.editUserNickName = async (req, res, next) => {
 
         return res.status(EDIT_USER_NICKNAME.status_code).json(EDIT_USER_NICKNAME.res_json);
     } catch (error) {
-        logger.error(`사용자 닉네임 수정 에러: {에러문: ${error}}`);
+        console.error(error);
         next(error);
     }
 };
@@ -351,7 +350,7 @@ exports.editUserProfileImage = async (req, res, next) => {
 
         return res.status(EDIT_USER_PROFILE_IMAGE.status_code).json(EDIT_USER_PROFILE_IMAGE.res_json);
     } catch (error) {
-        logger.error(`사용자 프로필 사진 수정 에러: {에러문: ${error}}`);
+        console.error(error);
         next(error);
     }
 };
@@ -364,10 +363,9 @@ exports.deleteUser = async (req, res, next) => {
         }
         await imageRemover(EX_USER.profile_img_url);
         await EX_USER.destroy();
-        logger.info(`회원 탈퇴 완료: {학번: ${EX_USER.school_id}}`);
         return res.status(DELETE_USER_SUCCESS.status_code).json(DELETE_USER_SUCCESS.res_json);
     } catch (error) {
-        logger.error(`회원 탈퇴 에러: {에러문: ${error}}`);
+        console.error(error);
         return next(error);
     }
 };
@@ -395,6 +393,7 @@ exports.changePassword = async (req, res, next) => {
         await User.update({ password: NEW_USER_PASSWORD_HASH }, { where: { id: NOW_USER.id } });
         return res.status(CHANGE_PASSWORD_SUCCESS.status_code).json(CHANGE_PASSWORD_SUCCESS.res_json);
     } catch (error) {
+        console.error(error);
         return next(error);
     }
 };
@@ -456,6 +455,7 @@ exports.sendUserAuthLinkForTest = async (req, res, next) => {
             });
         }
     } catch (error) {
+        console.error(error);
         return next(error);
     }
 };

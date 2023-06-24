@@ -1,4 +1,3 @@
-const logger = require('../../config/winstonConfig');
 const {
     REQ_FORM_ERROR,
     USER_NOT_EXIST,
@@ -117,7 +116,8 @@ exports.createNewComment = async (req, res, next) => {
 
         return res.status(ADD_COMMENT_SUCCESS.status_code).json(ADD_COMMENT_SUCCESS.res_json);
     } catch (error) {
-        return next(error);
+        console.error(error);
+        next(error);
     }
 };
 
@@ -163,7 +163,8 @@ exports.updateComment = async (req, res, next) => {
 
         return res.status(UPDATE_COMMENT_SUCCESS.status_code).json(UPDATE_COMMENT_SUCCESS.res_json);
     } catch (error) {
-        return next(error);
+        console.error(error);
+        next(error);
     }
 };
 
@@ -207,7 +208,8 @@ exports.deleteComment = async (req, res, next) => {
 
         return res.status(DELETE_COMMENT_SUCCESS.status_code).json(DELETE_COMMENT_SUCCESS.res_json);
     } catch (error) {
-        return next(error);
+        console.error(error);
+        next(error);
     }
 };
 
@@ -264,7 +266,8 @@ exports.likeComment = async (req, res, next) => {
             return res.status(UNDO_LIKE_COMMENT_SUCCESS_STATUS).json(UndoLikeCommentSuccessJson(NEW_COMMENT.likes));
         }
     } catch (error) {
-        return next(error);
+        console.error(error);
+        next(error);
     }
 };
 
@@ -312,7 +315,8 @@ exports.reportComment = async (req, res, next) => {
             return res.status(COMMENT_ALREADY_REPORT.status_code).json(COMMENT_ALREADY_REPORT.res_json);
         }
     } catch (error) {
-        return next(error);
+        console.error(error);
+        next(error);
     }
 };
 
@@ -321,6 +325,7 @@ exports.getCommentList = async (req, res, next) => {
         const ALL_COMMENT_LIST = await Comment.findAll();
         res.status(200).json(ALL_COMMENT_LIST);
     } catch (error) {
-        return next(error);
+        console.error(error);
+        next(error);
     }
 };
