@@ -1,28 +1,28 @@
+require('dotenv').config();
 const express = require('express');
+const { sequelize } = require('./models');
+const { resetDB } = require('./reset/resetDB');
+const sentryConfig = require('./config/sentryConfig');
+const pageRouter = require('./routes/page');
+const cors = require('cors');
+const { sendErrorLog } = require('./constants/resErrorJson');
+const { apiLimiter } = require('./middlewares');
+
+//필요성 확인
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const path = require('path');
 const session = require('express-session');
-const nunjucks = require('nunjucks');
-const dotenv = require('dotenv');
-
-dotenv.config();
-const pageRouter = require('./routes/page');
-const { sequelize } = require('./models');
-
-const { resetDB } = require('./reset/resetDB');
+const logger = require('./config/winstonConfig');
 
 const app = express();
+if (!process.env.NODE_ENV) sentryConfig.initbeforeStart(app);
 app.set('views', './public/views'); // New!!
 app.set('view engine', 'ejs'); // New!!
-app.set('port', process.env.PORT || 8001);
 app.set('view engine', 'html');
-nunjucks.configure('views', {
-    express: app,
-    watch: true,
-});
+app.set('port', process.env.PORT || 8001);
 
-// const IS_RESET_DB = process.argv[2] | "false";
+//DB 리셋 명령
 let isResetDB = false;
 if (process.argv[2] === 'realwanttoreset') isResetDB = true;
 
@@ -36,12 +36,14 @@ sequelize
         console.error(err);
     });
 
-app.use(morgan('dev'));
+//로그 관리
+if (process.env.NODE_ENV == 'prodution') app.use(morgan('combined', { stream: logger.stream }));
+else app.use(morgan('dev', { stream: logger.stream }));
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
-
 app.use(
     session({
         resave: false,
@@ -53,10 +55,6 @@ app.use(
         },
     })
 );
-
-const cors = require('cors');
-const { sendErrorLog } = require('./constants/resErrorJson');
-const { apiLimiter } = require('./middlewares');
 app.use(
     cors({
         // origin: "http://localhost:3000",
@@ -65,6 +63,8 @@ app.use(
 );
 
 app.use('/', apiLimiter, pageRouter);
+
+if (!process.env.NODE_ENV) app.use(sentryConfig.initErrorHandler);
 
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
@@ -76,7 +76,7 @@ app.use((err, req, res, next) => {
     res.locals.message = err.message;
     res.locals.error = process.env.NODE_ENV !== 'production' ? err : {};
     res.status(err.status || 500);
-    console.log(err);
+    logger.error(err);
     return res.json(sendErrorLog(err));
 });
 
