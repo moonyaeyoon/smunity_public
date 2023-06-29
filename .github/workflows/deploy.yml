@@ -32,45 +32,35 @@ jobs:
 
             - name: Set Secrets to Env
               run: |
-                  # secrets 목록
-                  secrets=(
-                    API_LIMIT_SECOND
-                    API_LIMIT_TIMES
-                    AUTH_QUERY_SECRET_KEY
-                    AWS_ACCESS_KEY_ID
-                    AWS_SECRET_ACCESS_KEY
-                    COMMON_FILE_URL
-                    COOKIE_SECRET
-                    DEFAULT_PROFILE_IMAGE
-                    EMAIL_AUTH_DOMAIN
-                    JWT_ACCESS_TOKEN_EXPIRESIN
-                    JWT_REFRESH_TOKEN_EXPIRESIN
-                    JWT_SECRET
-                    JWT_SIGN_ALGORITHM
-                    MONGODB_IP
-                    PASSWORD_SALT_OR_ROUNDS
-                    RDS_HOST
-                    RDS_PASSWORD
-                    RDS_USERNAME
-                    REDIS_PORT
-                    S3_BUCKET
-                    S3_REGION
-                    SES_AWS_ACCESS_KEY
-                    SES_AWS_ACCESS_KEY_ID
-                    SMU_STUDENT_EMAIL_DOMAIN
-                    LOST_BOARD_INDEX
-                    SENTRY_DSN
-                    SLACK_BOT_TOKEN
-                    SLACK_ERROR_CHANNEL
-                    SLACK_SIGNING_SECRET
-                  )
-
-                  # .env 파일 작성
-                  for secret in "${secrets[@]}"
-                  do
-                    value="${!secret}"
-                    echo "${secret}=${value}" >> .env
-                  done
+                  echo "API_LIMIT_SECOND: ${{ secrets.API_LIMIT_SECOND }}" >> .env
+                  echo "API_LIMIT_TIMES: ${{ secrets.API_LIMIT_TIMES }}" >> .env
+                  echo "AUTH_QUERY_SECRET_KEY: ${{ secrets.AUTH_QUERY_SECRET_KEY }}" >> .env
+                  echo "AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+                  echo "AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+                  echo "COMMON_FILE_URL: ${{ secrets.COMMON_FILE_URL }}" >> .env
+                  echo "COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}" >> .env
+                  echo "DEFAULT_PROFILE_IMAGE: ${{ secrets.DEFAULT_PROFILE_IMAGE }}" >> .env
+                  echo "EMAIL_AUTH_DOMAIN: ${{ secrets.EMAIL_AUTH_DOMAIN }}" >> .env
+                  echo "JWT_ACCESS_TOKEN_EXPIRESIN: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRESIN }}" >> .env
+                  echo "JWT_REFRESH_TOKEN_EXPIRESIN: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRESIN }}" >> .env
+                  echo "JWT_SECRET: ${{ secrets.JWT_SECRET }}" >> .env
+                  echo "JWT_SIGN_ALGORITHM: ${{ secrets.JWT_SIGN_ALGORITHM }}" >> .env
+                  echo "MONGODB_IP: ${{ secrets.MONGODB_IP }}" >> .env
+                  echo "PASSWORD_SALT_OR_ROUNDS: ${{ secrets.PASSWORD_SALT_OR_ROUNDS }}" >> .env
+                  echo "RDS_HOST: ${{ secrets.RDS_HOST }}" >> .env
+                  echo "RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}" >> .env
+                  echo "RDS_USERNAME: ${{ secrets.RDS_USERNAME }}" >> .env
+                  echo "REDIS_PORT: ${{ secrets.REDIS_PORT }}" >> .env
+                  echo "S3_BUCKET: ${{ secrets.S3_BUCKET }}" >> .env
+                  echo "S3_REGION: ${{ secrets.S3_REGION }}" >> .env
+                  echo "SES_AWS_ACCESS_KEY: ${{ secrets.SES_AWS_ACCESS_KEY }}" >> .env
+                  echo "SES_AWS_ACCESS_KEY_ID: ${{ secrets.SES_AWS_ACCESS_KEY_ID }}" >> .env
+                  echo "SMU_STUDENT_EMAIL_DOMAIN: ${{ secrets.SMU_STUDENT_EMAIL_DOMAIN }}" >> .env
+                  echo "LOST_BOARD_INDEX: ${{ secrets.LOST_BOARD_INDEX }}" >> .env
+                  echo "SENTRY_DSN: ${{ secrets.SENTRY_DSN }}" >> .env
+                  echo "SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}" >> .env
+                  echo "SLACK_ERROR_CHANNEL: ${{ secrets.SLACK_ERROR_CHANNEL }}" >> .env
+                  echo "SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}" >> .env
 
             - name: Check .env file
               run: cat .env
