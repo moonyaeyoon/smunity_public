@@ -96,5 +96,5 @@ jobs:
               run: aws deploy create-deployment
                   --application-name smus-test-deploy
                   --deployment-config-name CodeDeployDefault.OneAtATime
-                  --deployment-group-name smus-deploy-dg
+                  --deployment-group-name smus-dg
                   --s3-location bucket=smus,bundleType=zip,key=BE/smus.zip
