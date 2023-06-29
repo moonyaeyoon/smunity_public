@@ -58,6 +58,11 @@ jobs:
                     SES_AWS_ACCESS_KEY
                     SES_AWS_ACCESS_KEY_ID
                     SMU_STUDENT_EMAIL_DOMAIN
+                    LOST_BOARD_INDEX
+                    SENTRY_DSN
+                    SLACK_BOT_TOKEN
+                    SLACK_ERROR_CHANNEL
+                    SLACK_SIGNING_SECRET
                   )
 
                   # .env 파일 작성
