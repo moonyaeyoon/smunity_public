@@ -1,5 +1,4 @@
 //SENTRY
-const jwt = require('jsonwebtoken');
 const Sentry = require('@sentry/node');
 const App = require('./slackConfig');
 const initbeforeStart = (expressApp) => {
@@ -20,19 +19,10 @@ const initbeforeStart = (expressApp) => {
         tracesSampleRate: 1.0,
         beforeSend: (event, hint) => {
             const error = hint.originalException;
-            const request = event.request;
-
-            const apiName = request.route.stack[0].name;
-            const userId = jwt.verify(request.headers.authorization, process.env.JWT_SECRET).user_id;
-            const status = error.status;
-            const input = request.body;
-
-            const errorMessage = `[${apiName}] user: ${userId}, status: ${status}, input: [${input}]`;
-
             App.client.chat.postMessage({
                 token: process.env.SLACK_BOT_TOKEN,
                 channel: process.env.SLACK_ERROR_CHANNEL,
-                text: errorMessage,
+                text: 'test',
             });
             return event;
         },
