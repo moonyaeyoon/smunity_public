@@ -1,6 +1,8 @@
 //SENTRY
 const Sentry = require('@sentry/node');
 const App = require('./slackConfig');
+const jwt = require('jsonwebtoken');
+
 const initbeforeStart = (expressApp) => {
     Sentry.init({
         dsn: process.env.SENTRY_DSN,
@@ -19,10 +21,15 @@ const initbeforeStart = (expressApp) => {
         tracesSampleRate: 1.0,
         beforeSend: (event, hint) => {
             const error = hint.originalException;
+            const request = event.request;
+            const decodedToken = jwt.verify(request.headers.authorization, process.env.JWT_SECRET);
+
+            const errorMessage = `유저:${decodedToken.user_id}\n요청:[${request.method}] ${request.url}\n에러:${error.code}\n데이터:${request.data}`;
+
             App.client.chat.postMessage({
                 token: process.env.SLACK_BOT_TOKEN,
                 channel: process.env.SLACK_ERROR_CHANNEL,
-                text: 'test',
+                text: errorMessage,
             });
             return event;
         },
