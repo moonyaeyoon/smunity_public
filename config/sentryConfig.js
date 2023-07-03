@@ -22,9 +22,13 @@ const initbeforeStart = (expressApp) => {
         beforeSend: (event, hint) => {
             const error = hint.originalException;
             const request = event.request;
-            const decodedToken = jwt.verify(request.headers.authorization, process.env.JWT_SECRET);
+            let user = 'unknown';
+            if (request.headers.authorization) {
+                const decodedToken = jwt.verify(request.headers.authorization, process.env.JWT_SECRET);
+                user = decodedToken.user_id;
+            }
 
-            const errorMessage = `유저:${decodedToken.user_id}\n요청:[${request.method}] ${request.url}\n에러:${error.code}\n데이터:${request.data}`;
+            const errorMessage = `유저:${user}\n요청:[${request.method}] ${request.url}\n에러:${error.code}\n데이터:${request.data}`;
 
             App.client.chat.postMessage({
                 token: process.env.SLACK_BOT_TOKEN,
