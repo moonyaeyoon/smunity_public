@@ -22,7 +22,7 @@ const initbeforeStart = (expressApp) => {
             App.client.chat.postMessage({
                 token: process.env.SLACK_BOT_TOKEN,
                 channel: process.env.SLACK_ERROR_CHANNEL,
-                text: error.message,
+                text: 'test',
             });
             return event;
         },
