@@ -10,6 +10,8 @@ const ejs = require('ejs');
 const User = require('../../models/user');
 const Major = require('../../models/major');
 const Board = require('../../models/board');
+const Post = require('../../models/post');
+const UserLikePost = require('../../models/UserLikePost');
 const jwtUtil = require('../../util/jwtUtil');
 const {
     getSuccessSignInJson,
@@ -456,6 +458,34 @@ exports.sendUserAuthLinkForTest = async (req, res, next) => {
                 message: '이미 인증된 링크입니다.',
             });
         }
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getMyActivity = async (req, res, next) => {
+    try {
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        const posts = await Post.findAll({ where: { user_id: NOW_USER.id } });
+        const post_id_list = [];
+        for (let i = 0; i < posts.length; i++) {
+            post_id_list.push(posts[i].id);
+        }
+        const likes = await UserLikePost.findAll({ where: { user_id: NOW_USER.id } });
+        const like_list = [];
+        for (let i = 0; i < likes.length; i++) {
+            like_list.push(likes[i].post_id);
+        }
+
+        const RES_MY_ACTIVITY = {
+            user_post: post_id_list,
+            user_liked: like_list,
+        };
+        return res.status(200).json(RES_MY_ACTIVITY);
     } catch (error) {
         return next(error);
     }
