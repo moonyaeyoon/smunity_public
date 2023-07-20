@@ -308,6 +308,7 @@ exports.getUserInfo = async (req, res, next) => {
             username: NOW_USER.nickname,
             school_id: NOW_USER.school_id,
             profile_img_url: NOW_USER.profile_img_url || null,
+            mbti: NOW_USER.mbti,
             majors: RES_MAJOR_LIST,
         };
         res.status(200).json(RES_USER_INFO);

@@ -43,7 +43,7 @@
         "passport-local": "^1.0.0",
         "redis": "^4.6.5",
         "sequelize": "^6.28.1",
-        "sequelize-cli": "^6.6.0",
+        "sequelize-cli": "^6.6.1",
         "winston": "^3.9.0",
         "winston-daily-rotate-file": "^4.7.1",
         "yarn": "^1.22.19"
