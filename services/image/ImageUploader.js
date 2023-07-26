@@ -59,3 +59,20 @@ exports.imageRemover = async (req, res) => {
         console.error(err);
     }
 };
+
+exports.getEmoticon = async (req, res, next) => {
+    try {
+        const s3Client = s3();
+        const params = {
+            Bucket: 'smus',
+            Prefix: 'sumung/',
+        };
+
+        const data = await s3Client.listObjectsV2(params).promise();
+        const emoticon_url = await data.Contents.map((content) => `${process.env.COMMON_FILE_URL}${content.Key}`).slice(1);
+
+        return res.status(200).json(emoticon_url);
+    } catch (err) {
+        console.error(err);
+    }
+};
