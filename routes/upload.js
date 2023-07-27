@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { imageUploader, imageRemover } = require('../services/image/ImageUploader'); // 이미지 업로드 미들웨어 모듈
+const { imageUploader, imageRemover, getEmoticon } = require('../services/image/ImageUploader'); // 이미지 업로드 미들웨어 모듈
 const RES_ERROR_JSON = require('../constants/resErrorJson');
 
 router.post('/', imageUploader.array('image'), (req, res) => {
@@ -13,6 +13,7 @@ router.post('/', imageUploader.array('image'), (req, res) => {
     res.json({ imageUrls });
 });
 
+router.get('/emoticon', getEmoticon);
 router.delete('/', imageRemover);
 
 module.exports = router;
