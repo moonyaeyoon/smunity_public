@@ -490,3 +490,30 @@ exports.getMyActivity = async (req, res, next) => {
         return next(error);
     }
 };
+
+exports.checkUserPassword = async (req, res, next) => {
+    try {
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        const school_id = req.body.school_id;
+        const password = req.body.password;
+
+        const user = await User.findOne({ where: { school_id: school_id } });
+        if (!user) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        const PASSWORD_COMPARE_RESULT = await bcrypt.compare(password, user.password);
+
+        if (PASSWORD_COMPARE_RESULT) {
+            return res.status(200).json({ result: true });
+        } else {
+            return res.status(403).json({ result: false });
+        }
+    } catch (error) {
+        return next(error);
+    }
+};
