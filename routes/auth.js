@@ -47,6 +47,6 @@ router.get('/rhksflwkdlapdlffldzmcpzmapi', sendUserAuthLinkForTest); //관리자
 
 router.get('/my_activity', verifyAToken, getMyActivity);
 
-router.get('/check_password', verifyAToken, checkUserPassword);
+router.post('/check_password', verifyAToken, checkUserPassword);
 
 module.exports = router;
