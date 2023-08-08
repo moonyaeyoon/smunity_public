@@ -53,7 +53,7 @@ const checkUserExistByUserId = async (userId) => {
 
 exports.createNewComment = async (req, res, next) => {
     try {
-        if (!req.body.post_id || !req.body.content) {
+        if (!req.body.post_id || !req.body.content || !req.body.type) {
             return res.status(REQ_FORM_ERROR.status_code).json(REQ_FORM_ERROR.res_json);
         }
 
@@ -105,6 +105,7 @@ exports.createNewComment = async (req, res, next) => {
         }
 
         await Comment.create({
+            type: req.body.type,
             post_id: req.body.post_id,
             user_id: res.locals.decodes.user_id,
             content: req.body.content,
