@@ -17,6 +17,7 @@ const {
     sendUserAuthLinkForTest,
     getMyActivity,
     checkUserPassword,
+    findPassword,
 } = require('../services/auth/auth');
 
 const router = express.Router();
@@ -48,5 +49,7 @@ router.get('/rhksflwkdlapdlffldzmcpzmapi', sendUserAuthLinkForTest); //관리자
 router.get('/my_activity', verifyAToken, getMyActivity);
 
 router.post('/check_password', verifyAToken, checkUserPassword);
+
+router.post('/find_password', findPassword);
 
 module.exports = router;

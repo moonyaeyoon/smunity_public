@@ -59,6 +59,14 @@ exports.CHANGE_PASSWORD_SUCCESS = {
     },
 };
 
+exports.FIND_PASSWORD_SUCCESS = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '임시 비밀번호를 메일로 전송했습니다.',
+    },
+};
+
 exports.DELETE_USER_SUCCESS = {
     status_code: 201,
     res_json: {
