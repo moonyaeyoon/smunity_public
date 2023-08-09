@@ -626,10 +626,9 @@ exports.reportPost = async (req, res, next) => {
 
             await sequelize.query(`UPDATE ${config.database}.posts SET reports = reports+1 WHERE id = ${req.params.post_id}`);
 
-            // TODO: 센트리용으로 쏘고있지만 나중에 따로만들기
             App.client.chat.postMessage({
                 token: process.env.SLACK_BOT_TOKEN,
-                channel: process.env.SLACK_ERROR_CHANNEL,
+                channel: process.env.SLACK_REPORT_CHANNEL,
                 text: `<${NOW_POST.id}번 게시글 신고 접수> \n바로가기: ${process.env.POST_BASE_URL}/${NOW_POST.board_id}/${NOW_POST.id}\n제목: ${NOW_POST.title} \n본문: ${NOW_POST.content}`,
             });
 

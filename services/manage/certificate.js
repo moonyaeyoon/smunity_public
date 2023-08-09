@@ -26,10 +26,9 @@ exports.addCertificate = async (req, res, next) => {
             content: CONTENT || null,
         });
 
-        // TODO: 슬랙봇 따로 생성
         App.client.chat.postMessage({
             token: process.env.SLACK_BOT_TOKEN,
-            channel: process.env.SLACK_ERROR_CHANNEL,
+            channel: process.env.SLACK_CERTIFICATION_CHANNEL,
             text: `<학과 인증 요청> \nurl: ${process.env.MANAGEMENT_PAGE} \ncontent: ${CONTENT} \nimage: ${IMAGE_URL}`,
         });
 
