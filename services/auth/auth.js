@@ -26,6 +26,8 @@ const {
     DELETE_USER_SUCCESS,
     CHANGE_PASSWORD_SUCCESS,
     FIND_PASSWORD_SUCCESS,
+    EDIT_USER_MBTI,
+    EDIT_USER_TIME_TABLE,
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
@@ -313,6 +315,7 @@ exports.getUserInfo = async (req, res, next) => {
             profile_img_url: NOW_USER.profile_img_url || null,
             mbti: NOW_USER.mbti,
             majors: RES_MAJOR_LIST,
+            time_table: NOW_USER.time_table,
         };
         res.status(200).json(RES_USER_INFO);
     } catch (error) {
@@ -357,6 +360,42 @@ exports.editUserProfileImage = async (req, res, next) => {
     } catch (error) {
         logger.error(`사용자 프로필 사진 수정 에러: {에러문: ${error}}`);
         next(error);
+    }
+};
+
+exports.editUserTimeTable = async (req, res, next) => {
+    try {
+        // 로그인한 사용자 정보 가져오기
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        //이미지 s3버킷에서 삭제하기
+        await imageRemover(NOW_USER.time_table);
+
+        // 사용자 프로필 이미지 수정
+        await User.update({ time_table: req.body.time_table }, { where: { id: NOW_USER.id } });
+
+        return res.status(EDIT_USER_TIME_TABLE.status_code).json(EDIT_USER_TIME_TABLE.res_json);
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.editUserMbti = async (req, res, next) => {
+    try {
+        // 로그인한 사용자 정보 가져오기
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        await User.update({ mbti: req.body.mbti }, { where: { id: NOW_USER.id } });
+        logger.info(req.body.mbti);
+        return res.status(EDIT_USER_MBTI.status_code).json(EDIT_USER_MBTI.res_json);
+    } catch (error) {
+        return next(error);
     }
 };
 

@@ -51,6 +51,22 @@ exports.EDIT_USER_PROFILE_IMAGE = {
     },
 };
 
+exports.EDIT_USER_TIME_TABLE = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: '시간표가 업데이트 됐습니다.',
+    },
+};
+
+exports.EDIT_USER_MBTI = {
+    status_code: 201,
+    res_json: {
+        status_code: 201,
+        message: 'mbti가 업데이트 됐습니다.',
+    },
+};
+
 exports.CHANGE_PASSWORD_SUCCESS = {
     status_code: 201,
     res_json: {

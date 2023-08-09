@@ -18,6 +18,8 @@ const {
     getMyActivity,
     checkUserPassword,
     findPassword,
+    editUserMbti,
+    editUserTimeTable,
 } = require('../services/auth/auth');
 
 const router = express.Router();
@@ -41,6 +43,10 @@ router.get('/auth_email', addSchoolAuth);
 router.put('/user/nickname', verifyAToken, editUserNickName);
 
 router.put('/user/profile_image', verifyAToken, editUserProfileImage);
+
+router.put('/edit/mbti', verifyAToken, editUserMbti);
+
+router.put('/edit/timetable', verifyAToken, editUserTimeTable);
 
 router.put('/user/password', verifyAToken, changePassword);
 
