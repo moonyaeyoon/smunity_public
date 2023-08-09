@@ -1,5 +1,6 @@
 const { REQ_FORM_ERROR } = require('../../constants/resErrorJson');
 const { MajorAuthPost, UserMajor, MajorRejectPost } = require('../../models');
+const App = require('../../config/slackConfig');
 
 exports.getCertificateList = async (req, res, next) => {
     try {
@@ -24,6 +25,14 @@ exports.addCertificate = async (req, res, next) => {
             image_url: IMAGE_URL,
             content: CONTENT || null,
         });
+
+        // TODO: 슬랙봇 따로 생성
+        App.client.chat.postMessage({
+            token: process.env.SLACK_BOT_TOKEN,
+            channel: process.env.SLACK_ERROR_CHANNEL,
+            text: `<학과 인증 요청> \nurl: ${process.env.MANAGEMENT_PAGE} \ncontent: ${CONTENT} \nimage: ${IMAGE_URL}`,
+        });
+
         res.json({ isSuccess: true });
     } catch (err) {
         console.error(err);

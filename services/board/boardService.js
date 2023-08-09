@@ -630,7 +630,7 @@ exports.reportPost = async (req, res, next) => {
             App.client.chat.postMessage({
                 token: process.env.SLACK_BOT_TOKEN,
                 channel: process.env.SLACK_ERROR_CHANNEL,
-                text: `${NOW_POST.id}번 게시글 신고가 접수 됐습니다. \n바로가기: https://smus.co.kr/board/${NOW_POST.board_id}/${NOW_POST.id}\n제목: ${NOW_POST.title} \n본문: ${NOW_POST.content}`,
+                text: `<${NOW_POST.id}번 게시글 신고 접수> \n바로가기: ${process.env.POST_BASE_URL}/${NOW_POST.board_id}/${NOW_POST.id}\n제목: ${NOW_POST.title} \n본문: ${NOW_POST.content}`,
             });
 
             return res.status(REPORT_POST_SUCCESS.status_code).json(REPORT_POST_SUCCESS.res_json);
