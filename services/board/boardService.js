@@ -47,6 +47,7 @@ const { imageRemover } = require('../image/ImageUploader');
 const logger = require('../../config/winstonConfig');
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
+const App = require('../../config/slackConfig');
 
 const checkUserExistByUserId = async (userId) => {
     const REQ_USER = await User.findOne({
@@ -624,6 +625,14 @@ exports.reportPost = async (req, res, next) => {
             });
 
             await sequelize.query(`UPDATE ${config.database}.posts SET reports = reports+1 WHERE id = ${req.params.post_id}`);
+
+            // TODO: 센트리용으로 쏘고있지만 나중에 따로만들기
+            App.client.chat.postMessage({
+                token: process.env.SLACK_BOT_TOKEN,
+                channel: process.env.SLACK_ERROR_CHANNEL,
+                text: `${NOW_POST.id}번 게시글 신고가 접수 됐습니다. \n바로가기: https://smus.co.kr/board/${NOW_POST.board_id}/${NOW_POST.id}\n제목: ${NOW_POST.title} \n본문: ${NOW_POST.content}`,
+            });
+
             return res.status(REPORT_POST_SUCCESS.status_code).json(REPORT_POST_SUCCESS.res_json);
         } else {
             return res.status(POST_ALREADY_REPORT.status_code).json(POST_ALREADY_REPORT.res_json);
