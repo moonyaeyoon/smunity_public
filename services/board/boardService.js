@@ -906,6 +906,7 @@ exports.getPostListByCursor = async (req, res, next) => {
                 username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
                 title: NOW_POST.title,
                 preview: NOW_POST.content.substr(0, 50),
+                likes: NOW_POST.likes,
                 comments: COMMENT_COUNT,
                 views: NOW_POST.views,
                 created_time: moment(NOW_POST.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'), //utcOffset: UTC시간대 | format: moment지원 양식
