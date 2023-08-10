@@ -60,6 +60,34 @@ const checkUserExistByUserId = async (userId) => {
     else return REQ_USER;
 };
 
+const getChildComments = async (now_user_id, parent_id) => {
+    const COMMENTS_INFO = await Comment.findAll({
+        where: {
+            parent_id: parent_id,
+        },
+        order: [['created_at', 'DESC']],
+    });
+
+    const COMMENT_LIST = [];
+    for (let index = 0; index < COMMENTS_INFO.length; index++) {
+        const NOW_COMMENT = COMMENTS_INFO[index];
+        const NOW_COMMENT_USER = await checkUserExistByUserId(NOW_COMMENT.user_id);
+        const NOW_COMMENT_NICKNAME = NOW_COMMENT_USER.nickname || '알 수 없음';
+        const COMMENT_LIKED_INFO = await UserLikeComment.findOne({ where: { user_id: now_user_id, comment_id: NOW_COMMENT.id } });
+        COMMENT_LIST.push({
+            comment_id: NOW_COMMENT.id,
+            username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_NICKNAME,
+            user_id: NOW_COMMENT_USER ? NOW_COMMENT.user_id : 0,
+            content: NOW_COMMENT.content,
+            likes: NOW_COMMENT.likes,
+            isLiked: COMMENT_LIKED_INFO ? true : false,
+            created_time: moment(NOW_COMMENT.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+            updated_time: moment(NOW_COMMENT.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+        });
+    }
+    return COMMENT_LIST;
+};
+
 exports.createNewPost = async (req, res, next) => {
     try {
         if (!req.body.title || !req.body.content || !req.body.board_id) {
@@ -179,6 +207,7 @@ exports.getPostDatail = async (req, res, next) => {
         const COMMENTS_INFO = await Comment.findAll({
             where: {
                 post_id: req.params.post_id,
+                parent_id: 0,
             },
             order: [['created_at', 'DESC']],
         });
@@ -198,6 +227,7 @@ exports.getPostDatail = async (req, res, next) => {
                 isLiked: COMMENT_LIKED_INFO ? true : false,
                 created_time: moment(NOW_COMMENT.createdAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
                 updated_time: moment(NOW_COMMENT.updatedAt).utcOffset(9).format('YYYY.MM.DD_HH:mm:ss'),
+                childs: await getChildComments(NOW_USER.id, NOW_COMMENT.id),
             });
         }
 
