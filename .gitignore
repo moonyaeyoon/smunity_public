@@ -4,3 +4,4 @@
 /logs
 /migrations
 /.vscode
+.DS_Store
