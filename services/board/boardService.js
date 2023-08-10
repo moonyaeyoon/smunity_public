@@ -45,6 +45,7 @@ const {
 const { getSchoolNotice } = require('../../crawling/mongo/getNotice');
 const { imageRemover } = require('../image/ImageUploader');
 const logger = require('../../config/winstonConfig');
+const { getBusNotice } = require('../../crawling/mongo/getBusNotice');
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
 
@@ -1292,6 +1293,28 @@ exports.getSchoolNoticeList = async (req, res, next) => {
                 title: NOW_POST['title'],
                 views: NOW_POST['views'],
                 created_time: NOW_POST['date'],
+            });
+        }
+        return res.status(200).json(RES_POSTS);
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getBusNoticeList = async (req, res, next) => {
+    try {
+        const POSTS_INFO = await getBusNotice();
+
+        const RES_POSTS = [];
+        for (let index = 0; index < POSTS_INFO.length; index++) {
+            const NOW_POST = POSTS_INFO[index];
+            RES_POSTS.push({
+                post_id: NOW_POST['number'],
+                created_time: NOW_POST['createdTime'],
+                updated_time: NOW_POST['updatedTime'],
+                title: NOW_POST['title'],
+                imageUrls: JSON.parse(NOW_POST['imageUrlList']),
+                content: NOW_POST['content'],
             });
         }
         return res.status(200).json(RES_POSTS);
