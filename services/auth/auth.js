@@ -25,6 +25,9 @@ const {
     EDIT_USER_PROFILE_IMAGE,
     DELETE_USER_SUCCESS,
     CHANGE_PASSWORD_SUCCESS,
+    FIND_PASSWORD_SUCCESS,
+    EDIT_USER_MBTI,
+    EDIT_USER_TIME_TABLE,
 } = require('../../constants/resSuccessJson');
 const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
@@ -312,6 +315,7 @@ exports.getUserInfo = async (req, res, next) => {
             profile_img_url: NOW_USER.profile_img_url || null,
             mbti: NOW_USER.mbti,
             majors: RES_MAJOR_LIST,
+            time_table: NOW_USER.time_table,
         };
         res.status(200).json(RES_USER_INFO);
     } catch (error) {
@@ -356,6 +360,42 @@ exports.editUserProfileImage = async (req, res, next) => {
     } catch (error) {
         logger.error(`사용자 프로필 사진 수정 에러: {에러문: ${error}}`);
         next(error);
+    }
+};
+
+exports.editUserTimeTable = async (req, res, next) => {
+    try {
+        // 로그인한 사용자 정보 가져오기
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        //이미지 s3버킷에서 삭제하기
+        await imageRemover(NOW_USER.time_table);
+
+        // 사용자 프로필 이미지 수정
+        await User.update({ time_table: req.body.time_table }, { where: { id: NOW_USER.id } });
+
+        return res.status(EDIT_USER_TIME_TABLE.status_code).json(EDIT_USER_TIME_TABLE.res_json);
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.editUserMbti = async (req, res, next) => {
+    try {
+        // 로그인한 사용자 정보 가져오기
+        const NOW_USER = await checkUserExistByUserId(res.locals.decodes.user_id);
+        if (!NOW_USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        await User.update({ mbti: req.body.mbti }, { where: { id: NOW_USER.id } });
+        logger.info(req.body.mbti);
+        return res.status(EDIT_USER_MBTI.status_code).json(EDIT_USER_MBTI.res_json);
+    } catch (error) {
+        return next(error);
     }
 };
 
@@ -513,6 +553,61 @@ exports.checkUserPassword = async (req, res, next) => {
         } else {
             return res.status(403).json({ result: false });
         }
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.findPassword = async (req, res, next) => {
+    try {
+        if (!req.body.school_id) {
+            return res.status(RES_ERROR_JSON.REQ_FORM_ERROR.status_code).json(RES_ERROR_JSON.REQ_FORM_ERROR.res_json);
+        }
+
+        const USER = await User.findOne({
+            where: {
+                school_id: req.body.school_id,
+            },
+        });
+        if (!USER) {
+            return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
+        }
+
+        const new_password = generateRandomCode(8);
+
+        const NEW_PASSWORD_HASH = await bcrypt.hash(new_password, Number(PASSWORD_SALT_OR_ROUNDS));
+
+        await User.update({ password: NEW_PASSWORD_HASH }, { where: { school_id: req.body.school_id } });
+
+        aws.config.update({
+            accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SES_ACCESS_KEY,
+            region: 'us-east-1',
+        });
+        const ses = new aws.SES({
+            apiVersion: '2010-12-01',
+        });
+
+        let transporter = nodemailer.createTransport({
+            SES: { ses, aws },
+        });
+
+        transporter.sendMail(
+            {
+                from: 'SMUS<sja3410@gmail.com>',
+                to: `${req.body.school_id}@sangmyung.kr`,
+                subject: 'SMUS 임시비밀번호 발급 안내',
+                text: `임시 비밀번호: ${new_password}`,
+            },
+            (err, info) => {
+                if (err) {
+                    console.log(err);
+                    return false;
+                }
+            }
+        );
+        logger.info(new_password);
+        return res.status(FIND_PASSWORD_SUCCESS.status_code).json(FIND_PASSWORD_SUCCESS.res_json);
     } catch (error) {
         return next(error);
     }

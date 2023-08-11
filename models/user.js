@@ -45,6 +45,10 @@ module.exports = class User extends Sequelize.Model {
                     type: Sequelize.STRING(5),
                     allowNull: true,
                 },
+                time_table: {
+                    type: Sequelize.STRING(100),
+                    allowNull: true,
+                },
             },
             {
                 sequelize,

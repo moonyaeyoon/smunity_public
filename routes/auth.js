@@ -17,6 +17,9 @@ const {
     sendUserAuthLinkForTest,
     getMyActivity,
     checkUserPassword,
+    findPassword,
+    editUserMbti,
+    editUserTimeTable,
 } = require('../services/auth/auth');
 
 const router = express.Router();
@@ -41,6 +44,10 @@ router.put('/user/nickname', verifyAToken, editUserNickName);
 
 router.put('/user/profile_image', verifyAToken, editUserProfileImage);
 
+router.put('/edit/mbti', verifyAToken, editUserMbti);
+
+router.put('/edit/timetable', verifyAToken, editUserTimeTable);
+
 router.put('/user/password', verifyAToken, changePassword);
 
 router.get('/rhksflwkdlapdlffldzmcpzmapi', sendUserAuthLinkForTest); //관리자이메일링크체크api
@@ -48,5 +55,7 @@ router.get('/rhksflwkdlapdlffldzmcpzmapi', sendUserAuthLinkForTest); //관리자
 router.get('/my_activity', verifyAToken, getMyActivity);
 
 router.post('/check_password', verifyAToken, checkUserPassword);
+
+router.post('/find_password', findPassword);
 
 module.exports = router;

@@ -48,6 +48,7 @@ const logger = require('../../config/winstonConfig');
 const { getBusNotice } = require('../../crawling/mongo/getBusNotice');
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
+const App = require('../../config/slackConfig');
 
 const checkUserExistByUserId = async (userId) => {
     const REQ_USER = await User.findOne({
@@ -625,6 +626,13 @@ exports.reportPost = async (req, res, next) => {
             });
 
             await sequelize.query(`UPDATE ${config.database}.posts SET reports = reports+1 WHERE id = ${req.params.post_id}`);
+
+            App.client.chat.postMessage({
+                token: process.env.SLACK_BOT_TOKEN,
+                channel: process.env.SLACK_REPORT_CHANNEL,
+                text: `<${NOW_POST.id}번 게시글 신고 접수> \n바로가기: ${process.env.POST_BASE_URL}/${NOW_POST.board_id}/${NOW_POST.id}\n제목: ${NOW_POST.title} \n본문: ${NOW_POST.content}`,
+            });
+
             return res.status(REPORT_POST_SUCCESS.status_code).json(REPORT_POST_SUCCESS.res_json);
         } else {
             return res.status(POST_ALREADY_REPORT.status_code).json(POST_ALREADY_REPORT.res_json);
