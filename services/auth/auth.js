@@ -392,7 +392,6 @@ exports.editUserMbti = async (req, res, next) => {
         }
 
         await User.update({ mbti: req.body.mbti }, { where: { id: NOW_USER.id } });
-        logger.info(req.body.mbti);
         return res.status(EDIT_USER_MBTI.status_code).json(EDIT_USER_MBTI.res_json);
     } catch (error) {
         return next(error);
