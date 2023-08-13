@@ -7,11 +7,15 @@ const {
     getCommentList,
     likeComment,
     reportComment,
+    createNewChildComment,
 } = require('../services/comment/comment');
 const router = express.Router();
 
 //댓글 작성
 router.post('/create', verifyAToken, createNewComment);
+
+//대댓글 작성
+router.post('/create_child', verifyAToken, createNewChildComment);
 
 //댓글 수정
 router.patch('/update/:comment_id', verifyAToken, updateComment);
