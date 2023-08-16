@@ -174,7 +174,9 @@ exports.login = async (req, res, next) => {
                 return res.status(RES_ERROR_JSON.EMAIL_AUTH_ERROR.status_code).json(RES_ERROR_JSON.EMAIL_AUTH_ERROR.res_json);
             const aToken = jwtUtil.signAToken(USER_INFO.id);
             const rToken = await jwtUtil.signRToken(USER_INFO.id);
-            return res.status(USER_SIGNIN_SUCCESS_STATUS).json(getSuccessSignInJson(USER_INFO.id, aToken, rToken));
+            return res
+                .status(USER_SIGNIN_SUCCESS_STATUS)
+                .json(getSuccessSignInJson(USER_INFO.id, aToken, rToken.resfreshToken, rToken.expirationDateTime));
         } else {
             //비번 불일치
             console.log('Login Error: password error');
