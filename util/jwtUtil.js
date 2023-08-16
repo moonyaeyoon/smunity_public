@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { where } = require('sequelize');
 const User = require('../models/user');
+const moment = require('moment');
 
 module.exports = {
     signAToken: (userId) => {
@@ -14,12 +15,21 @@ module.exports = {
     },
 
     signRToken: async (userId) => {
+        const expiresIn = process.env.JWT_REFRESH_TOKEN_EXPIRESIN;
+
         const NEW_RTOKEN = jwt.sign({}, process.env.JWT_SECRET, {
             algorithm: process.env.JWT_SIGN_ALGORITHM,
-            expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRESIN,
+            expiresIn: expiresIn,
         });
+
+        // 숫자값과 단위값을 분리 (7d 면 7와 d를 분리)
+        const numericValue = parseInt(expiresIn);
+        const unit = expiresIn.replace(numericValue.toString(), '');
+
+        const expirationDateTime = moment().add(numericValue, unit).format('YYYY.MM.DD HH:mm:ss');
+
         await User.update({ refresh_token: NEW_RTOKEN }, { where: { id: userId } });
-        return NEW_RTOKEN;
+        return { resfreshToken: NEW_RTOKEN, expirationDateTime: expirationDateTime };
     },
 
     //verifyAToken(access_token을 인증해주는 함수)는 middleware/index.js에 있음.
