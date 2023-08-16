@@ -26,7 +26,7 @@ module.exports = {
         const numericValue = parseInt(expiresIn);
         const unit = expiresIn.replace(numericValue.toString(), '');
 
-        const expirationDateTime = moment().add(numericValue, unit).format('YYYY.MM.DD HH:mm:ss');
+        const expirationDateTime = moment().add(numericValue, unit).add(9, 'hours').format('YYYY.MM.DD HH:mm:ss');
 
         await User.update({ refresh_token: NEW_RTOKEN }, { where: { id: userId } });
         return { resfreshToken: NEW_RTOKEN, expirationDateTime: expirationDateTime };
