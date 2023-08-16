@@ -144,6 +144,14 @@ exports.JWT_REFRESH_TOKEN_EXPIRED = {
     },
 };
 
+exports.INVALID_MBTI = {
+    status_code: 401,
+    res_json: {
+        stats_code: 401,
+        message: '잘못된 mbti 양식입니다.',
+    },
+};
+
 exports.sendErrorLog = (error) => {
     return {
         message: '예상치 않는 에러입니다.',

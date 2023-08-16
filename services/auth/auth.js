@@ -390,9 +390,15 @@ exports.editUserMbti = async (req, res, next) => {
         if (!NOW_USER) {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
         }
+        const mbti = req.body.mbti;
+        const validMbtiPattern = /^[EI][NS][FT][JP]$/i;
 
-        await User.update({ mbti: req.body.mbti }, { where: { id: NOW_USER.id } });
-        return res.status(EDIT_USER_MBTI.status_code).json(EDIT_USER_MBTI.res_json);
+        if (validMbtiPattern.test(mbti)) {
+            await User.update({ mbti: mbti }, { where: { id: NOW_USER.id } });
+            return res.status(EDIT_USER_MBTI.status_code).json(EDIT_USER_MBTI.res_json);
+        } else {
+            return res.status(RES_ERROR_JSON.INVALID_MBTI.status_code).json(RES_ERROR_JSON.INVALID_MBTI.res_json);
+        }
     } catch (error) {
         return next(error);
     }
