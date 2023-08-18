@@ -333,7 +333,7 @@ exports.updatePost = async (req, res, next) => {
             title: req.body.title,
             content: req.body.content,
             is_anonymous: isUserSelectedAnonymous,
-            img_urls: req.body.image_url_list || null,
+            img_urls: imageUrlsString || null,
         });
 
         return res.status(UPDATE_POST_SUCCESS.status_code).json(UPDATE_POST_SUCCESS.res_json);
