@@ -1384,6 +1384,7 @@ exports.getBusNoticeList = async (req, res, next) => {
                 title: NOW_POST['title'],
                 imageUrls: JSON.parse(NOW_POST['imageUrlList']),
                 content: NOW_POST['content'],
+                bus_list: JSON.parse(NOW_POST['bus_number_list']),
             });
         }
         return res.status(200).json(RES_POSTS);

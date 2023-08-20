@@ -1,9 +1,9 @@
 # Python 3.8.10 - 64-bit
 
-# pip install beautifulsoup4
-# pip install requests
-# pip install pymongo
-# pip install schedule
+# pip3 install beautifulsoup4
+# pip3 install requests
+# pip3 install pymongo
+# pip3 install schedule
 
 # DB - database name: school_notice
 # DB - collection name: seoul_new_100
@@ -14,6 +14,7 @@ from pymongo import MongoClient
 
 import schedule
 import time
+from datetime import datetime
 
 def getSchoolNotice(): 
     client = MongoClient("mongodb://localhost:27017/")
@@ -44,7 +45,7 @@ def getSchoolNotice():
             "date": SERVER_TIME,
             "views": NOW_VIEWS
         })
-    print("Crawling Done")
+    print("Crawling Done. Time:", datetime.now())
     
 if __name__ == "__main__":
     getSchoolNotice()

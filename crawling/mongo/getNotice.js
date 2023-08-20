@@ -21,7 +21,7 @@ exports.getSchoolNotice = async () => {
         // if ((await notices.estimatedDocumentCount()) === 0) {
         //     console.log('No documents found!');
         // }
-        return notices.toArray();
+        return await notices.toArray();
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
