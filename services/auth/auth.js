@@ -519,13 +519,22 @@ exports.getMyActivity = async (req, res, next) => {
 
         const posts = await Post.findAll({ where: { user_id: NOW_USER.id } });
         const post_id_list = [];
+        
         for (let i = 0; i < posts.length; i++) {
-            post_id_list.push(posts[i].id);
+            const post_obj = {
+                post_id : posts[i].id,
+                board_id : posts[i].board_id
+            }
+            post_id_list.push(post_obj);
         }
         const likes = await UserLikePost.findAll({ where: { user_id: NOW_USER.id } });
         const like_list = [];
         for (let i = 0; i < likes.length; i++) {
-            like_list.push(likes[i].post_id);
+            const post_obj = {
+                post_id : likes[i].post_id,
+                board_id : posts[i].board_id
+            }
+            like_list.push(post_obj);
         }
 
         const RES_MY_ACTIVITY = {
