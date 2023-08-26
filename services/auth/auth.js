@@ -537,6 +537,7 @@ exports.getMyActivity = async (req, res, next) => {
         //내가 좋아요 한 글
         const liked_info = await UserLikePost.findAll({where : { user_id: NOW_USER.id}});
         const post_id_list = liked_info.map(like => like.post_id);
+        
         const liked_posts = await Post.findAll({where:{id: post_id_list}});
         const liked_post_list = [];
         for(let i = 0; i < liked_posts.length; i++){
