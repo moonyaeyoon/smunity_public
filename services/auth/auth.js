@@ -11,6 +11,7 @@ const User = require('../../models/user');
 const Major = require('../../models/major');
 const Board = require('../../models/board');
 const Post = require('../../models/post');
+const Comment = require('../../models/comment');
 const UserLikePost = require('../../models/UserLikePost');
 const jwtUtil = require('../../util/jwtUtil');
 const {
@@ -517,31 +518,46 @@ exports.getMyActivity = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.USER_NOT_EXIST.status_code).json(RES_ERROR_JSON.USER_NOT_EXIST.res_json);
         }
 
-        const posts = await Post.findAll({ where: { user_id: NOW_USER.id } });
-        const post_id_list = [];
-        
-        for (let i = 0; i < posts.length; i++) {
-            const post_obj = {
-                post_id : posts[i].id,
-                board_id : posts[i].board_id
-            }
-            post_id_list.push(post_obj);
-        }
-        const likes = await UserLikePost.findAll({ where: { user_id: NOW_USER.id } });
-        const like_list = [];
-        for (let i = 0; i < likes.length; i++) {
-            const post_obj = {
-                post_id : likes[i].post_id,
-                board_id : posts[i].board_id
-            }
-            like_list.push(post_obj);
+        //내가 쓴글
+        const writed_posts = await Post.findAll({ where: { user_id: NOW_USER.id } });
+        const writed_post_list = [];
+        for (let i = 0; i < writed_posts.length; i++) {
+
+            const post = writed_posts[i];
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: post.id } });
+
+            //내가 쓴글을 모델객체가 아닌 일반 객체로 변환
+            const new_post_object = post.toJSON(); 
+            //객체에 key, value 추가
+            new_post_object.number_of_comments = COMMENT_COUNT;
+            //객체를 return할 배열에 담기
+            writed_post_list.push(new_post_object);
         }
 
-        const RES_MY_ACTIVITY = {
-            user_post: post_id_list,
-            user_liked: like_list,
+        //내가 좋아요 한 글
+        const liked_info = await UserLikePost.findAll({where : { user_id: NOW_USER.id}});
+        const post_id_list = liked_info.map(like => like.post_id);
+        const liked_posts = await Post.findAll({where:{id: post_id_list}});
+        const liked_post_list = [];
+        for(let i = 0; i < liked_posts.length; i++){
+            
+            const post = liked_posts[i];
+            const COMMENT_COUNT = await Comment.count({ where: { post_id: post.id } });
+
+            //내가 쓴글을 모델객체가 아닌 일반 객체로 변환
+            const new_post_object = post.toJSON(); 
+            //객체에 key, value 추가
+            new_post_object.number_of_comments = COMMENT_COUNT;
+            //객체를 return할 배열에 담기
+            liked_post_list.push(new_post_object);
+        }
+
+        const ACTIVITY_RESPONSE_DTO = {
+            writed_post: writed_post_list,
+            liked_post: liked_post_list
         };
-        return res.status(200).json(RES_MY_ACTIVITY);
+
+        return res.status(200).json(ACTIVITY_RESPONSE_DTO);
     } catch (error) {
         return next(error);
     }
