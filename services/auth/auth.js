@@ -105,11 +105,7 @@ exports.join = async (req, res, next) => {
         if (EX_USER) {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         }
-        //프사 지정안하면 기본프사 url 할당
-        if (image === null || image === '') {
-            console.log('no image');
-            image = process.env.DEFAULT_PROFILE_IMAGE;
-        }
+        
         const NEW_USER_EMAIL = `${school_id}@${SMU_STUDENT_EMAIL_DOMAIN}`;
         const NEW_USER_PASSWORD_HASH = await bcrypt.hash(password, Number(PASSWORD_SALT_OR_ROUNDS));
         console.log('passwod hash is: ' + NEW_USER_PASSWORD_HASH + ', and the password is: ' + password);
