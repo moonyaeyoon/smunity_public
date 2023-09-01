@@ -36,7 +36,7 @@ const {
     UserLikeComment,
     UserReportComment,
 } = require('../../models');
-
+const App = require('../../config/slackConfig');
 const env = process.env.NODE_ENV || 'development';
 const config = require('../../config/config')[env];
 
@@ -388,6 +388,20 @@ exports.reportComment = async (req, res, next) => {
             });
 
             await sequelize.query(`UPDATE ${config.database}.comments SET reports = reports+1 WHERE id = ${req.params.comment_id}`);
+
+            //누적신고횟수를 반영하기 위해 다시 db서치하는거보다 +1로 코딩을 했습니다. 의견부탁드려요~
+
+            const TOTAL_REPORTS = NOW_COMMENT.reports+1;
+            //일정 횟수 누적되면 슬랙으로 알림
+            if(TOTAL_REPORTS >= process.env.CRITICAL_POINT_REPORTS){
+
+                App.client.chat.postMessage({
+                    token: process.env.SLACK_BOT_TOKEN,
+                    channel: process.env.SLACK_REPORT_CHANNEL,
+                    text: `<${NOW_COMMENT.id}번 댓글 신고 접수> \n누적신고횟수: ${TOTAL_REPORTS}\n바로가기: ${process.env.POST_BASE_URL}/${NOW_BOARD.id}/${NOW_POST.id}\n내용: ${NOW_COMMENT.content}`,
+                });
+            }
+            
             return res.status(REPORT_COMMENT_SUCCESS.status_code).json(REPORT_COMMENT_SUCCESS.res_json);
         } else {
             return res.status(COMMENT_ALREADY_REPORT.status_code).json(COMMENT_ALREADY_REPORT.res_json);
