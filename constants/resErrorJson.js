@@ -137,9 +137,9 @@ exports.JWT_TOKEN_EXPIRED = {
 };
 
 exports.JWT_REFRESH_TOKEN_EXPIRED = {
-    status_code: 445,
+    status_code: 444,
     res_json: {
-        status_code: 445,
+        status_code: 444,
         message: 'Refresh토큰이 만료되었습니다.',
     },
 };
