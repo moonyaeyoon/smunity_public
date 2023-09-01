@@ -271,7 +271,7 @@ exports.getPostDatail = async (req, res, next) => {
             post_id: NOW_POST.id,
             username: NOW_POST.is_anonymous ? '익명' : AUTHOR_NICKNAME,
             user_id: AUTHOR_USER ? NOW_POST.user_id : 0,
-            profile_img_url: NOW_POST.is_anonymous ? process.env.DEFAULT_PROFILE_IMAGE : NOW_USER.profile_img_url,
+            profile_img_url: NOW_POST.is_anonymous ? process.env.DEFAULT_PROFILE_IMAGE : AUTHOR_USER.profile_img_url,
             title: NOW_POST.title,
             content: NOW_POST.content,
             image_urls: NOW_POST.img_urls || null,
