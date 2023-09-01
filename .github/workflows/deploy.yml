@@ -65,6 +65,7 @@ jobs:
                   echo "POST_BASE_URL: ${{ secrets.POST_BASE_URL }}" >> .env
                   echo "SLACK_REPORT_CHANNEL: ${{ secrets.SLACK_REPORT_CHANNEL }}" >> .env
                   echo "SLACK_CERTIFICATION_CHANNEL: ${{ secrets.SLACK_CERTIFICATION_CHANNEL }}" >> .env
+                  echo "SLACK_CRITICAL_POINT_REPORTS: ${{ secrets.CRITICAL_POINT_REPORTS  }}" >> .env
 
             - name: Check .env file
               run: cat .env
