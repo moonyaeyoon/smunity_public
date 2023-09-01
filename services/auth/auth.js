@@ -134,10 +134,10 @@ exports.join = async (req, res, next) => {
         });
         // ADD_USER_SUCCESS.res_json.auth_url = AUTH_URL;
         ADD_USER_SUCCESS.res_json.profile_img_url = image;
-        logger.info(`회원 가입 성공: {학번:${school_id}, 인증 링크:${AUTH_URL}}`);
+        // logger.write(`회원 가입 성공: {학번:${school_id}, 인증 링크:${AUTH_URL}}`);
         return res.status(ADD_USER_SUCCESS.status_code).json(ADD_USER_SUCCESS.res_json);
     } catch (error) {
-        logger.error(`회원 가입 에러: {학번: ${school_id}, 에러문: ${error}}`);
+        // logger.write(`회원 가입 에러: {학번: ${school_id}, 에러문: ${error}}`);
         return next(error);
     }
 };
@@ -184,7 +184,7 @@ exports.login = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.SIGN_IN_ERROR.status_code).json(RES_ERROR_JSON.SIGN_IN_ERROR.res_json);
         }
     } catch (error) {
-        logger.error(`로그인 에러: {학번: ${school_id}, 에러문: ${error}}`);
+        // logger.error(`로그인 에러: {학번: ${school_id}, 에러문: ${error}}`);
         return next(error);
     }
 };
@@ -209,7 +209,7 @@ exports.refreshAToken = async (req, res, next) => {
             return res.status(RES_ERROR_JSON.JWT_REFRESH_TOKEN_EXPIRED.status_code).json(RES_ERROR_JSON.JWT_REFRESH_TOKEN_EXPIRED.res_json);
         }
     } catch (error) {
-        logger.error(`토큰 재발급 에러: {에러문: ${error}}`);
+        // logger.error(`토큰 재발급 에러: {에러문: ${error}}`);
         return next(error);
     }
 };
@@ -268,7 +268,7 @@ exports.addSchoolAuth = async (req, res, next) => {
                 major_id: 1,
             });
             await REQ_USER.update({ email_auth_code: 'finish' });
-            logger.info(`이메일 인증 성공: {학번: ${REQ_USER.school_id}}`);
+            // logger.info(`이메일 인증 성공: {학번: ${REQ_USER.school_id}}`);
             return res.status(201).send(emailAuthSuccess());
         } else if (REQ_USER.email_auth_code == 'finish') {
             console.log(`Email Auth Error: 이미 인증된 링크 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`);
@@ -278,7 +278,7 @@ exports.addSchoolAuth = async (req, res, next) => {
             return res.status(404).send(RES_ERROR_JSON.emailAuthError());
         }
     } catch (error) {
-        logger.error(`이메일 인증 에러: {에러문: ${error}}}`);
+        // logger.error(`이메일 인증 에러: {에러문: ${error}}}`);
         return res.status(404).send(RES_ERROR_JSON.emailAuthError());
     }
 };
@@ -340,7 +340,7 @@ exports.editUserNickName = async (req, res, next) => {
 
         return res.status(EDIT_USER_NICKNAME.status_code).json(EDIT_USER_NICKNAME.res_json);
     } catch (error) {
-        logger.error(`사용자 닉네임 수정 에러: {에러문: ${error}}`);
+        // logger.error(`사용자 닉네임 수정 에러: {에러문: ${error}}`);
         next(error);
     }
 };
@@ -361,7 +361,7 @@ exports.editUserProfileImage = async (req, res, next) => {
 
         return res.status(EDIT_USER_PROFILE_IMAGE.status_code).json(EDIT_USER_PROFILE_IMAGE.res_json);
     } catch (error) {
-        logger.error(`사용자 프로필 사진 수정 에러: {에러문: ${error}}`);
+        // logger.error(`사용자 프로필 사진 수정 에러: {에러문: ${error}}`);
         next(error);
     }
 };
@@ -415,10 +415,10 @@ exports.deleteUser = async (req, res, next) => {
         }
         await imageRemover(EX_USER.profile_img_url);
         await EX_USER.destroy();
-        logger.info(`회원 탈퇴 완료: {학번: ${EX_USER.school_id}}`);
+        // logger.info(`회원 탈퇴 완료: {학번: ${EX_USER.school_id}}`);
         return res.status(DELETE_USER_SUCCESS.status_code).json(DELETE_USER_SUCCESS.res_json);
     } catch (error) {
-        logger.error(`회원 탈퇴 에러: {에러문: ${error}}`);
+        // logger.error(`회원 탈퇴 에러: {에러문: ${error}}`);
         return next(error);
     }
 };
@@ -522,12 +522,11 @@ exports.getMyActivity = async (req, res, next) => {
         const writed_posts = await Post.findAll({ where: { user_id: NOW_USER.id } });
         const writed_post_list = [];
         for (let i = 0; i < writed_posts.length; i++) {
-
             const post = writed_posts[i];
             const COMMENT_COUNT = await Comment.count({ where: { post_id: post.id } });
 
             //내가 쓴글을 모델객체가 아닌 일반 객체로 변환
-            const new_post_object = post.toJSON(); 
+            const new_post_object = post.toJSON();
             //객체에 key, value 추가
             new_post_object.number_of_comments = COMMENT_COUNT;
             //객체를 return할 배열에 담기
@@ -535,18 +534,17 @@ exports.getMyActivity = async (req, res, next) => {
         }
 
         //내가 좋아요 한 글
-        const liked_info = await UserLikePost.findAll({where : { user_id: NOW_USER.id}});
-        const post_id_list = liked_info.map(like => like.post_id);
-        
-        const liked_posts = await Post.findAll({where:{id: post_id_list}});
+        const liked_info = await UserLikePost.findAll({ where: { user_id: NOW_USER.id } });
+        const post_id_list = liked_info.map((like) => like.post_id);
+
+        const liked_posts = await Post.findAll({ where: { id: post_id_list } });
         const liked_post_list = [];
-        for(let i = 0; i < liked_posts.length; i++){
-            
+        for (let i = 0; i < liked_posts.length; i++) {
             const post = liked_posts[i];
             const COMMENT_COUNT = await Comment.count({ where: { post_id: post.id } });
 
             //내가 쓴글을 모델객체가 아닌 일반 객체로 변환
-            const new_post_object = post.toJSON(); 
+            const new_post_object = post.toJSON();
             //객체에 key, value 추가
             new_post_object.number_of_comments = COMMENT_COUNT;
             //객체를 return할 배열에 담기
@@ -555,7 +553,7 @@ exports.getMyActivity = async (req, res, next) => {
 
         const ACTIVITY_RESPONSE_DTO = {
             writed_post: writed_post_list,
-            liked_post: liked_post_list
+            liked_post: liked_post_list,
         };
 
         return res.status(200).json(ACTIVITY_RESPONSE_DTO);
@@ -639,7 +637,7 @@ exports.findPassword = async (req, res, next) => {
                 }
             }
         );
-        logger.info(new_password);
+        // logger.info(new_password);
         return res.status(FIND_PASSWORD_SUCCESS.status_code).json(FIND_PASSWORD_SUCCESS.res_json);
     } catch (error) {
         return next(error);
