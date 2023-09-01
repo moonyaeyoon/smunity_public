@@ -8,6 +8,7 @@ exports.verifyAToken = (req, res, next) => {
         res.locals.decodes = jwt.verify(req.headers.authorization, process.env.JWT_SECRET);
         return next();
     } catch (error) {
+
         //logger.error(error);
         if (error.name === 'TokenExpiredError') {
             //유효 기간 초과
