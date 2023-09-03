@@ -21,6 +21,9 @@ const ADMIN_EMAIL_SETTING = {
 exports.sendEmailUseSchoolId = (school_id, subject, htmlContent) => {
     const emailTo = school_id + '@sangmyung.kr';
     try {
+        console.log('DAUM_KEY: ' + DAUM_SMTP_PASSWORD);
+        console.log('PRIVATE_KEY: ' + ADMIN1_PRIVATE_KEY);
+        console.log('SETTING: ' + ADMIN_EMAIL_SETTING);
         const transporter = nodemailer.createTransport(ADMIN_EMAIL_SETTING);
         transporter.sendMail(
             {
