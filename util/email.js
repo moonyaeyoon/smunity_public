@@ -31,8 +31,10 @@ exports.sendEmailUseSchoolId = (school_id, subject, htmlContent) => {
             },
             (error, info) => {
                 if (error) {
-                    throw new Error('Send Email Callback Error: ', error);
+                    console.log('Send Email Callback Error: ' + error);
+                    throw new Error('Send Email Callback Error: ' + error);
                 }
+                console.log('Send Email Success: ' + info);
             }
         );
     } catch (error) {
