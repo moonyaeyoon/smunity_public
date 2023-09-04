@@ -44,13 +44,16 @@ exports.apiLimiter = rateLimit({
 exports.trackEvent = async(req, res, next) => {
     
     const api = req.originalUrl;
-    console.log(api);
     let school_id;
 
     // case 1: 회원가입했을 경우(회원정보는 받아올 수 있지만 로그인 상태로 api를 호출하지 않음)
     if(api === '/auth/join'){
         school_id = req.body.school_id;
         const name = req.body.name;
+
+        if(!name || !school_id){
+            next();
+        }
 
         mixpanelClient.people.set(school_id, {
             Nickname: name,
@@ -63,6 +66,9 @@ exports.trackEvent = async(req, res, next) => {
         school_id = req.body.school_id;
         
         const NOW_USER = await User.findOne({ where : { school_id: school_id}});
+        if(!NOW_USER){
+            next();
+        }
         const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
 
         const name = NOW_USER.nickname;
@@ -89,6 +95,9 @@ exports.trackEvent = async(req, res, next) => {
 
         school_id = URL_SCHOOL_ID;
         const NOW_USER = await User.findOne({ where : { school_id: school_id}});
+        if(!NOW_USER){
+            next();
+        }
 
         mixpanelClient.people.set(school_id, {
             Nickname: NOW_USER.nickname,
@@ -109,9 +118,15 @@ exports.trackEvent = async(req, res, next) => {
     // case 5: 로그인한 사용자가 api호출 하는 경우
     else{
         const userID = res.locals.decodes.user_id;
-
+        if(!userID){
+            next();
+        }
     
         const NOW_USER = await User.findOne({ where : { id: userID}});
+        if(!NOW_USER){
+            next();
+        }
+
         const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
 
         let major_list = "";
