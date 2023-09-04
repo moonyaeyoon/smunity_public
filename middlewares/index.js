@@ -52,7 +52,7 @@ exports.trackEvent = async(req, res, next) => {
         const name = req.body.name;
 
         if(!name || !school_id){
-            next();
+            return next();
         }
 
         mixpanelClient.people.set(school_id, {
@@ -67,7 +67,7 @@ exports.trackEvent = async(req, res, next) => {
         
         const NOW_USER = await User.findOne({ where : { school_id: school_id}});
         if(!NOW_USER){
-            next();
+            return next();
         }
         const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
 
@@ -96,7 +96,7 @@ exports.trackEvent = async(req, res, next) => {
         school_id = URL_SCHOOL_ID;
         const NOW_USER = await User.findOne({ where : { school_id: school_id}});
         if(!NOW_USER){
-            next();
+            return next();
         }
 
         mixpanelClient.people.set(school_id, {
@@ -122,12 +122,12 @@ exports.trackEvent = async(req, res, next) => {
     else{
         const userID = res.locals.decodes.user_id;
         if(!userID){
-            next();
+            return next();
         }
     
         const NOW_USER = await User.findOne({ where : { id: userID}});
         if(!NOW_USER){
-            next();
+            return next();
         }
 
         const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
@@ -151,5 +151,5 @@ exports.trackEvent = async(req, res, next) => {
     mixpanelClient.track(api, {
         distinct_id: school_id
     });
-    next();
+    return next();
 };
