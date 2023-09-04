@@ -3,9 +3,6 @@ const jwt = require('jsonwebtoken');
 const RES_ERROR_JSON = require('../../constants/resErrorJson');
 const SMU_STUDENT_EMAIL_DOMAIN = process.env.SMU_STUDENT_EMAIL_DOMAIN;
 const PASSWORD_SALT_OR_ROUNDS = process.env.PASSWORD_SALT_OR_ROUNDS;
-const nodemailer = require('nodemailer');
-const aws = require('aws-sdk');
-const ejs = require('ejs');
 
 const User = require('../../models/user');
 const Major = require('../../models/major');
@@ -34,6 +31,8 @@ const { UserMajor } = require('../../models');
 const { encrypt, decrypt } = require('../../util/crypter');
 const { imageRemover } = require('../image/ImageUploader');
 const logger = require('../../config/winstonConfig');
+const { renderAuthEmail, rendernewPasswordEmail } = require('../../public/ejsRender');
+const { sendEmailUseSchoolId } = require('../../util/email');
 
 const checkSchoolIdExist = async (schoolId) => {
     const EX_USER = await User.findOne({ where: { school_id: schoolId } });
@@ -105,7 +104,7 @@ exports.join = async (req, res, next) => {
         if (EX_USER) {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
         }
-        
+
         const NEW_USER_EMAIL = `${school_id}@${SMU_STUDENT_EMAIL_DOMAIN}`;
         const NEW_USER_PASSWORD_HASH = await bcrypt.hash(password, Number(PASSWORD_SALT_OR_ROUNDS));
         console.log('passwod hash is: ' + NEW_USER_PASSWORD_HASH + ', and the password is: ' + password);
@@ -116,9 +115,9 @@ exports.join = async (req, res, next) => {
         //이메일 인증을 위한 링크 생성 -> 암호화 필수
         const AUTH_URL = generateAuthUrl(school_id, AUTH_CODE);
 
-        //이메일 보내기 => 테스트할 때는 해당 링크를 서버에 log남기기
-        sendAuthMailing(AUTH_URL, school_id);
-        console.log(`Sign Up: 인증 링크: ${AUTH_URL}`);
+        //이메일 보내기
+        const AUTH_EMAIL_HTML = await renderAuthEmail(AUTH_URL); //보낼 이메일 내용을 랜더링하기
+        sendEmailUseSchoolId(school_id, 'SMUS - 스뮤즈 학생 인증', AUTH_EMAIL_HTML); // 해당 내용을 학번으로 이메일 보내기
 
         const NEW_USER = await User.create({
             school_id: school_id,
@@ -446,37 +445,6 @@ exports.changePassword = async (req, res, next) => {
     }
 };
 
-const sendAuthMailing = async (authUrl, schoolId) => {
-    aws.config.update({
-        accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SES_ACCESS_KEY,
-        region: 'us-east-1',
-    });
-    const ses = new aws.SES({
-        apiVersion: '2010-12-01',
-    });
-
-    let transporter = nodemailer.createTransport({
-        SES: { ses, aws },
-    });
-
-    transporter.sendMail(
-        {
-            from: 'SMUS<sja3410@gmail.com>',
-            to: `${schoolId}@sangmyung.kr`,
-            subject: 'SMUS 회원가입 인증메일 입니다.',
-            text: `해당 링크를 클릭하면 회원인증이 완료됩니다. ${authUrl}`,
-        },
-        (err, info) => {
-            if (err) {
-                console.log(err);
-                return false;
-            }
-        }
-    );
-    return true;
-};
-
 exports.sendUserAuthLinkForTest = async (req, res, next) => {
     try {
         const REQ_SCHOOL_ID = req.headers.school_id;
@@ -606,34 +574,9 @@ exports.findPassword = async (req, res, next) => {
 
         await User.update({ password: NEW_PASSWORD_HASH }, { where: { school_id: req.body.school_id } });
 
-        aws.config.update({
-            accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SES_ACCESS_KEY,
-            region: 'us-east-1',
-        });
-        const ses = new aws.SES({
-            apiVersion: '2010-12-01',
-        });
+        const NEW_PASSWORD_EMAIL_HTML = await rendernewPasswordEmail(new_password); //보낼 이메일 내용을 랜더링하기
+        sendEmailUseSchoolId(req.body.school_id, 'SMUS - 스뮤즈 임시비밀번호 안내', NEW_PASSWORD_EMAIL_HTML); //학번으로 이메일을 보낸다.
 
-        let transporter = nodemailer.createTransport({
-            SES: { ses, aws },
-        });
-
-        transporter.sendMail(
-            {
-                from: 'SMUS<sja3410@gmail.com>',
-                to: `${req.body.school_id}@sangmyung.kr`,
-                subject: 'SMUS 임시비밀번호 발급 안내',
-                text: `임시 비밀번호: ${new_password}`,
-            },
-            (err, info) => {
-                if (err) {
-                    console.log(err);
-                    return false;
-                }
-            }
-        );
-        // logger.info(new_password);
         return res.status(FIND_PASSWORD_SUCCESS.status_code).json(FIND_PASSWORD_SUCCESS.res_json);
     } catch (error) {
         return next(error);

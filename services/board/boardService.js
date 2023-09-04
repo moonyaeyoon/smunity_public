@@ -152,6 +152,12 @@ exports.createNewPost = async (req, res, next) => {
             }
         }
 
+        //해당 부분이 프론트에서 아직 구현하지 못해서
+        //임시로 모든 비밀게시판 요청을 강제로 익명으로 처리
+        if (NOW_BOARD.is_can_anonymous == true) {
+            isUserSelectedAnonymous = true;
+        }
+
         const image_urls = req.body.image_url_list.join(',');
 
         const newPost = await Post.create({
@@ -690,18 +696,17 @@ exports.reportPost = async (req, res, next) => {
             });
 
             await sequelize.query(`UPDATE ${config.database}.posts SET reports = reports+1 WHERE id = ${req.params.post_id}`);
-            
-            const TOTAL_REPORTS = NOW_POST.reports+1;
+
+            const TOTAL_REPORTS = NOW_POST.reports + 1;
 
             //일정 횟수 누적되면 슬랙으로 알림
-            if(TOTAL_REPORTS >= process.env.CRITICAL_POINT_REPORTS){
+            if (TOTAL_REPORTS >= process.env.CRITICAL_POINT_REPORTS) {
                 App.client.chat.postMessage({
                     token: process.env.SLACK_BOT_TOKEN,
                     channel: process.env.SLACK_REPORT_CHANNEL,
                     text: `<${NOW_POST.id}번 게시글 신고 접수> \n누적신고횟수: ${TOTAL_REPORTS}\n바로가기: ${process.env.POST_BASE_URL}/${NOW_POST.board_id}/${NOW_POST.id}\n제목: ${NOW_POST.title} \n본문: ${NOW_POST.content}`,
                 });
             }
-            
 
             return res.status(REPORT_POST_SUCCESS.status_code).json(REPORT_POST_SUCCESS.res_json);
         } else {
