@@ -43,7 +43,7 @@ exports.apiLimiter = rateLimit({
 
 exports.trackEvent = async(req, res, next) => {
     
-    const api = req.originalUrl;
+    let api = req.originalUrl;
     let school_id;
 
     // case 1: 회원가입했을 경우(회원정보는 받아올 수 있지만 로그인 상태로 api를 호출하지 않음)
@@ -103,6 +103,9 @@ exports.trackEvent = async(req, res, next) => {
             Nickname: NOW_USER.nickname,
             Major: 'Not yet'
         });
+
+        //email code 다 개인마다 다르기때문에 다른이벤트로 수집하는 문제 해결
+        api = '/auth/auth_email';
 
     }
 
