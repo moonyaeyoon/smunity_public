@@ -5,6 +5,7 @@ const mixpanel = require('mixpanel');
 const User = require('../models/user');
 const UserMajor = require('../models/UserMajor');
 const Major = require('../models/major');
+const { decrypt } = require('../util/crypter');
 
 const mixpanelClient = mixpanel.init(process.env.MIXPANEL_PROJECT_TOKEN);
 
@@ -41,27 +42,92 @@ exports.apiLimiter = rateLimit({
 });
 
 exports.trackEvent = async(req, res, next) => {
-    //Mixpanel
     
     const api = req.originalUrl;
-    const userID = res.locals.decodes.user_id;
-    
-    const NOW_USER = await User.findOne({ where : { id: userID}});
-    const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+    console.log(api);
+    let school_id;
 
-    let major_list = "";
-    for(let i =0; i < NOW_USER_MAJOR_LIST.length; i++){
-        const major_id = NOW_USER_MAJOR_LIST[i].major_id;
-        const major = await Major.findOne({ where: { id: major_id }});
-        major_list += major.major_name + " ";
+    // case 1: 회원가입했을 경우(회원정보는 받아올 수 있지만 로그인 상태로 api를 호출하지 않음)
+    if(api === '/auth/join'){
+        school_id = req.body.school_id;
+        const name = req.body.name;
+
+        mixpanelClient.people.set(school_id, {
+            Nickname: name,
+            Major: 'Not yet'
+        });
     }
-    const school_id = NOW_USER.school_id;
-    const name = NOW_USER.nickname;
 
-    mixpanelClient.people.set(school_id, {
-        Nickname: name,
-        Major: major_list
-    });
+    // case 2: 로그인했을 경우
+    else if(api === '/auth/login'){
+        school_id = req.body.school_id;
+        
+        const NOW_USER = await User.findOne({ where : { school_id: school_id}});
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+
+        const name = NOW_USER.nickname;
+
+        let major_list = "";
+        for(let i =0; i < NOW_USER_MAJOR_LIST.length; i++){
+            const major_id = NOW_USER_MAJOR_LIST[i].major_id;
+            const major = await Major.findOne({ where: { id: major_id }});
+            major_list += major.major_name + " ";
+        }
+
+        mixpanelClient.people.set(school_id, {
+            Nickname: name,
+            Major: major_list
+        });
+    }
+
+    //case 3: 이메일 인증을 했을 경우
+    else if(api.match(/^\/auth\/auth_email\?.*$/)){
+        
+        const DECODED_CODE = decodeURIComponent(req.query.code);
+        const AUTH_QUERY_ARRAY = decrypt(DECODED_CODE, process.env.AUTH_QUERY_SECRET_KEY).split('&&');
+        const URL_SCHOOL_ID = AUTH_QUERY_ARRAY[0];
+
+        school_id = URL_SCHOOL_ID;
+        const NOW_USER = await User.findOne({ where : { school_id: school_id}});
+
+        mixpanelClient.people.set(school_id, {
+            Nickname: NOW_USER.nickname,
+            Major: 'Not yet'
+        });
+
+    }
+
+
+    // case 4: 로그인하지 않고 api호출하지만 사용자 정보를 얻을 수 없음(현재 이 경우는 없어요 단순 조회에는 믹스패널을 안붙여놔서)
+    else if(res.locals === undefined){
+        mixpanelClient.people.set('Non-member', {
+            Nickname: 'Non-member',
+            Major: 'No major'
+        });
+        school_id = 'Non-user';
+    }
+    // case 5: 로그인한 사용자가 api호출 하는 경우
+    else{
+        const userID = res.locals.decodes.user_id;
+
+    
+        const NOW_USER = await User.findOne({ where : { id: userID}});
+        const NOW_USER_MAJOR_LIST = await UserMajor.findAll({ where: { user_id: NOW_USER.id } });
+
+        let major_list = "";
+        for(let i =0; i < NOW_USER_MAJOR_LIST.length; i++){
+            const major_id = NOW_USER_MAJOR_LIST[i].major_id;
+            const major = await Major.findOne({ where: { id: major_id }});
+            major_list += major.major_name + " ";
+        }
+        school_id = NOW_USER.school_id;
+        const name = NOW_USER.nickname;
+
+        mixpanelClient.people.set(school_id, {
+            Nickname: name,
+            Major: major_list
+        });
+    }
 
     
     mixpanelClient.track(api, {

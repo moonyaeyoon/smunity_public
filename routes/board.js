@@ -1,5 +1,5 @@
 const express = require('express');
-const { verifyAToken } = require('../middlewares');
+const { verifyAToken, trackEvent } = require('../middlewares');
 const {
     createNewPost,
     getPostList,
@@ -29,7 +29,7 @@ const {
 
 const router = express.Router();
 
-router.post('/create', verifyAToken, createNewPost);
+router.post('/create', verifyAToken, trackEvent, createNewPost);
 
 router.get('/detail/:post_id', verifyAToken, getPostDatail);
 
@@ -47,7 +47,7 @@ router.get('/board_list/:major_id', getMajorBoards);
 
 router.get('/preview', verifyAToken, getBoardPreview);
 
-router.post('/like', verifyAToken, likePost);
+router.post('/like', verifyAToken, trackEvent, likePost);
 
 router.put('/scrap/:post_id', verifyAToken, scrapPost);
 

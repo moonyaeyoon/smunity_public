@@ -1,5 +1,5 @@
 const express = require('express');
-const { verifyAToken } = require('../middlewares');
+const { verifyAToken, trackEvent } = require('../middlewares');
 const {
     getCertificateList,
     addCertificate,
@@ -12,7 +12,7 @@ const {
 const router = express.Router();
 
 router.get('/certificate/list', getCertificateList);
-router.post('/certificate/create', verifyAToken, addCertificate);
+router.post('/certificate/create', verifyAToken, trackEvent, addCertificate);
 router.put('/certificate/update', updateMajorInCertificate);
 router.post('/certificate/postInfo', getCertificateInfo);
 router.post('/certificate/deletePost', deletePostMajor);
