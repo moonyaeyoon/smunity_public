@@ -104,6 +104,12 @@ exports.createNewComment = async (req, res, next) => {
             }
         }
 
+        //해당 부분이 프론트에서 아직 구현하지 못해서
+        //임시로 모든 비밀게시판 요청을 강제로 익명으로 처리
+        if (NOW_BOARD.is_can_anonymous == true) {
+            isUserSelectedAnonymous = true;
+        }
+
         await Comment.create({
             type: req.body.type,
             post_id: req.body.post_id,
@@ -179,6 +185,12 @@ exports.createNewChildComment = async (req, res, next) => {
                 //실제로도 게시판이 익명을 허용하지 않으면
                 isUserSelectedAnonymous = false; //강제로 익명 선택 취소
             }
+        }
+
+        //해당 부분이 프론트에서 아직 구현하지 못해서
+        //임시로 모든 비밀게시판 요청을 강제로 익명으로 처리
+        if (NOW_BOARD.is_can_anonymous == true) {
+            isUserSelectedAnonymous = true;
         }
 
         await Comment.create({
@@ -391,17 +403,16 @@ exports.reportComment = async (req, res, next) => {
 
             //누적신고횟수를 반영하기 위해 다시 db서치하는거보다 +1로 코딩을 했습니다. 의견부탁드려요~
 
-            const TOTAL_REPORTS = NOW_COMMENT.reports+1;
+            const TOTAL_REPORTS = NOW_COMMENT.reports + 1;
             //일정 횟수 누적되면 슬랙으로 알림
-            if(TOTAL_REPORTS >= process.env.CRITICAL_POINT_REPORTS){
-
+            if (TOTAL_REPORTS >= process.env.CRITICAL_POINT_REPORTS) {
                 App.client.chat.postMessage({
                     token: process.env.SLACK_BOT_TOKEN,
                     channel: process.env.SLACK_REPORT_CHANNEL,
                     text: `<${NOW_COMMENT.id}번 댓글 신고 접수> \n누적신고횟수: ${TOTAL_REPORTS}\n바로가기: ${process.env.POST_BASE_URL}/${NOW_BOARD.id}/${NOW_POST.id}\n내용: ${NOW_COMMENT.content}`,
                 });
             }
-            
+
             return res.status(REPORT_COMMENT_SUCCESS.status_code).json(REPORT_COMMENT_SUCCESS.res_json);
         } else {
             return res.status(COMMENT_ALREADY_REPORT.status_code).json(COMMENT_ALREADY_REPORT.res_json);
