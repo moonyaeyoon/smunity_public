@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { verifyAToken } = require('../middlewares');
+const { verifyAToken, trackEvent} = require('../middlewares');
 
 const {
     checkSchoolId,
@@ -26,11 +26,11 @@ const router = express.Router();
 
 router.get('/check_school_id', checkSchoolId);
 
-router.post('/join', join);
+router.post('/join', trackEvent, join);
 
-router.post('/login', login);
+router.post('/login', trackEvent, login);
 
-router.delete('/revoke', verifyAToken, deleteUser);
+router.delete('/revoke', verifyAToken, trackEvent, deleteUser);
 
 router.get('/refresh_access_token', refreshAToken);
 
@@ -38,17 +38,17 @@ router.get('/usermajors', verifyAToken, getUserMajors);
 
 router.get('/user_info', verifyAToken, getUserInfo);
 
-router.get('/auth_email', addSchoolAuth);
+router.get('/auth_email', trackEvent, addSchoolAuth);
 
-router.put('/user/nickname', verifyAToken, editUserNickName);
+router.put('/user/nickname', verifyAToken, trackEvent, editUserNickName);
 
-router.put('/user/profile_image', verifyAToken, editUserProfileImage);
+router.put('/user/profile_image', verifyAToken, trackEvent, editUserProfileImage);
 
-router.put('/edit/mbti', verifyAToken, editUserMbti);
+router.put('/edit/mbti', verifyAToken, trackEvent, editUserMbti);
 
-router.put('/edit/timetable', verifyAToken, editUserTimeTable);
+router.put('/edit/timetable', verifyAToken, trackEvent, editUserTimeTable);
 
-router.put('/user/password', verifyAToken, changePassword);
+router.put('/user/password', verifyAToken, trackEvent, changePassword);
 
 router.get('/rhksflwkdlapdlffldzmcpzmapi', sendUserAuthLinkForTest); //관리자이메일링크체크api
 

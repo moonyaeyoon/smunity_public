@@ -66,8 +66,10 @@ jobs:
                   echo "SLACK_REPORT_CHANNEL: ${{ secrets.SLACK_REPORT_CHANNEL }}" >> .env
                   echo "SLACK_CERTIFICATION_CHANNEL: ${{ secrets.SLACK_CERTIFICATION_CHANNEL }}" >> .env
                   echo "SLACK_CRITICAL_POINT_REPORTS: ${{ secrets.CRITICAL_POINT_REPORTS  }}" >> .env
+                  echo "MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN  }}" >> .env
                   echo "DAUM_SMTP_PASSWORD: ${{ secrets.DAUM_SMTP_PASSWORD }}" >> .env
                   echo "ADMIN1_PRIVATE_KEY: ${{ secrets.ADMIN1_PRIVATE_KEY }}" >> .env
+                  
             - name: Check .env file
               run: cat .env
 
