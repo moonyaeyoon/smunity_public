@@ -40,6 +40,12 @@ const checkSchoolIdExist = async (schoolId) => {
     else return null;
 };
 
+const checkNicknameExist = async (nickname) => {
+    const EX_USER = await User.findOne({ where: { nickname: nickname } });
+    if (EX_USER) return EX_USER;
+    else return null;
+};
+
 const checkUserExistByUserId = async (userId) => {
     const REQ_USER = await User.findOne({
         where: {
@@ -103,6 +109,12 @@ exports.join = async (req, res, next) => {
         const EX_USER = await checkSchoolIdExist(school_id);
         if (EX_USER) {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
+        }
+
+        //닉네임 중복 체크
+        const EX_NICKNAME = await checkNicknameExist(nickname);
+        if (EX_NICKNAME) {
+            return res.status(RES_ERROR_JSON.NICKNAME_EXISTS.status_code).json(RES_ERROR_JSON.NICKNAME_EXISTS.res_json);
         }
 
         const NEW_USER_EMAIL = `${school_id}@${SMU_STUDENT_EMAIL_DOMAIN}`;
