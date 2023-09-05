@@ -270,6 +270,11 @@ exports.addSchoolAuth = async (req, res, next) => {
             return res.status(401).send(RES_ERROR_JSON.alreadyAuth());
         } else {
             console.log(`Email Auth Error: 인증코드 일치하지 않음 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`);
+            App.client.chat.postMessage({
+                token: process.env.SLACK_BOT_TOKEN,
+                channel: process.env.SLACK_ERROR_CHANNEL,
+                text: `Email Auth Error: 인증코드 일치하지 않음 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`,
+            });
             return res.status(404).send(RES_ERROR_JSON.emailAuthError());
         }
     } catch (error) {
