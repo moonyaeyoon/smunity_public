@@ -22,7 +22,7 @@ def getSchoolNotice():
     noticeTable = noticeDB["seoul_new_100"]
 
     campus = "smu" #천안캠은 smuc
-    page = requests.get(f'https://www.smu.ac.kr/lounge/notice/notice.do?srUpperNoticeYn=on&srCampus={campus}&article.offset=0&articleLimit=100')
+    page = requests.get(f'https://www.smu.ac.kr/kor/life/notice.do?srUpperNoticeYn=on&srCampus={campus}&article.offset=0&articleLimit=100')
 
     soup = bs(page.content, "html.parser")
 
