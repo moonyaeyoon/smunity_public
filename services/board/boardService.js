@@ -260,7 +260,7 @@ exports.getPostDatail = async (req, res, next) => {
                     comment_id: NOW_COMMENT.id,
                     username: NOW_COMMENT.is_anonymous ? '익명' : NOW_COMMENT_NICKNAME,
                     user_id: NOW_COMMENT_USER ? NOW_COMMENT.user_id : 0,
-                    profile_img_url: NOW_COMMENT_USER.profile_img_url,
+                    profile_img_url: NOW_COMMENT.is_anonymous ? null : NOW_COMMENT_USER.profile_img_url,
                     content: NOW_COMMENT.content,
                     likes: NOW_COMMENT.likes,
                     isLiked: COMMENT_LIKED_INFO ? true : false,
