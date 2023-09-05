@@ -49,7 +49,7 @@ exports.trackEvent = async(req, res, next) => {
     // case 1: 회원가입했을 경우(회원정보는 받아올 수 있지만 로그인 상태로 api를 호출하지 않음)
     if(api === '/auth/join'){
         school_id = req.body.school_id;
-        const name = req.body.name;
+        const name = req.body.nickname;
 
         if(!name || !school_id){
             return next();
