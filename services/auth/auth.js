@@ -40,6 +40,12 @@ const checkSchoolIdExist = async (schoolId) => {
     else return null;
 };
 
+const checkNicknameExist = async (nickname) => {
+    const EX_USER = await User.findOne({ where: { nickname: nickname } });
+    if (EX_USER) return EX_USER;
+    else return null;
+};
+
 const checkUserExistByUserId = async (userId) => {
     const REQ_USER = await User.findOne({
         where: {
@@ -103,6 +109,12 @@ exports.join = async (req, res, next) => {
         const EX_USER = await checkSchoolIdExist(school_id);
         if (EX_USER) {
             return res.status(RES_ERROR_JSON.USER_EXISTS.status_code).json(RES_ERROR_JSON.USER_EXISTS.res_json);
+        }
+
+        //닉네임 중복 체크
+        const EX_NICKNAME = await checkNicknameExist(nickname);
+        if (EX_NICKNAME) {
+            return res.status(RES_ERROR_JSON.NICKNAME_EXISTS.status_code).json(RES_ERROR_JSON.NICKNAME_EXISTS.res_json);
         }
 
         const NEW_USER_EMAIL = `${school_id}@${SMU_STUDENT_EMAIL_DOMAIN}`;
@@ -270,6 +282,11 @@ exports.addSchoolAuth = async (req, res, next) => {
             return res.status(401).send(RES_ERROR_JSON.alreadyAuth());
         } else {
             console.log(`Email Auth Error: 인증코드 일치하지 않음 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`);
+            App.client.chat.postMessage({
+                token: process.env.SLACK_BOT_TOKEN,
+                channel: process.env.SLACK_ERROR_CHANNEL,
+                text: `Email Auth Error: 인증코드 일치하지 않음 -> 링크: ${URL_AUTH_CODE}, 서버: ${REQ_USER.email_auth_code}`,
+            });
             return res.status(404).send(RES_ERROR_JSON.emailAuthError());
         }
     } catch (error) {

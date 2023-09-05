@@ -15,6 +15,14 @@ exports.USER_EXISTS = {
     },
 };
 
+exports.NICKNAME_EXISTS = {
+    status_code: 406,
+    res_json: {
+        status_code: 406,
+        message: '이미 존재한 닉네임입니다.',
+    },
+};
+
 exports.USER_NOT_EXIST = {
     status_code: 400,
     res_json: {
